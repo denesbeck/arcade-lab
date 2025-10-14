@@ -42,11 +42,11 @@ const Post = async ({ params }: IPost) => {
   );
 
   return (
-    <div className="flex flex-col items-center px-8 mb-8 pt-[100px]">
+    <div className="flex flex-col items-center w-dvw">
       <ScrollToTop />
       <MacOSBar close="/blog" />
       {Post()}
-      <div className="flex flex-wrap items-start px-5 mt-8 space-x-4 max-w-screen w-4xl">
+      <div className="flex flex-wrap items-start px-6 mt-8 space-x-4 max-w-screen w-4xl">
         {(post?.tags || []).map((tag) => (
           <Tag key={tag} name={tag} />
         ))}

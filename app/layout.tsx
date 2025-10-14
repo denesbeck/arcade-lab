@@ -2,6 +2,7 @@ import "./globals.css";
 import Navbar from "./_components/Navbar";
 import { Metadata } from "next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Footer } from "./_components";
 
 export const metadata: Metadata = {
   title: "Arcade Lab",
@@ -33,9 +34,10 @@ export default function RootLayout({
                 "linear-gradient(to right, rgb(26, 26, 36, 0.2) 2px, transparent 2px),linear-gradient(to bottom, rgb(26, 26, 36, 0.2) 2px, transparent 2px)",
             }}
           />
-          <div className="z-10">
+          <div className="flex z-10 flex-col min-h-dvh">
             <Navbar />
-            {children}
+            <div className="flex flex-1 mt-[100px]">{children}</div>
+            <Footer />
           </div>
         </div>
       </body>

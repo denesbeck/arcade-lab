@@ -1,6 +1,6 @@
 const Footer = () => {
   return (
-    <footer className="py-8 px-6 mt-auto text-xs animate-text-focus text-slate-200">
+    <footer className="flex justify-start items-center p-6 text-xs backdrop-blur-md animate-text-focus text-dark-200">
       Copyright © 2025 | All rights reserved.
     </footer>
   );

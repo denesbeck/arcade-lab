@@ -4,7 +4,7 @@ import { INFO } from "@/_config/about";
 
 const Home = () => {
   return (
-    <div className="flex flex-col justify-center items-center px-4 w-full h-dvh">
+    <div className="flex flex-col justify-center items-center px-4 w-dvw">
       <Head>
         <title>Arcade Lab | Home</title>
       </Head>

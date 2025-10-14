@@ -4,7 +4,7 @@ import Image from "next/image";
 const components: MDXComponents = {
   // Wrapper for all MDX content (e.g., for margin, padding, and layout)
   wrapper: ({ children }) => (
-    <div className="overflow-auto px-5 max-w-screen w-4xl">{children}</div>
+    <div className="overflow-auto px-6 max-w-dvw w-4xl">{children}</div>
   ),
 
   // Headings (h1 - h6)

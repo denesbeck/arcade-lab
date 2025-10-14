@@ -28,7 +28,7 @@ const SHARE_OPTIONS = [
 
 const Share = ({ id }: IShare) => {
   return (
-    <div className="flex flex-col items-start px-5 mt-8 max-w-screen w-4xl">
+    <div className="flex flex-col items-start px-6 mt-8 max-w-screen w-4xl">
       <div className="font-bold">Share this post on:</div>
       <div className="flex py-4 space-x-4">
         {SHARE_OPTIONS.map((option) => {

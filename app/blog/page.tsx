@@ -14,9 +14,9 @@ const Blog = async ({
 
   const entries = tags.length > 0 ? filteredEntries : blogEntries;
   return (
-    <div className="h-dvh pt-[100px]">
+    <div className="overflow-auto flex-col max-h-[calc(100dvh-170px)]">
       <FilterTags />
-      <div className="flex overflow-auto justify-center pt-12 pb-4 max-h-[calc(100dvh-100px)]">
+      <div className="flex justify-center py-4 pb-4">
         {entries.length === 0 ? (
           <NoRecords />
         ) : (
