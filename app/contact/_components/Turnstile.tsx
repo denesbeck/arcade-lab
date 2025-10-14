@@ -21,7 +21,6 @@ const Turnstile = ({ getToken }: ITurnstile) => {
       data-size="flexible"
       data-callback="onTurnstileSuccess"
       data-theme="dark"
-      data-refresh-expired="manual"
     />
   );
 };

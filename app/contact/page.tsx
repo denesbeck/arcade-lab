@@ -60,9 +60,12 @@ const Contact = () => {
       nameRef.current!.value = "";
       emailRef.current!.value = "";
       messageRef.current!.value = "";
+      // @ts-expect-error: Turnstile object should be present
+      window.turnstile.reset();
       return;
     }
   };
+
   return (
     <div className="flex overflow-auto flex-col max-h-[calc(100dvh-170px)]">
       <div className="flex relative top-0 justify-end items-center px-6 space-x-2 underline underline-offset-4 w-dvw text-dark-100 animate-text-focus hover:decoration-dashed">
