@@ -10,6 +10,19 @@ import techConference from "@/../public/blog/covers/tech_conference.png";
 
 const BLOG_ENTRIES: BlogEntry[] = [
   {
+    id: 6,
+    title: "Building my home server P3",
+    description: "Part 3: Volumes and backup",
+    date: "2025-10-11",
+    tags: ["linux", "ubuntu", "volumes", "rsync"],
+    content: "building-my-home-server-p3",
+    cover: {
+      image: buildHomeServerSm,
+      original: buildHomeServer,
+      alt: "build_home_server",
+    },
+  },
+  {
     id: 5,
     title: "Building my home server P2",
     description: "Part 2: SMB with Samba",
