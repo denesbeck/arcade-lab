@@ -2,7 +2,6 @@ import "./globals.css";
 import Navbar from "./_components/Navbar";
 import { Metadata } from "next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { Footer } from "./_components";
 import AlertBox from "./_components/AlertBox";
 
 export const metadata: Metadata = {

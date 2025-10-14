@@ -38,7 +38,7 @@ To execute my plan, I utilized several Linux tools:
 
 First, I had to partition and format my new 5TB drive. For partitioning, I used the `fdisk` tool.
 
-```
+```bash
 # Unmount target disk
 sudo umount /dev/target_disk
 
@@ -62,13 +62,13 @@ It's worth mentioning that you can't make irreversible mistakes—if you don't w
 
 Once I partitioned the drive, I could format it with a specific filesystem (e.g., `ext4`, `ntfs`, `xfs`, etc.). The most common filesystem for Linux is `ext4`.
 
-```
+```bash
 sudo mkfs.ext4 /dev/target_disk
 ```
 
 Just in case, I checked and verified the filesystem type and details after formatting using `lsblk`.
 
-```
+```bash
 lsblk -f
 ```
 
@@ -76,7 +76,7 @@ lsblk -f
 
 Although I had a large amount of movie data (around 1TB), I deemed it non-critical, so I decided to skip backing it up. On the other hand, I considered my photos more valuable, so, I backed them up to the 5TB drive.
 
-```
+```bash
 # List block devices and their partitions
 lsblk
 
@@ -98,7 +98,7 @@ sudo rsync -aAXHvS --progress /mnt/source_disk/ /mnt/target_disk/
 
 Once the backup was complete, I could proceed to repair the filesystem using `fsck`. First, I unmounted the target device and ensured that it is not being used by any processes.
 
-```
+```bash
 # Unmount your device
 sudo umount /dev/target_disk
 

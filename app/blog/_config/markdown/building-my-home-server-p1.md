@@ -45,19 +45,19 @@ To set up an SSH tunnel and access my server from my laptop, the first step was 
 
 1. Update system and the packages:
 
-```
+```bash
 sudo apt update && sudo apt upgrade
 ```
 
 2. Install OpenSSH:
 
-```
+```bash
 sudo apt install openssh-server
 ```
 
 3. Start and enable SSH service:
 
-```
+```bash
 sudo systemctl enable --now ssh
 ```
 
@@ -85,19 +85,19 @@ To enhance SSH security, I needed to modify the SSH configuration file located a
 
 I also configured UFW to allow SSH traffic. UFW stands for Uncomplicated Firewall, which is a frontend for managing iptables (the Linux firewall).
 
-```
+```bash
 sudo ufw enable && sudo ufw allow <custom SSH port> && sudo ufw status
 ```
 
 To apply changes I ran the following commands:
 
-```
+```bash
 systemctl daemon-reload
 systemctl restart ssh.socket
 ```
 
 Finally, I was able to connect to my server from my laptop by running the command below! 🎉
 
-```
+```bash
 ssh -p <custom port> username@server-ip
 ```

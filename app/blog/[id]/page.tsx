@@ -1,3 +1,4 @@
+import "highlight.js/styles/nord.css";
 import { MacOSBar, ScrollToTop } from "@/_components";
 import blogEntries from "../_config/data";
 import { Share, Tag } from "../_components";

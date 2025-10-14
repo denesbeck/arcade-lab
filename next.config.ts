@@ -12,7 +12,7 @@ const withMDX = createMDX({
   extension: /\.(md|mdx)$/,
   options: {
     remarkPlugins: [["remark-gfm", { strict: true, throwOnError: true }]],
-    rehypePlugins: [],
+    rehypePlugins: ["rehype-highlight"],
   },
 });
 
