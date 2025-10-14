@@ -11,7 +11,7 @@ import techConference from "@/../public/blog/covers/tech_conference.png";
 const BLOG_ENTRIES: BlogEntry[] = [
   {
     id: 5,
-    title: "Building my home server",
+    title: "Building my home server P2",
     description: "Part 2: SMB with Samba",
     date: "2025-10-03",
     tags: ["linux", "ubuntu", "smb", "samba"],
@@ -24,7 +24,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
   },
   {
     id: 4,
-    title: "Building my home server",
+    title: "Building my home server P1",
     description: "Part 1: Starting and connecting to the server",
     date: "2025-10-03",
     tags: ["linux", "ubuntu", "ssh", "wifi", "netplan", "security", "ufw"],
