@@ -1,4 +1,5 @@
 import Button from "./Button";
+import CopyButton from "./CopyButton";
 import DarkLayout from "./DarkLayout";
 import Footer from "./Footer";
 import Heading1 from "./Heading1";
@@ -13,6 +14,7 @@ import TextArea from "./TextArea";
 
 export {
   Button,
+  CopyButton,
   DarkLayout,
   Footer,
   Heading1,

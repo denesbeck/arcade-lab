@@ -1,3 +1,4 @@
+import { CopyButton } from "@/_components";
 import type { MDXComponents } from "mdx/types";
 import Image from "next/image";
 
@@ -75,17 +76,40 @@ const components: MDXComponents = {
 
   // Inline Code
   code: ({ children }) => (
-    <code className="py-1 px-1 font-mono text-sm break-words rounded text-dark-200 bg-dark-700">
+    <code className="inline-block py-1 px-1 font-mono text-sm break-words rounded text-dark-200 bg-dark-700">
       {children}
     </code>
   ),
 
   // Code Block (preformatted code)
-  pre: ({ children }) => (
-    <pre className="overflow-x-auto p-5 my-6 text-sm rounded-lg text-dark-200 bg-dark-700">
-      {children}
-    </pre>
-  ),
+  pre: ({ children }) => {
+    let codeString = "";
+
+    const codeChild = children?.props?.children;
+
+    if (typeof codeChild === "string") {
+      codeString = codeChild;
+    } else if (Array.isArray(codeChild)) {
+      codeString = codeChild
+        .map((child) => {
+          // if child is a string, keep it; if it's an element, try to get its children
+          if (typeof child === "string") return child;
+          if (typeof child === "object" && child?.props?.children) {
+            return typeof child.props.children === "string"
+              ? child.props.children
+              : "";
+          }
+          return "";
+        })
+        .join("");
+    }
+    return (
+      <pre className="overflow-x-auto relative p-5 my-6 text-sm rounded-lg text-dark-200 bg-dark-700">
+        <CopyButton content={codeString} />
+        <span className="whitespace-pre-wrap break-words">{children}</span>
+      </pre>
+    );
+  },
 
   // Images
   img: ({ src, alt }) => {
