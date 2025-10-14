@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { Certificates, Info, Skills } from "./_components";
 import Bio from "./_components/Bio/Bio";
 
@@ -13,7 +14,9 @@ const About = () => {
             <div className="block my-2 border-b-2 sm:hidden border-secondary" />
             <Certificates />
             <div className="block my-2 border-b-2 sm:hidden border-secondary" />
-            <Bio />
+            <Suspense>
+              <Bio />
+            </Suspense>
             <div className="block my-2 border-b-2 sm:hidden border-secondary" />
             <Skills />
           </div>

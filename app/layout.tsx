@@ -1,5 +1,13 @@
 import "./globals.css";
 import Navbar from "./_components/Navbar";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Arcade Lab",
+  icons: {
+    icon: "/logo/arcade_lab_logo_64.png",
+  },
+};
 
 export default function RootLayout({
   children,
