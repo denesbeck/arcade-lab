@@ -2,11 +2,10 @@
 import AWS from "aws-sdk";
 import { InvocationRequest } from "aws-sdk/clients/lambda";
 
-const AWS_REGION = process.env.AWS_REGION;
-const CONTACT_LAMBDA = process.env.CONTACT_LAMBDA;
-
 const contactLambda = new AWS.Lambda({
-  region: AWS_REGION,
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: process.env.AWS_REGION,
 });
 
 interface IContactPayload {
@@ -18,7 +17,7 @@ interface IContactPayload {
 
 export async function contact(payload: IContactPayload) {
   const params = {
-    FunctionName: CONTACT_LAMBDA,
+    FunctionName: process.env.CONTACT_LAMBDA,
     InvocationType: "RequestResponse",
     Payload: JSON.stringify(payload),
   };
