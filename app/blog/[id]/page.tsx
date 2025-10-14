@@ -11,7 +11,7 @@ export async function generateMetadata({ params }: IPost): Promise<Metadata> {
   const id = (await params).id;
   const post = blogEntries.find((entry) => entry.id.toString() === id);
   const { title, description, cover } = post || {};
-  const coverImageUrl = cover?.image.src || "";
+  const coverImageUrl = cover?.original.src || "";
 
   return {
     metadataBase: new URL(`https://arcade-lab.io/`),

@@ -1,8 +1,12 @@
 import { BlogEntry } from "../_interfaces/blog";
-import buildHomeServer from "@/../public/blog/covers/building_home_server_sm.png";
-import lambdaDeploy from "@/../public/blog/covers/lambda_deploy_sm.png";
-import tektonCicd from "@/../public/blog/covers/tekton_cicd_sm.png";
-import techConference from "@/../public/blog/covers/tech_conference_sm.png";
+import buildHomeServerSm from "@/../public/blog/covers/building_home_server_sm.png";
+import lambdaDeploySm from "@/../public/blog/covers/lambda_deploy_sm.png";
+import tektonCicdSm from "@/../public/blog/covers/tekton_cicd_sm.png";
+import techConferenceSm from "@/../public/blog/covers/tech_conference_sm.png";
+import buildHomeServer from "@/../public/blog/covers/building_home_server.png";
+import lambdaDeploy from "@/../public/blog/covers/lambda_deploy.png";
+import tektonCicd from "@/../public/blog/covers/tekton_cicd.png";
+import techConference from "@/../public/blog/covers/tech_conference.png";
 
 const BLOG_ENTRIES: BlogEntry[] = [
   {
@@ -12,7 +16,11 @@ const BLOG_ENTRIES: BlogEntry[] = [
     date: "2025-10-03",
     tags: ["linux", "ubuntu", "smb", "samba"],
     content: "building-my-home-server-p2",
-    cover: { image: buildHomeServer, alt: "build_home_server" },
+    cover: {
+      image: buildHomeServerSm,
+      original: buildHomeServer,
+      alt: "build_home_server",
+    },
   },
   {
     id: 4,
@@ -21,7 +29,11 @@ const BLOG_ENTRIES: BlogEntry[] = [
     date: "2025-10-03",
     tags: ["linux", "ubuntu", "ssh", "wifi", "netplan", "security", "ufw"],
     content: "building-my-home-server-p1",
-    cover: { image: buildHomeServer, alt: "build_home_server" },
+    cover: {
+      image: buildHomeServerSm,
+      original: buildHomeServer,
+      alt: "build_home_server",
+    },
   },
   {
     id: 3,
@@ -31,7 +43,11 @@ const BLOG_ENTRIES: BlogEntry[] = [
     date: "2025-06-07",
     tags: ["aws", "lambda", "cicd", "github-actions"],
     content: "lambda-deployments",
-    cover: { image: lambdaDeploy, alt: "lambda_deploy" },
+    cover: {
+      image: lambdaDeploySm,
+      original: lambdaDeploy,
+      alt: "lambda_deploy",
+    },
   },
   {
     id: 2,
@@ -40,7 +56,11 @@ const BLOG_ENTRIES: BlogEntry[] = [
     date: "2024-03-22",
     tags: ["ibm", "red-hat", "openshift", "ansible", "security", "watsonx"],
     content: "ibm-tech-2024-conference",
-    cover: { image: techConference, alt: "tech_conference" },
+    cover: {
+      image: techConferenceSm,
+      original: techConference,
+      alt: "tech_conference",
+    },
   },
   {
     id: 1,
@@ -57,7 +77,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
       "docker",
     ],
     content: "migrating-to-tekton",
-    cover: { image: tektonCicd, alt: "tekton_cicd" },
+    cover: { image: tektonCicdSm, original: tektonCicd, alt: "tekton_cicd" },
   },
 ];
 
