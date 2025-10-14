@@ -108,7 +108,7 @@ sudo fsck /dev/target_disk
 
 ### Copying Files Between Drives
 
-For copying files from one drive to another, I continued using rsync in the same way I did for the backup. The rest of the steps were pretty much the same, just with different source and target values.
+For copying files from one drive to another, I continued using `rsync` in the same way I did for the backup. The rest of the steps were pretty much the same, just with different source and target values.
 
 ### Automated backups
 
@@ -209,7 +209,7 @@ To run this script automatically on my Ubuntu Server, I used the `crontab` utili
 
 The above configuration ensures that the script runs every day at 1 AM (according to server's local time). It also redirects both the standard output and error messages to the specified log file (`/var/log/backup-photos.log`).
 
-With this additional step, I can relax knowing that my most important data is backed up automatically every day automatically 😎
+With this additional step, I can relax knowing that my most important data is backed up automatically every day 😎
 
 ### Mount disks on system boot
 

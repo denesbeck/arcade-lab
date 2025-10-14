@@ -21,6 +21,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
       "fstab",
       "fdisk",
       "mkfs",
+      "crontab",
       "home-server",
       "volumes",
       "rsync",
