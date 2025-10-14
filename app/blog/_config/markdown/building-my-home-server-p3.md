@@ -213,7 +213,7 @@ With this additional step, I can relax knowing that my most important data is ba
 
 ### Mount disks on system boot
 
-Finally, to ensure that my disks are automatically mounted on system boot, I first needed to obtain the UUIDs of the devices. I did this by running: `lsblk -o UUID,NAME,FSTYPE,MOUNTPOINT`. Once I had the UUIDs of the target drives, I modified the filesystem table by running: `sudo vi /etc/fstab`. In the file, I added the following entry for each drive I wanted to mount automatically: `UUID=<uuid> <pathtomount> <filesystem> defaults,noatime 0 1`.
+Finally, to ensure that my disks are automatically mounted on system boot, I first needed to obtain the UUIDs of the devices. I did this by running: `lsblk -o UUID,NAME,FSTYPE,MOUNTPOINT`. Once I had the UUIDs of the target drives, I modified the filesystem table by running: `sudo vi /etc/fstab`. In the file, I added the following entry for each drive I wanted to mount automatically: `UUID=<uuid> <pathtomount> <filesystem> defaults,noatime 0 2`.
 
 Here's a breakdown of what this line does:
 
