@@ -169,15 +169,5 @@ export const BIO = (
       </a>{" "}
       on GitHub
     </p>
-    <p>
-      💻 Check out{" "}
-      <a
-        target="_blank"
-        className="underline text-active underline-offset-4"
-        href="https://lostindusk.com"
-      >
-        my portfolio page
-      </a>
-    </p>
   </div>
 );

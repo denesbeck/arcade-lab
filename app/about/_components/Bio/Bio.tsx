@@ -4,10 +4,11 @@ import { BIO, BIO_START } from "../../_config/data";
 import { FaMagnifyingGlass } from "react-icons/fa6";
 import { Modal } from ".";
 import { Tooltip } from "@mui/material";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 const Bio = () => {
   const { push } = useRouter();
+  const searchParams = useSearchParams();
   return (
     <>
       <div className="flex overflow-x-auto flex-col gap-2 px-2 animate-text-focus max-w-[30rem]">
@@ -16,7 +17,7 @@ const Bio = () => {
             <span>Bio</span>
             <Tooltip arrow placement="right" title="Show more">
               <button
-                onClick={() => push("/about?modalOpen")}
+                onClick={() => push(`/about?${searchParams}&modalOpen`)}
                 className="transition-all duration-200 ease-in-out cursor-pointer hover:scale-110 text-primary hover:brightness-125"
               >
                 <FaMagnifyingGlass className="text-base text-primary" />

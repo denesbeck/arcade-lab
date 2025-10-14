@@ -1,5 +1,5 @@
 "use client";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 interface MacOSBarProps {
   close?: string;
@@ -7,7 +7,6 @@ interface MacOSBarProps {
 }
 
 const MacOSBar = ({ size = "md", close }: MacOSBarProps) => {
-  const searchParams = useSearchParams();
   const router = useRouter();
 
   const calcSize = () => {
@@ -29,8 +28,8 @@ const MacOSBar = ({ size = "md", close }: MacOSBarProps) => {
     >
       <button
         disabled={!close}
-        onClick={() => router.push(`${close!}?${searchParams}`)}
-        className="flex space-x-2 cursor-pointer"
+        onClick={() => router.push(close!)}
+        className={`flex space-x-2 ${close && "cursor-pointer"}`}
       >
         <div className={`${dots} rounded-full bg-macos-red`} />
         <div className={`${dots} rounded-full bg-macos-yellow`} />
