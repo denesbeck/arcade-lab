@@ -49,7 +49,7 @@ const BlogCard = ({ id, title, description, date, cover }: BlogCardProps) => {
         onLoadingComplete={() => handleLoad()}
       />
       <div className="flex flex-col py-3 px-6 space-y-2">
-        <h1 className="relative text-lg text-left transition-all duration-200 ease-in-out group-hover:font-bold after:bg-primary after:absolute after:-bottom-0.5 after:left-0 after:h-0.5 after:w-0 after:transition-all after:duration-200 after:ease-in-out after:content-[''] group-hover:after:w-full">
+        <h1 className="relative text-lg text-left transition-all duration-200 ease-in-out after:bg-primary after:absolute after:-bottom-0.5 after:left-0 after:h-0.5 after:w-0 after:transition-all after:duration-200 after:ease-in-out after:content-[''] group-hover:after:w-full">
           {title}
         </h1>
 
