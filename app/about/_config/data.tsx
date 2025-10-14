@@ -3,6 +3,7 @@ import {
   SiCredly,
   SiTypescript,
   SiTerraform,
+  SiAnsible,
   SiKubernetes,
   SiDocker,
   SiGithubactions,
@@ -117,6 +118,10 @@ export const SKILLS = [
   {
     name: "Terraform",
     icon: SiTerraform,
+  },
+  {
+    name: "Ansible",
+    icon: SiAnsible,
   },
   {
     name: "AWS",
