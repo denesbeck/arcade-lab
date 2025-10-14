@@ -129,19 +129,19 @@ const components: MDXComponents = {
     </div>
   ),
   thead: ({ children }) => (
-    <thead className="text-white break-words bg-dark-800">{children}</thead>
+    <thead className="break-words text-dark-100 bg-dark-900">{children}</thead>
   ),
   tbody: ({ children }) => <tbody>{children}</tbody>,
   tr: ({ children }) => (
     <tr className="break-words border-b border-dark-500">{children}</tr>
   ),
   th: ({ children }) => (
-    <th className="py-3 px-5 text-lg font-semibold break-words text-dark-100">
+    <th className="py-3 px-4 text-lg font-semibold break-words text-dark-100">
       {children}
     </th>
   ),
   td: ({ children }) => (
-    <td className="py-3 px-5 break-words text-dark-200">{children}</td>
+    <td className="py-3 px-4 break-words text-dark-200">{children}</td>
   ),
 };
 
