@@ -1,4 +1,4 @@
-import { CopyButton } from "@/_components";
+import { CopyButton, MacOSBar } from "@/_components";
 import type { MDXComponents } from "mdx/types";
 import Image from "next/image";
 
@@ -105,6 +105,7 @@ const components: MDXComponents = {
     }
     return (
       <pre className="overflow-x-auto relative p-5 my-6 text-sm rounded-lg text-dark-200 bg-dark-700">
+        <MacOSBar size="sm" />
         <CopyButton content={codeString} />
         <span className="whitespace-pre-wrap break-words">{children}</span>
       </pre>
