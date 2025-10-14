@@ -1,6 +1,7 @@
 import "./globals.css";
 import Navbar from "./_components/Navbar";
 import { Metadata } from "next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 export const metadata: Metadata = {
   title: "Arcade Lab",
@@ -17,6 +18,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="text-text-dark font-[DepartureMono]">
+        <SpeedInsights />
         <div className="flex flex-col">
           <div className="fixed top-0 w-screen h-screen from-dark-1400 to-dark-1400 via-dark-900 bg-linear-to-r" />
           <div
