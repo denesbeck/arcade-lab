@@ -7,6 +7,7 @@ import Heading3 from "./Heading3";
 import Input from "./Input";
 import MacOSBar from "./MacOSBar";
 import Navbar from "./Navbar";
+import ScrollToTop from "./ScrollToTop";
 import Spinner from "./Spinner";
 import TextArea from "./TextArea";
 
@@ -20,6 +21,7 @@ export {
   Input,
   MacOSBar,
   Navbar,
+  ScrollToTop,
   Spinner,
   TextArea,
 };

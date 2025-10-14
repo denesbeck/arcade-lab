@@ -1,4 +1,4 @@
-import { MacOSBar } from "@/_components";
+import { MacOSBar, ScrollToTop } from "@/_components";
 import blogEntries from "../_config/data";
 import { Share, Tag } from "../_components";
 import { Metadata } from "next/types";
@@ -43,6 +43,7 @@ const Post = async ({ params }: IPost) => {
 
   return (
     <div className="flex flex-col items-center px-8 mb-8 pt-[100px]">
+      <ScrollToTop />
       <MacOSBar close="/blog" />
       {Post()}
       <div className="flex flex-wrap items-start px-5 mt-8 space-x-4 max-w-screen w-4xl">
