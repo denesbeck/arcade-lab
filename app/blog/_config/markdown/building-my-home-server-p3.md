@@ -190,7 +190,7 @@ log_message "Backup process finished successfully"
 
 #### Script Breakdown:
 
-I wrote the script above for an Ansible playbook, so it includes some Ansible variables. You can easily replace these values as needed.
+I wrote the script above for an Ansible playbook, so it includes some Ansible variables. You can easily replace these values as needed. It's important to make the script executable by runnning: `sudo chmod 0755 /path/to/my/script`.
 
 - `set -euo pipefail`:
   - Stops immediately when an error occurs (thanks to `-e`).
@@ -201,12 +201,33 @@ I wrote the script above for an Ansible playbook, so it includes some Ansible va
 - After the backup is completed, the script collects all existing backup directories, sorts them by modification time in descending order, and deletes the oldest backups, keeping only the three most recent ones.
 - The entire backup process is logged, including any errors or success messages, either to a file or to the terminal.
 
-To run this script automatically on your Linux system, I used the `crontab` utility by running `sudo crontab -e` (which edits the `crontab` settings for the `root` user). `crontab` is a tool that allows you to schedule tasks to run at specified intervals. It's part of the cron system, a time-based job scheduler in Unix-like operating systems. After opening the `crontab` configuration file, I added the following line to schedule the script:
+To run this script automatically on my Ubuntu Server, I used the `crontab` utility by running `sudo crontab -e` (which edits the `crontab` settings for the `root` user). `crontab` is a tool that allows you to schedule tasks to run at specified intervals. It's part of the cron system, a time-based job scheduler in Unix-like operating systems. After opening the `crontab` configuration file, I added the following line to schedule the script:
 
 ```bash
-0 1 * * * /path/to/your/script >> /var/log/backup-photos.log 2>&1
+0 1 * * * /path/to/my/script >> /var/log/backup-photos.log 2>&1
 ```
 
-The above configuration ensures that your script runs every day at 1 AM (according to your server's local time). It also redirects both the standard output and error messages to the specified log file (`/var/log/backup-photos.log`).
+The above configuration ensures that the script runs every day at 1 AM (according to server's local time). It also redirects both the standard output and error messages to the specified log file (`/var/log/backup-photos.log`).
 
-😎 With this additional step, I can relax knowing that my most important data is backed up automatically every day automatically.
+With this additional step, I can relax knowing that my most important data is backed up automatically every day automatically 😎
+
+### Mount disks on system boot
+
+Finally, to ensure that my disks are automatically mounted on system boot, I first needed to obtain the UUIDs of the devices. I did this by running: `lsblk -o UUID,NAME,FSTYPE,MOUNTPOINT`. Once I had the UUIDs of the target drives, I modified the filesystem table by running: `sudo vi /etc/fstab`. In the file, I added the following entry for each drive I wanted to mount automatically: `UUID=<uuid> <pathtomount> <filesystem> defaults,noatime 0 1`.
+
+Here's a breakdown of what this line does:
+
+- The partition with the specified UUID will be mounted at the target path, e.g., `/mnt/data`.
+  This means the partition identified by the UUID will be automatically mounted to the directory `/mnt/data`.
+- The filesystem type (e.g., `ext4`).
+  This specifies the type of filesystem the partition is using, such as `ext4`, `xfs`, `ntfs`, etc.
+- The filesystem will be mounted with default options and the `noatime` option:
+  - `defaults`: This refers to a standard set of mount options that include read/write access, asynchronous I/O, and others that make the filesystem behave in a standard way.
+  - `noatime`: This option prevents the system from updating the "access time" (atime) every time a file is read. This reduces unnecessary disk writes, which can improve performance, especially on SSDs.
+- `0` → This value indicates that the partition will not be backed up by the dump utility. In practice, most filesystems do not require backups using dump, so 0 is commonly used here.
+- `1` → This is the `fsck` order. It specifies the order in which the filesystems should be checked by the `fsck` (file system check) utility during boot:
+  - `1` means this filesystem will be checked first (typically used for the root filesystem).
+  - `2` means it will be checked second, and so on.
+  - If set to `0`, the filesystem will not be checked during boot.
+
+With the configuration above, if everything is set up correctly, all registered drives will now be automatically mounted to their specified mount points during system boot. 🎉🎉🎉
