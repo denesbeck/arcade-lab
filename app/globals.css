@@ -65,3 +65,6 @@
   font-family: "DepartureMono";
   src: url("/fonts/DepartureMono-Regular.woff2") format("woff2");
 }
+body {
+  background: var(--color-dark-900);
+}

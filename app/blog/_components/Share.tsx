@@ -9,7 +9,7 @@ const SHARE_OPTIONS = [
   {
     getId: (id: string) => `${id}_linkedin`,
     getHref: (id: string) =>
-      `https://www.linkedin.com/sharing/share-offsite/?url=https://arcade-lab.vercel.app/blog/${id}`,
+      `https://www.linkedin.com/sharing/share-offsite/?url=https://arcade-lab.io/blog/${id}`,
     icon: FaLinkedin,
   },
   {

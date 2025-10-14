@@ -77,7 +77,7 @@ const FilterTags = () => {
                 <button
                   key={tag}
                   onClick={() => handleSelect(tag)}
-                  className={`text-2xl ${selection.includes(tag) ? "text-primary scale-110" : "text-gray-200"} cursor-pointer transition-all duration-200 ease-in-out hover:scale-110`}
+                  className={`sm:text-xl ${selection.includes(tag) ? "text-primary scale-110" : "text-gray-200"} cursor-pointer transition-all duration-200 ease-in-out hover:scale-110`}
                 >
                   #{tag}
                 </button>
