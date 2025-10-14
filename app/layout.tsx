@@ -3,6 +3,7 @@ import Navbar from "./_components/Navbar";
 import { Metadata } from "next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Footer } from "./_components";
+import AlertBox from "./_components/AlertBox";
 
 export const metadata: Metadata = {
   title: "Arcade Lab",
@@ -36,6 +37,7 @@ export default function RootLayout({
           />
           <div className="flex z-10 flex-col min-h-dvh">
             <Navbar />
+            <AlertBox context="global" />
             <div className="flex flex-1 mt-[100px]">{children}</div>
             <Footer />
           </div>

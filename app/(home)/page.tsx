@@ -1,5 +1,5 @@
 import Head from "next/head";
-// import { ContactButton } from "./_components";
+import { ContactButton } from "./_components";
 import { INFO } from "@/_config/about";
 
 const Home = () => {
@@ -15,7 +15,7 @@ const Home = () => {
       <div className="mt-2 text-center animate-text-focus">
         I&apos;m a {INFO.Role}.
       </div>
-      {/* <ContactButton label={"Contact me"} /> */}
+      <ContactButton label={"Contact me"} />
     </div>
   );
 };
