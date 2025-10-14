@@ -7,6 +7,8 @@ interface IPost {
   params: Promise<{ id: string }>;
 }
 
+const domain = process.env.NEXT_PUBLIC_DOMAIN;
+
 export async function generateMetadata({ params }: IPost): Promise<Metadata> {
   const id = (await params).id;
   const post = blogEntries.find((entry) => entry.id.toString() === id);
@@ -14,13 +16,13 @@ export async function generateMetadata({ params }: IPost): Promise<Metadata> {
   const coverImageUrl = cover?.original.src || "";
 
   return {
-    metadataBase: new URL(`https://arcade-lab.io/`),
+    metadataBase: new URL(`https://${domain}/`),
     title: title,
     description: description,
     openGraph: {
       title: title,
       description: description,
-      url: `https://arcade-lab.io/blog/${id}`,
+      url: `https://${domain}/blog/${id}`,
       images: [{ url: coverImageUrl }],
       type: "website",
       siteName: "Arcade Lab",
@@ -38,7 +40,7 @@ const Post = async ({ params }: IPost) => {
   const { id } = await params;
   const post = blogEntries.find((entry) => entry.id.toString() === id);
   const { default: Post } = await import(
-    `../blog-entries/${post?.content}.mdx`
+    `../_config/markdown/${post?.content}.mdx`
   );
 
   return (
