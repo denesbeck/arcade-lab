@@ -44,7 +44,7 @@ const Post = async ({ params }: IPost) => {
   );
 
   return (
-    <div className="flex flex-col items-center w-dvw">
+    <div className="flex flex-col items-center pb-4 w-dvw">
       <ScrollToTop />
       <MacOSBar close="/blog" />
       {Post()}
