@@ -67,12 +67,12 @@ const Contact = () => {
   };
 
   return (
-    <div className="flex overflow-auto flex-col max-h-[calc(100dvh-170px)]">
-      <div className="flex relative top-0 justify-end items-center px-6 space-x-2 underline underline-offset-4 w-dvw text-dark-100 animate-text-focus hover:decoration-dashed">
+    <div className="flex overflow-auto flex-col max-h-[calc(100dvh-180px)]">
+      <div className="flex relative top-0 justify-end items-center px-6 pb-2 space-x-2 underline underline-offset-4 w-dvw text-dark-100 animate-text-focus hover:decoration-dashed">
         <FaArrowCircleLeft />
         <Link href="/">Go back</Link>
       </div>
-      <div className="flex flex-col justify-center items-center my-auto w-dvw animate-slide-in-from-bottom">
+      <div className="flex flex-col justify-center items-center py-2 my-auto w-dvw animate-slide-in-from-bottom">
         <div className="relative group">
           <div className="hidden absolute w-12 h-12 border-t-2 border-r-2 transition-all duration-200 ease-in-out sm:block border-primary -top-[24px] -right-[24px] group-hover:-top-[16px] group-hover:-right-[16px]" />
           <div className="hidden absolute w-48 h-48 border-t-2 border-l-2 transition-all duration-200 ease-in-out sm:block border-primary -top-[24px] -left-[24px] group-hover:-top-[16px] group-hover:-left-[16px]" />
