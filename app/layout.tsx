@@ -39,7 +39,6 @@ export default function RootLayout({
             <Navbar />
             <AlertBox context="global" />
             <div className="flex flex-1 mt-[100px]">{children}</div>
-            <Footer />
           </div>
         </div>
       </body>

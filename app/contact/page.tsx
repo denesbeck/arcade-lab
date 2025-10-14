@@ -67,18 +67,18 @@ const Contact = () => {
   };
 
   return (
-    <div className="flex overflow-auto flex-col max-h-[calc(100dvh-180px)]">
-      <div className="flex relative top-0 justify-end items-center px-6 pb-2 space-x-2 underline underline-offset-4 w-dvw text-dark-100 animate-text-focus hover:decoration-dashed">
+    <div className="flex flex-col min-h-[calc(100dvh-100px)]">
+      <div className="flex justify-end items-center px-6 pb-2 space-x-2 underline underline-offset-4 w-dvw text-dark-100 animate-text-focus hover:decoration-dashed">
         <FaArrowCircleLeft />
         <Link href="/">Go back</Link>
       </div>
-      <div className="flex flex-col justify-center items-center py-2 my-auto w-dvw animate-slide-in-from-bottom">
+      <div className="flex flex-col items-center pt-6 pb-10 my-auto w-dvw animate-slide-in-from-bottom">
         <div className="relative group">
           <div className="hidden absolute w-12 h-12 border-t-2 border-r-2 transition-all duration-200 ease-in-out sm:block border-primary -top-[24px] -right-[24px] group-hover:-top-[16px] group-hover:-right-[16px]" />
           <div className="hidden absolute w-48 h-48 border-t-2 border-l-2 transition-all duration-200 ease-in-out sm:block border-primary -top-[24px] -left-[24px] group-hover:-top-[16px] group-hover:-left-[16px]" />
           <div className="hidden absolute w-12 h-12 border-b-2 border-l-2 transition-all duration-200 ease-in-out sm:block border-primary -bottom-[24px] -left-[24px] group-hover:-bottom-[16px] group-hover:-left-[16px]" />
           <div className="hidden absolute w-48 h-48 border-r-2 border-b-2 transition-all duration-200 ease-in-out sm:block border-primary -right-[24px] -bottom-[24px] group-hover:-right-[16px] group-hover:-bottom-[16px]" />
-          <div className="flex overflow-auto relative flex-col p-6 min-w-max ring-2 transition-all duration-200 ease-in-out hover:ring-gray-500 hover:ring-offset-2 ring-secondary ring-offset-root h-max max-h-[calc(100dvh-200px)] max-w-[90dvw] gap-[1rem] backdrop-blur-md">
+          <div className="flex relative flex-col p-6 min-w-max ring-2 transition-all duration-200 ease-in-out hover:ring-gray-500 hover:ring-offset-2 ring-secondary ring-offset-root h-max max-w-[90dvw] gap-[1rem] backdrop-blur-md">
             <Heading2>Contact </Heading2>
             <Input placeholder="Name" nameRef={nameRef} />
             <Input placeholder="Email" nameRef={emailRef} />
