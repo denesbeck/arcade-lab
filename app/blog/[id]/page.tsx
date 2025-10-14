@@ -14,15 +14,15 @@ export async function generateMetadata({ params }: IPost): Promise<Metadata> {
   const coverImageUrl = cover?.image.src || "";
 
   return {
-    metadataBase: new URL(`https://arcade-lab.dev/`),
+    metadataBase: new URL(`https://arcade-lab.io/`),
     title: title,
     description: description,
     openGraph: {
       title: title,
       description: description,
-      url: `https://arcade-lab.dev/blog/${id}`,
+      url: `https://arcade-lab.io/blog/${id}`,
       images: [{ url: coverImageUrl }],
-      type: "article",
+      type: "website",
       siteName: "Arcade Lab",
     },
     twitter: {

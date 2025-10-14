@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 interface BadgeProps {
   url: string;
   size?: number;
@@ -12,7 +14,7 @@ const Badge = ({ url, size = 28, img, alt }: BadgeProps) => {
       href={url}
       target="_blank"
     >
-      <img width={size} height={size} src={img} alt={alt} />
+      <Image width={size} height={size} src={img} alt={alt} />
     </a>
   );
 };

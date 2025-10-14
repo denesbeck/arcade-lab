@@ -1,5 +1,4 @@
 "use client";
-import { Portal } from "@mui/material";
 import { usePathname } from "next/navigation";
 import { ReactElement, useState, useEffect } from "react";
 import { RxHamburgerMenu } from "react-icons/rx";

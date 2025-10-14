@@ -9,19 +9,19 @@ const SHARE_OPTIONS = [
   {
     getId: (id: string) => `${id}_linkedin`,
     getHref: (id: string) =>
-      `https://www.linkedin.com/sharing/share-offsite/?url=https://arcade-lab.dev/blog/${id}`,
+      `https://www.linkedin.com/sharing/share-offsite/?url=https://arcade-lab.vercel.app/blog/${id}`,
     icon: FaLinkedin,
   },
   {
     getId: (id: string) => `${id}_facebook`,
     getHref: (id: string) =>
-      `https://www.facebook.com/sharer.php?u=https://arcade-lab.dev/blog/${id}`,
+      `https://www.facebook.com/sharer.php?u=https://arcade-lab.io/blog/${id}`,
     icon: FaFacebook,
   },
   {
     getId: (id: string) => `${id}_twitter`,
     getHref: (id: string) =>
-      `https://twitter.com/intent/tweet?url=https://arcade-lab.dev/blog/${id}`,
+      `https://twitter.com/intent/tweet?url=https://arcade-lab.io/blog/${id}`,
     icon: FaTwitter,
   },
 ];
