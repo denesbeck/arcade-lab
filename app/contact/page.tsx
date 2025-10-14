@@ -1,8 +1,6 @@
 "use client";
-import { Button, Heading2, Input, TextArea } from "@/_components";
+import { Button, GoBack, Heading2, Input, TextArea } from "@/_components";
 import { Turnstile } from "./_components";
-import Link from "next/link";
-import { FaArrowCircleLeft } from "react-icons/fa";
 import { useRef, useState } from "react";
 import { contact } from "./actions";
 import { useAlert } from "@/_components/AlertBox/_hooks";
@@ -68,10 +66,7 @@ const Contact = () => {
 
   return (
     <div className="flex flex-col min-h-[calc(100dvh-100px)]">
-      <div className="flex justify-end items-center px-6 pb-2 space-x-2 underline underline-offset-4 w-dvw text-dark-100 animate-text-focus hover:decoration-dashed">
-        <FaArrowCircleLeft />
-        <Link href="/">Go back</Link>
-      </div>
+      <GoBack />
       <div className="flex flex-col items-center pt-6 pb-10 my-auto w-dvw animate-slide-in-from-bottom">
         <div className="relative group">
           <div className="hidden absolute w-12 h-12 border-t-2 border-r-2 transition-all duration-200 ease-in-out sm:block border-primary -top-[24px] -right-[24px] group-hover:-top-[16px] group-hover:-right-[16px]" />

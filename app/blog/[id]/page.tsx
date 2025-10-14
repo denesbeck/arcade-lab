@@ -1,5 +1,5 @@
 import "highlight.js/styles/nord.css";
-import { ScrollToTop } from "@/_components";
+import { GoBack, ScrollToTop } from "@/_components";
 import blogEntries from "../_config/data";
 import { Share, Tag } from "../_components";
 import { Metadata } from "next/types";
@@ -46,6 +46,7 @@ const Post = async ({ params }: IPost) => {
 
   return (
     <div className="flex flex-col items-center pb-4 w-dvw">
+      <GoBack />
       <ScrollToTop />
       {Post()}
       <div className="flex flex-wrap items-start px-6 mt-8 space-x-4 max-w-screen w-4xl">

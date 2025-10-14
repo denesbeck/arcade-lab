@@ -1,7 +1,8 @@
 "use client";
 import { Badge, IconButton, Tooltip } from "@mui/material";
 import { useState } from "react";
-import { IoSettingsSharp, IoCheckmarkSharp, IoClose } from "react-icons/io5";
+import { IoCheckmarkSharp, IoClose } from "react-icons/io5";
+import { FaHashtag } from "react-icons/fa";
 import { LiaBroomSolid } from "react-icons/lia";
 import blogEntries from "../_config/data";
 import { DarkLayout } from "@/_components";
@@ -46,9 +47,12 @@ const FilterTags = () => {
     <>
       <div className="flex fixed right-0 justify-end py-2 px-4 sm:px-8 top-[100px] animate-text-focus">
         <Badge badgeContent={tags.length} color="primary">
-          <IconButton onClick={() => setIsOpen(true)}>
-            <IoSettingsSharp className="text-white" />
-          </IconButton>
+          <button
+            className="flex justify-center items-center p-2 w-11 h-11 rounded-full border cursor-pointer border-dark-500 bg-secondary animate-text-focus text-dark-50 hover:bg-dark-900"
+            onClick={() => setIsOpen(true)}
+          >
+            <FaHashtag className="w-5 h-5 text-dark-100" />
+          </button>
         </Badge>
       </div>
       {isOpen && (
