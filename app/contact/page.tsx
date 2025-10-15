@@ -66,7 +66,7 @@ const Contact = () => {
 
   return (
     <div className="flex flex-col min-h-[calc(100dvh-100px)]">
-      <GoBack />
+      <GoBack fallbackUrl="/" />
       <div className="flex flex-col items-center pt-6 pb-10 my-auto w-dvw animate-slide-in-from-bottom">
         <div className="relative group">
           <div className="hidden absolute w-12 h-12 border-t-2 border-r-2 transition-all duration-200 ease-in-out sm:block border-primary -top-[24px] -right-[24px] group-hover:-top-[16px] group-hover:-right-[16px]" />

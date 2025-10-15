@@ -46,7 +46,7 @@ const Post = async ({ params }: IPost) => {
 
   return (
     <div className="flex flex-col items-center pb-4 w-dvw">
-      <GoBack />
+      <GoBack fallbackUrl="/blog" />
       <ScrollToTop />
       {Post()}
       <div className="flex flex-wrap items-start px-6 mt-8 space-x-4 max-w-screen w-4xl">
