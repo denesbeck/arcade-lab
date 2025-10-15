@@ -2,6 +2,7 @@ import "./globals.css";
 import Navbar from "./_components/Navbar";
 import { Metadata } from "next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Analytics } from "@vercel/analytics/next";
 import AlertBox from "./_components/AlertBox";
 
 export const metadata: Metadata = {
@@ -20,6 +21,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="text-text-dark font-[DepartureMono]">
         <SpeedInsights />
+        <Analytics />
         <div className="flex flex-col">
           <div className="fixed top-0 w-screen h-screen from-dark-1400 to-dark-1400 via-dark-900 bg-linear-to-r" />
           <div
