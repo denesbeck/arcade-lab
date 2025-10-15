@@ -8,7 +8,7 @@ In my previous post, I discussed setting up my SMB server using the Samba librar
 
 ## ✏️ Planning
 
-Originally, all my movies and photos were stored on a 1TB HDD, while my documents were kept on a flash drive. I also recently bought a brand-new 5TB HDD. My plan was to repartition the 1TB HDD: I intended to allocate 100GB for my documents (which were currently on the flash drive), while the rest of the drive would be dedicated to my photos. I planned to move all the movies from the 1TB HDD to the 5TB drive. During this process, I realized it would be useful to create a backup partition on the 5TB disk, allowing me to back up my photos daily and maintain a maximum of five backups at any given time.
+Originally, all my movies and photos were stored on a 1TB HDD, while my documents were kept on a flash drive. I also recently bought a brand-new 5TB HDD. My plan was to repartition the 1TB HDD: I intended to allocate 100GB for my documents (which were currently on the flash drive), while the rest of the drive would be dedicated to my photos. I planned to move all the movies from the 1TB HDD to the 5TB drive. During this process, I realized it would be useful to create a backup partition on the 5TB disk, allowing me to back up my photos daily and maintain a maximum of three backups at any given time.
 
 Here's the task list I put together:
 
