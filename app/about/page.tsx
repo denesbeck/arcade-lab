@@ -4,7 +4,7 @@ import Bio from "./_components/Bio/Bio";
 
 const About = () => {
   return (
-    <div className="flex flex-col items-center pb-8 min-h-[calc(100dvh-100px)] w-dvw">
+    <div className="flex flex-col items-center pb-8 min-h-[calc(100dvh-100px)] w-dvw lg:pb-[100px]">
       {/* wrapper for adding animate-slide-in-from-bottom */}
       <div className="flex flex-col py-4 px-2 my-auto transition-all duration-200 ease-in-out sm:w-max sm:ring-2 lg:py-8 lg:px-8 ring-secondary animate-slide-in-from-bottom backdrop-blur-md sm:max-w-[90dvw] sm:hover:shadow-[10px_10px_#46ecd5,20px_20px_black]">
         {/* main container */}

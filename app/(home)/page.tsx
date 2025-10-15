@@ -9,15 +9,17 @@ const Home = () => {
       <Head>
         <title>Arcade Lab | Home</title>
       </Head>
-      <div className="text-2xl text-center animate-text-focus">
-        👋🏻 Hello, my name is {INFO.Name.split(" ")[0]}.
+      <div className="flex flex-col justify-center items-center pb-[100px]">
+        <div className="text-2xl text-center animate-text-focus">
+          👋🏻 Hello, my name is {INFO.Name.split(" ")[0]}.
+        </div>
+        <div className="mt-2 text-center animate-text-focus">
+          I&apos;m a {INFO.Role}.
+        </div>
+        <Suspense>
+          <ContactButton label={"Contact me"} />
+        </Suspense>
       </div>
-      <div className="mt-2 text-center animate-text-focus">
-        I&apos;m a {INFO.Role}.
-      </div>
-      <Suspense>
-        <ContactButton label={"Contact me"} />
-      </Suspense>
     </div>
   );
 };
