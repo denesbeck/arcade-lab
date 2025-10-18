@@ -45,18 +45,15 @@ const BlogCard = ({ id, title, description, date, cover }: BlogCardProps) => {
         quality={100}
         src={cover.image}
         alt={cover.alt}
-        className="h-full max-h-40 animate-text-focus max-w-40"
+        className="hidden h-full max-h-40 xs:block animate-text-focus max-w-40"
         onLoadingComplete={() => handleLoad()}
       />
-      <div className="flex flex-col py-3 px-6 space-y-2">
-        <h1 className="relative text-lg text-left transition-all duration-200 ease-in-out after:bg-primary after:absolute after:-bottom-0.5 after:left-0 after:h-0.5 after:w-0 after:transition-all after:duration-200 after:ease-in-out after:content-[''] group-hover:after:w-full">
+      <div className="flex overflow-auto flex-col py-3 px-6 space-y-2">
+        <h1 className="relative text-lg text-left transition-all duration-200 ease-in-out md:whitespace-nowrap after:bg-primary after:absolute after:-bottom-0.5 after:left-0 after:h-0.5 after:w-0 after:transition-all after:duration-200 after:ease-in-out after:content-[''] group-hover:after:w-full">
           {title}
         </h1>
-
-        <p className="overflow-hidden flex-1 text-sm text-left whitespace-nowrap md:w-full md:whitespace-pre-wrap w-[20ch] text-ellipsis sm:w-[32ch]">
-          {description}
-        </p>
-        <div className="flex justify-end items-center space-x-2 w-full">
+        <p className="flex-1 text-sm text-left md:w-full">{description}</p>
+        <div className="flex justify-start items-center space-x-2 w-full xs:justify-end">
           <FaRegCalendarAlt />
           <div className="text-sm">{date}</div>
         </div>
