@@ -41,7 +41,7 @@ const Post = async ({ params }: IPost) => {
   const { id } = await params;
   const post = blogEntries.find((entry) => entry.id.toString() === id);
   const { default: Post } = await import(
-    `../_config/markdown/${post?.content}.md`
+    `../_config/markdown/${post?.content}.mdx`
   );
 
   return (
