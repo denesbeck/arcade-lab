@@ -19,7 +19,11 @@ interface BlogCardProps {
 
 const BlogCard = ({ id, title, description, date, cover }: BlogCardProps) => {
   const searchParams = useSearchParams();
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+
+  const startLoad = () => {
+    setLoading(true);
+  };
 
   const handleLoad = () => {
     setLoading(false);
@@ -46,7 +50,8 @@ const BlogCard = ({ id, title, description, date, cover }: BlogCardProps) => {
         src={cover.image}
         alt={cover.alt}
         className="hidden h-full max-h-40 xs:block animate-text-focus max-w-40"
-        onLoadingComplete={() => handleLoad()}
+        onLoadStart={startLoad}
+        onLoad={handleLoad}
       />
       <div className="flex overflow-auto flex-col py-3 px-6 space-y-2">
         <h1 className="relative text-lg text-left transition-all duration-200 ease-in-out md:whitespace-nowrap after:bg-primary after:absolute after:-bottom-0.5 after:left-0 after:h-0.5 after:w-0 after:transition-all after:duration-200 after:ease-in-out after:content-[''] group-hover:after:w-full">
