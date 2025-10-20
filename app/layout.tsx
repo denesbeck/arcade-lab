@@ -23,7 +23,7 @@ export default function RootLayout({
         <SpeedInsights />
         <Analytics />
         <div className="flex flex-col">
-          <div className="fixed top-0 w-screen h-screen from-dark-1400 to-dark-1400 via-dark-900 bg-linear-to-r" />
+          <div className="fixed top-0 w-dvw h-dvh from-dark-1400 to-dark-1400 via-dark-900 bg-linear-to-r" />
           <div
             style={{
               position: "fixed",
