@@ -73,8 +73,8 @@ const BLOG_ENTRIES: BlogEntry[] = [
     title: "Lambda Deployments",
     description:
       "Automating AWS Lambda and Layer Deployments with GitHub Actions",
-    date: "2025-06-07",
-    tags: ["aws", "lambda", "cicd", "github-actions"],
+    date: "2025-10-19",
+    tags: ["aws", "lambda", "cicd", "github-actions", "terraform", "oidc"],
     content: "lambda-deployments",
     cover: {
       image: lambdaDeploySm,

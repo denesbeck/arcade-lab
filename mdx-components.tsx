@@ -54,7 +54,7 @@ const components: MDXComponents = {
     </ul>
   ),
   ol: ({ children }) => (
-    <ol className="pl-5 my-4 list-decimal break-words text-dark-200">
+    <ol className="pl-12 my-4 list-decimal break-words text-dark-200">
       {children}
     </ol>
   ),

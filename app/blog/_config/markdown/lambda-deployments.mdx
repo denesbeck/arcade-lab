@@ -1,14 +1,14 @@
 # 🚀 Lambda Deployments
 
-_Automating AWS Lambda and Layer Deployments with GitHub Actions_
+_Automating AWS Lambda and Layer Deployments with GitHub Actions_ 
 
-📅 2025-06-07
+📅 2025-10-19 **[UPDATED]**
 
 ## 🧭 Introduction
 
 Managing and deploying AWS Lambda functions at scale can get complex, especially when dealing with multiple environments, configuration changes, and code versions. To simplify this, I created a GitHub Actions workflow that automates the deployment of both Lambda functions and Lambda layers — directly from a monorepo structure, with smart caching and S3-backed hash tracking.
 
-In this post, I’ll walk you through how it works, the logic behind it, and how you can adapt it to your own projects.
+In this post, I'll walk you through how it works, the logic behind it, to help you adapting it to your own projects.
 
 ## 🗂️ Repo Structure Overview
 
@@ -32,6 +32,14 @@ The repository uses a clear folder structure:
 
 This allows us to independently track changes to each function or layer, and optimize deployments accordingly.
 
+## 🔐 Authentication & Authorization
+
+To authenticate GitHub Actions with AWS, I configured OpenID Connect (OIDC). This approach eliminates the need to store long-lived AWS credentials as GitHub secrets. It is the de facto standard for securely integrating third-party services with AWS using short-lived credentials. To set everything up, I followed the [official GitHub documentation](https://docs.github.com/en/actions/how-tos/secure-your-work/security-harden-deployments/oidc-in-aws). Since I used environments for each AWS region in GitHub to enable multi-region Lambda deployments, I had to set the `sub` field to `repo:ORG-NAME/REPO-NAME:environment:ENVIRONMENT-NAME`.
+
+## 🚧 Environments
+
+The initial version of the tool didn't support deploying Lambda functions and layers to multiple AWS regions. To address this, I leveraged [GitHub Environments](https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments), using environment-specific variables like S3 bucket names for each region. This setup also makes it easy to add environment-based approval steps, giving more control over how and when changes are deployed in each region. 
+
 ## ⚙️ GitHub Actions Workflow Overview
 
 The [Deploy Lambda](https://github.com/denesbeck/lambda-functions/blob/main/.github/workflows/main.yml) workflow runs on every `push` to any branch. Here's a breakdown of what it does:
@@ -40,7 +48,7 @@ The [Deploy Lambda](https://github.com/denesbeck/lambda-functions/blob/main/.git
 
 - Checks out the repo
 - Installs `jq` for JSON parsing
-- Configures AWS credentials using GitHub Secrets
+- Authenticates with AWS via OIDC (OpenID Connect)
 - Sets environment variables using GH `vars`.
 
 ### 2. Download Previous Hashes from S3
@@ -65,9 +73,28 @@ For each changed layer:
 
 Versioning is automatic and timestamped, tied to the commit SHA.
 
-### 5. Detect Changed Lambda Functions
+### 5. Get Lambda Functions
 
-Same approach as layers — identifies changed function folders under `/functions/<app>/<function>`
+Collect the function folders under `/functions/<app>/<function>`
+
+Take a look at this example `config.json` file for a Lambda function located in the root of the function's folder. In this file you can define the function name, runtime, handler, IAM role, and the layers for each region where the Lambda function is deployed:
+
+```json
+{
+  "function_name": "ArcadeLabContact",
+  "runtime": "nodejs22.x",
+  "handler": "index.handler",
+  "role": "ArcadeLabContactRole",
+  "layers": [
+    {
+      "eu-central-1": ["Axios:24", "Validator:22"],
+      "us-east-1": ["Axios:6", "Validator:6"]
+    }
+  ]
+}
+```
+
+In this configuration, you can specify the layers for each Lambda function in different regions, ensuring that reusable code can be applied across functions based on their deployment region.
 
 ### 6. Generate Hashes
 
@@ -76,13 +103,29 @@ For each changed Lambda function:
 - If the code hash changed → zip and upload code, publish a new version.
 - If the config hash changed → update function configuration.
 
-It handles both `create` and `update` logic for new or existing functions, using `aws lambda get-function`.
+One key difference from the initial version is that this workflow now focuses solely on update logic. The creation of the Lambda function resources is managed separately through a Terraform repository called `lambda-functions-tf`. This separation is significant because it ensures that each Lambda function resource is controlled by Terraform, allowing for easy removal when needed.
 
 Aliases (like `dev`, `staging`, etc.) are managed via the `get-alias.sh` script, enabling branch-to-alias mapping.
 
+As mentioned earlier, the layer versions specified in the Lambda function's config file are assigned directly to the function. This setup enables a centrally managed layers repository, where reusable code can be stored and accessed by multiple functions.
+
 ### 7. Upload Updated Hashes to S3
 
-Finally, updated `.code.hash` and `.config.hash` files are uploaded back to S3, ensuring the next deployment has a reliable change reference.
+As a final step, updated `.code.hash` and `.config.hash` files are uploaded back to S3, ensuring the next deployment has a reliable change reference.
+
+## 🏗️ Using Terraform
+
+The GitHub Actions (GHA) workflow is responsible for managing the deployment of Lambda functions and layers. Additionally, the `lambda-functions-tf` Terraform repository plays a key role with the following tasks:
+
+1. **Environment Setup**: It provisions the necessary infrastructure for the GHA workflow, including IAM roles and policies, OIDC authentication, and S3 buckets for storing Lambda and layer code, along with Lambda config and code hashes.
+
+1. **Automatic Cleanup**: It also configures resources to automate the cleanup of Lambda layers via EventBridge Scheduler.
+
+1. **Lambda Resources**: Finally, it creates the Lambda-specific resources, such as the function itself and the associated IAM roles and policies.
+
+It's important to note that while the Lambda function is created through Terraform, it is initially just a placeholder with no actual code. The real function code is deployed through the GHA workflow.
+
+As mentioned earlier, for the `lambda-functions` repository, I leverage GitHub Environments to enable multi-region deployments. In the case of the lambda-functions-tf repo, I use Terraform modules and distinct providers for each region. This ensures that resources are deployed as expected and, if necessary, can be destroyed independently in each region.
 
 ## 💥 Key Features
 
@@ -91,12 +134,13 @@ Finally, updated `.code.hash` and `.config.hash` files are uploaded back to S3, 
 | Incremental Deploys | Only changed functions/layers are deployed                |
 | Environment-Aware   | Automatically maps branch → alias (e.g. `dev`, `staging`) |
 | Smart Caching       | Avoids unnecessary builds via S3-based hash comparison    |
-| Secure              | Uses GitHub Secrets for AWS credentials                   |
+| Secure              | Uses short-lived AWS credentials                          |
 | Fully Idempotent    | Can run multiple times without side effects               |
 
 ## 💡 Final Thoughts
 
-This workflow has massively reduced friction in deploying AWS Lambda infrastructure at scale. If you’re looking for a robust CI/CD setup for your serverless stack, this architecture can serve as a solid blueprint.
+This workflow has massively reduced friction in deploying AWS Lambda infrastructure at scale. If you're looking for a robust CI/CD setup for your serverless stack, this architecture can serve as a solid blueprint.
 
-You can check out the full repo here:  
-🔗 [https://github.com/denesbeck/lambda-functions](https://github.com/denesbeck/lambda-functions)
+You can check out both repos here:  
+🔗 [https://github.com/denesbeck/lambda-functions](https://github.com/denesbeck/lambda-functions) \
+🔗 [https://github.com/denesbeck/lambda-functions-tf](https://github.com/denesbeck/lambda-functions-tf)
