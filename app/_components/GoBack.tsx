@@ -18,7 +18,7 @@ const GoBack = ({ fallbackUrl }: IGoBack) => {
   }, []);
 
   return (
-    <div className="flex justify-end px-6 pb-2 w-dvw">
+    <div className="flex justify-end px-6 pb-2 w-full">
       <button
         onClick={hasHistory ? () => back() : () => push(fallbackUrl)}
         className="flex items-center space-x-2 underline whitespace-nowrap cursor-pointer underline-offset-4 text-dark-100 animate-text-focus hover:decoration-dashed"
