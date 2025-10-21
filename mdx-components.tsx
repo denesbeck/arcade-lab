@@ -5,7 +5,7 @@ import Image from "next/image";
 const components: MDXComponents = {
   // Wrapper for all MDX content (e.g., for margin, padding, and layout)
   wrapper: ({ children }) => (
-    <div className="overflow-auto px-6 max-w-dvw w-4xl">{children}</div>
+    <div className="px-6 max-w-dvw w-4xl">{children}</div>
   ),
 
   // Headings (h1 - h6)
@@ -104,7 +104,7 @@ const components: MDXComponents = {
         .join("");
     }
     return (
-      <pre className="overflow-x-auto relative p-5 my-6 text-sm rounded-lg text-dark-200 bg-dark-700">
+      <pre className="relative p-5 my-6 text-sm rounded-lg text-dark-200 bg-dark-700">
         <MacOSBar size="sm" />
         <CopyButton content={codeString} />
         <span className="whitespace-pre-wrap break-words">{children}</span>
