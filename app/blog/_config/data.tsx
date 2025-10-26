@@ -10,6 +10,27 @@ import techConference from "@/../public/blog/covers/tech_conference.png";
 
 const BLOG_ENTRIES: BlogEntry[] = [
   {
+    id: 7,
+    title: "Building my home server P4",
+    description: "Part 4: Docker, UFW and Nginx",
+    date: "2025-10-26",
+    tags: [
+      "linux",
+      "ubuntu",
+      "docker",
+      "ufw",
+      "nginx",
+      "containers",
+      "home-server",
+    ],
+    content: "building-my-home-server-p4",
+    cover: {
+      image: buildHomeServerSm,
+      original: buildHomeServer,
+      alt: "build_home_server",
+    },
+  },
+  {
     id: 6,
     title: "Building my home server P3",
     description: "Part 3: Volumes and backup",

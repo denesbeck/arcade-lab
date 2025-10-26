@@ -1,0 +1,229 @@
+# 🏗️ Building my home server: Part 4
+
+_Containers, UFW and Nginx_
+
+📅 2025-10-26
+
+In my previous blog post, I discussed volume management. For the next step, I aimed to deploy a few apps and app stacks, such as [File Browser](https://filebrowser.org/) and [Transmission](https://transmissionbt.com/). 
+
+- **File Browser** is a sleek, out-of-the-box file management interface that allows you to quickly set up a web-based file management system, complete with built-in access controls to secure your files. 
+- **Transmission** is a minimalist, lightweight BitTorrent client that I appreciate for its speed, open-source nature, simplicity, and efficient performance. 
+
+To make deploying these and other apps quick and easy, I like to run them in containers, which are the go-to method these days for running portable, isolated, and environment-consistent applications. Fortunately, both File Browser and Transmission offer official container images, which made the process even smoother.
+
+## 🐳 Containers
+
+To set up the containers, I followed the official installation guides for both apps:
+
+- [File Browser](https://filebrowser.org/installation.html#docker)
+- [Transmission](https://hub.docker.com/r/linuxserver/transmission)
+
+These guides provided clear, step-by-step instructions on how to deploy each app using Docker.
+
+Since each of these apps are single-container apps and don't require multiple services to interact with each other, using the `docker run` command instead of `docker compose` was a straightforward decision. Additionally, I wanted the flexibility to set variables dynamically, which was another factor that made `docker run` the better choice for this setup.
+
+```bash
+# File Browser
+docker run \
+    -v /path/to/srv:/srv \
+    -v /path/to/database:/database \
+    -v /path/to/config:/config \
+    -e PUID=$(id -u) \
+    -e PGID=$(id -g) \
+    -p 8080:80 \
+    filebrowser/filebrowser:s6
+```
+
+```bash
+# Transmission
+docker run -d \
+  --name=transmission \
+  -e PUID=1000 \
+  -e PGID=1000 \
+  -e TZ=Etc/UTC \
+  -e TRANSMISSION_WEB_HOME= `#optional` \
+  -e USER= `#optional` \
+  -e PASS= `#optional` \
+  -e WHITELIST= `#optional` \
+  -e PEERPORT= `#optional` \
+  -e HOST_WHITELIST= `#optional` \
+  -p 9091:9091 \
+  -p 51413:51413 \
+  -p 51413:51413/udp \
+  -v /path/to/transmission/data:/config \
+  -v /path/to/downloads:/downloads `#optional` \
+  -v /path/to/watch/folder:/watch `#optional` \
+  --restart unless-stopped \
+  lscr.io/linuxserver/transmission:latest
+```
+
+## 🛡️ UFW
+
+To secure my containers, I used [UFW (Uncomplicated Firewall)](https://help.ubuntu.com/community/UFW) and exposed only the necessary ports. For File Browser, I opened port `8080` for the UI, and for Transmission, I opened port `9091` for the web interface.
+
+```bash
+# Turn UFW on with the default set of rules
+sudo ufw enable
+
+# Check the status of UFW
+sudo ufw status verbose
+
+# Deny all incoming traffic
+sudo ufw default deny incoming
+
+# Allow incoming tcp traffic on port 8080
+sudo ufw allow 8080/tcp
+
+# Allow incoming tcp traffic on port 9091
+sudo ufw allow 9091/tcp
+```
+
+This way, I limited the exposure of the containers to only the essential services, reducing potential security risks. At least, that's what I thought...
+
+It turned out that, despite not allowing traffic to port `8080` via UFW initially, I was still able to access the File Browser web UI over my local network.
+
+### 🤔 But... why?
+
+1. Docker binds exposed ports to `0.0.0.0` by default, making services accessible from both local and external networks.
+
+2. Docker uses `iptables` (Linux's firewall management tool) to configure network routing. When you run containers and expose ports, Docker automatically adds `iptables` rules to manage traffic. These rules are added directly to the system's networking stack and can override UFW's settings in some cases.
+
+    For example, Docker might automatically add rules like:
+
+    ```bash
+    ACCEPT     tcp  --  anywhere             anywhere             tcp dpt:8080
+
+    ```
+
+3. UFW is essentially a frontend for `iptables`. If Docker's rules are inserted after UFW's (which is often the case), Docker's `iptables` rules will take precedence, allowing traffic that would otherwise be blocked by UFW. This can lead to situations where Docker containers are accessible even though UFW rules have been set to block traffic.
+
+That was a bit of a security surprise! 👻  
+
+### 🔧 Fixing the issue
+
+To resolve this issue, I first needed to ensure that Docker wouldn't expose ports to `0.0.0.0` by default. To do this, I had to adjust the `docker run` commands slightly:
+
+```
+-p 8080:80 -> -p 127.0.0.1:8080:8080
+
+-p 9091:9091 -> -p 127.0.0.1:9091:9091
+```
+
+By adding `127.0.0.1` to the exposed ports, I ensured that the services would only be accessible from the local network. Now that my containers were safe by default, I still had to make sure that I expose these ports to the local network. To achieve this I decided to use Nginx reverse-proxy.
+
+## 🚦 Nginx
+
+To install Nginx, I followed these steps (sourced from [here](https://pimylifeup.com/raspberry-pi-bitwarden/#nginxproxy)):
+
+1. Update and upgrade the system:
+    ```bash
+    sudo apt update
+    sudo apt upgrade
+    ```
+
+2. Install Nginx:
+    ```bash
+    sudo apt install nginx
+    ```
+
+3. Start Nginx:
+    ```bash
+    sudo systemctl start nginx
+    ```
+
+4. Enable Nginx to start on boot:
+    ```bash
+    sudo systemctl enable nginx
+    ```
+
+5. Generate a self-signed SSL certificate:
+    ```bash
+    sudo openssl req -x509 -nodes -days 365 -newkey rsa:4096 -keyout /etc/ssl/private/nginx-docker.key -out /etc/ssl/certs/nginx-docker.crt
+    ```
+
+6. Set proper permission for the certificate:
+    ```bash
+    sudo chmod 600 /etc/ssl/private/nginx-docker.key
+    ```
+
+7. Create a Diffie-Hellman group to improve security:\
+__[Learn more about Diffie-Hellman key exchange.](https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange)__
+    ```bash
+    openssl dhparam -out /etc/ssl/certs/dhparam.pem 2048
+    ```
+
+8. Set proper permissions for the Diffie-Hellman group:
+    ```bash
+    sudo chmod 600 /etc/ssl/certs/dhparam.pem
+    ```
+
+9. Remove the default Nginx configuration:
+    ```bash
+    sudo rm /etc/nginx/sites-enabled/default
+    ```
+
+10. Create a new Nginx configuration file:
+    ```bash
+    sudo vi /etc/nginx/sites-enabled/docker.conf
+    ```
+    
+Add the following configuration to the file:
+```nginx
+server {
+    listen 80;
+    listen [::]:80;
+    server_name _;
+    return 301 https://$host$request_uri;
+}
+
+server {
+  listen 443 ssl http2;
+  server_name transmission.*;
+
+  ssl_certificate      /etc/ssl/certs/nginx-docker.crt;   #Swap these out with Lets Encrypt Path if using signed cert
+  ssl_certificate_key  /etc/ssl/private/nginx-docker.key; #Swap these out with Lets Encrypt Path if using signed cert
+
+  ssl_dhparam /etc/ssl/certs/dhparam.pem;
+
+  client_max_body_size 128M;
+
+  location / {
+    proxy_pass http://127.0.0.1:9091;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }
+}
+
+server {
+  listen 443 ssl http2;
+  server_name filebrowser.*;
+
+  ssl_certificate      /etc/ssl/certs/nginx-docker.crt;   #Swap these out with Lets Encrypt Path if using signed cert
+  ssl_certificate_key  /etc/ssl/private/nginx-docker.key; #Swap these out with Lets Encrypt Path if using signed cert
+
+  ssl_dhparam /etc/ssl/certs/dhparam.pem;
+
+  client_max_body_size 128M;
+
+  location / {
+    proxy_pass http://127.0.0.1:8080;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }
+}
+```
+
+### Outcome
+
+With this setup, I can now access both apps on my local network at:
+
+- http://transmission.mydomain.com
+- http://filebrowser.mydomain.com
+
+Since `mydomain.com` is mapped in the `/etc/hosts` file (or DNS resolution for local network), the subdomains resolve correctly. I can be confident that only the services proxied via Nginx are accessible within my network.
+
+Noice! 🎉
