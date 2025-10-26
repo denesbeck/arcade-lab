@@ -167,62 +167,75 @@ __[Learn more about Diffie-Hellman key exchange.](https://en.wikipedia.org/wiki/
     sudo vi /etc/nginx/sites-enabled/docker.conf
     ```
     
-Add the following configuration to the file:
-```nginx
-server {
-    listen 80;
-    listen [::]:80;
-    server_name _;
-    return 301 https://$host$request_uri;
-}
+    Add the following configuration to the file:
+    ```nginx
+    server {
+        listen 80;
+        listen [::]:80;
+        server_name _;
+        return 301 https://$host$request_uri;
+    }
 
-server {
-  listen 443 ssl http2;
-  server_name transmission.*;
+    server {
+      listen 443 ssl http2;
+      server_name transmission.*;
 
-  ssl_certificate      /etc/ssl/certs/nginx-docker.crt;   #Swap these out with Lets Encrypt Path if using signed cert
-  ssl_certificate_key  /etc/ssl/private/nginx-docker.key; #Swap these out with Lets Encrypt Path if using signed cert
+      ssl_certificate      /etc/ssl/certs/nginx-docker.crt;   #Swap these out with Lets Encrypt Path if using signed cert
+      ssl_certificate_key  /etc/ssl/private/nginx-docker.key; #Swap these out with Lets Encrypt Path if using signed cert
 
-  ssl_dhparam /etc/ssl/certs/dhparam.pem;
+      ssl_dhparam /etc/ssl/certs/dhparam.pem;
 
-  client_max_body_size 128M;
+      client_max_body_size 128M;
 
-  location / {
-    proxy_pass http://127.0.0.1:9091;
-    proxy_set_header Host $host;
-    proxy_set_header X-Real-IP $remote_addr;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto $scheme;
-  }
-}
+      location / {
+        proxy_pass http://127.0.0.1:9091;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+      }
+    }
 
-server {
-  listen 443 ssl http2;
-  server_name filebrowser.*;
+    server {
+      listen 443 ssl http2;
+      server_name filebrowser.*;
 
-  ssl_certificate      /etc/ssl/certs/nginx-docker.crt;   #Swap these out with Lets Encrypt Path if using signed cert
-  ssl_certificate_key  /etc/ssl/private/nginx-docker.key; #Swap these out with Lets Encrypt Path if using signed cert
+      ssl_certificate      /etc/ssl/certs/nginx-docker.crt;   #Swap these out with Lets Encrypt Path if using signed cert
+      ssl_certificate_key  /etc/ssl/private/nginx-docker.key; #Swap these out with Lets Encrypt Path if using signed cert
 
-  ssl_dhparam /etc/ssl/certs/dhparam.pem;
+      ssl_dhparam /etc/ssl/certs/dhparam.pem;
 
-  client_max_body_size 128M;
+      client_max_body_size 128M;
 
-  location / {
-    proxy_pass http://127.0.0.1:8080;
-    proxy_set_header Host $host;
-    proxy_set_header X-Real-IP $remote_addr;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto $scheme;
-  }
-}
-```
+      location / {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+      }
+    }
+    ```
+
+11. Restart Nginx:
+    ```bash
+    sudo systemctl restart nginx
+    ```
+
+### Adjust UFW
+
+As a final step, I disabled access to ports `8080` and `9091` via UFW, then allowed full access for Nginx with the following command:
+
+    ```bash
+    sudo ufw allow 'Nginx Full'
+    ```
 
 ### Outcome
 
 With this setup, I can now access both apps on my local network at:
 
-- http://transmission.mydomain.com
-- http://filebrowser.mydomain.com
+- https://transmission.mydomain.com
+- https://filebrowser.mydomain.com
 
 Since `mydomain.com` is mapped in the `/etc/hosts` file (or DNS resolution for local network), the subdomains resolve correctly. I can be confident that only the services proxied via Nginx are accessible within my network.
 
