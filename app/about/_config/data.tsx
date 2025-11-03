@@ -21,6 +21,7 @@ import {
 } from "react-icons/fa";
 import { FaGolang } from "react-icons/fa6";
 import { HiIdentification } from "react-icons/hi2";
+import { Emphasize } from "@/_components";
 
 export const INFO = {
   Name: "Denes B.",
@@ -130,24 +131,35 @@ export const SKILLS = [
 ];
 
 export const BIO_START = (
-  <p className="mb-4 text-ellipsis">
-    🚀 I&apos;m a full-stack software engineer with a strong focus on creating
-    scalable, efficient, and maintainable applications using modern frameworks
-    and best practices...
+  <p className="text-text-dark">
+    <p className="mb-2">
+      🚀 I&apos;m a self-taught full-stack software engineer with{" "}
+      <Emphasize>{new Date().getFullYear() - 2019} years</Emphasize> of
+      experience.
+    </p>
+    <p>
+      🏗️ I specialize in developing scalable, efficient, and maintainable
+      applications...
+    </p>
   </p>
 );
 
 export const BIO = (
-  <div className="text-text-dark">
+  <p className="text-text-dark">
     <p className="mb-8">
-      🚀 I&apos;m a full-stack software engineer with a strong focus on creating
-      scalable, efficient, and maintainable applications using modern frameworks
-      and best practices. I thrive on building self-hosted solutions and
-      automating workflows, with a deep interest in DevOps and infrastructure
-      management.
+      🚀 I&apos;m a self-taught full-stack software engineer with{" "}
+      <Emphasize>{new Date().getFullYear() - 2019} years</Emphasize> of
+      experience.
     </p>
     <p className="mb-8">
-      🛠️ I&apos;m a huge Nvim and Tmux enthusiast — both help me optimize my
+      🏗️ I specialize in developing scalable, efficient, and maintainable
+      applications using modern frameworks and best practices. I thrive on
+      building self-hosted solutions and automating workflows, with a deep
+      interest in DevOps, security and infrastructure management.
+    </p>
+    <p className="mb-8">
+      🛠️ I&apos;m a huge <Emphasize>Nvim</Emphasize> and{" "}
+      <Emphasize>Tmux</Emphasize> enthusiast — both help me optimize my
       development environment (check out{" "}
       <a
         target="_blank"
@@ -158,8 +170,23 @@ export const BIO = (
       </a>
       ).
     </p>
+    <p className="mb-8">
+      💼 I mostly work with <Emphasize>JavaScript</Emphasize> and{" "}
+      <Emphasize>TypeScript</Emphasize>, but I&apos;m also comfortable working
+      with other languages like <Emphasize>Python</Emphasize> and{" "}
+      <Emphasize>Lua</Emphasize>. I&apos;m currently diving into{" "}
+      <Emphasize>Golang</Emphasize>. Feel free to check out my latest Go project{" "}
+      <a
+        target="_blank"
+        className="underline text-active underline-offset-4"
+        href="https://github.com/denesbeck/code-sync"
+      >
+        here
+      </a>
+      .
+    </p>
     <p>
-      📁 Check out on{" "}
+      📁 Check out{" "}
       <a
         target="_blank"
         className="underline text-active underline-offset-4"
@@ -167,7 +194,7 @@ export const BIO = (
       >
         my work
       </a>{" "}
-      on GitHub
+      on GitHub.
     </p>
-  </div>
+  </p>
 );

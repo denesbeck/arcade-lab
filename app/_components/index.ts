@@ -1,6 +1,7 @@
 import Button from "./Button";
 import CopyButton from "./CopyButton";
 import DarkLayout from "./DarkLayout";
+import Emphasize from "./Emphasize";
 import Footer from "./Footer";
 import GoBack from "./GoBack";
 import Heading1 from "./Heading1";
@@ -17,6 +18,7 @@ export {
   Button,
   CopyButton,
   DarkLayout,
+  Emphasize,
   Footer,
   GoBack,
   Heading1,

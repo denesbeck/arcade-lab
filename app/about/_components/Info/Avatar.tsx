@@ -33,7 +33,7 @@ const Avatar = () => {
         height={160}
         quality={100}
         className="w-40 h-40 rounded-full transition-all duration-200 ease-in-out hover:scale-110 animate-text-focus min-w-40 min-h-40"
-        onLoadingComplete={() => handleLoad()}
+        onLoad={() => handleLoad()}
       />
     </div>
   );
