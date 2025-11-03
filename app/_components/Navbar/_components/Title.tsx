@@ -11,6 +11,7 @@ const Title = ({ mr = false, ml = false }: TitleProps) => {
     >
       <Image
         src="/logo/arcade_lab_logo_120.png"
+        quality={100}
         width={42}
         height={42}
         alt="arcade_lab_logo"

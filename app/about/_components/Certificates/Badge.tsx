@@ -14,7 +14,7 @@ const Badge = ({ url, size = 28, img, alt }: BadgeProps) => {
       href={url}
       target="_blank"
     >
-      <Image width={size} height={size} src={img} alt={alt} />
+      <Image width={size} quality={100} height={size} src={img} alt={alt} />
     </a>
   );
 };
