@@ -58,22 +58,24 @@ const FilterTags = () => {
       {isOpen && (
         <DarkLayout>
           <>
-            <div className="flex absolute top-2 right-2 gap-4">
-              <Tooltip arrow placement="bottom" title="Clear">
-                <IconButton onClick={handleClear}>
-                  <LiaBroomSolid className="text-3xl text-white" />
-                </IconButton>
-              </Tooltip>
+            <div className="flex absolute top-2 gap-4 justify-between items-center px-2 w-full">
               <Tooltip arrow placement="bottom" title="Close">
                 <IconButton onClick={handleCancel}>
-                  <IoClose className="text-3xl text-white" />
+                  <IoClose className="text-3xl text-pink-300" />
                 </IconButton>
               </Tooltip>
-              <Tooltip arrow placement="bottom" title="Apply">
-                <IconButton onClick={handleApply}>
-                  <IoCheckmarkSharp className="text-3xl text-primary" />
-                </IconButton>
-              </Tooltip>
+              <div className="flex">
+                <Tooltip arrow placement="bottom" title="Clear">
+                  <IconButton onClick={handleClear}>
+                    <LiaBroomSolid className="text-3xl text-white" />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip arrow placement="bottom" title="Apply">
+                  <IconButton onClick={handleApply}>
+                    <IoCheckmarkSharp className="text-3xl text-primary" />
+                  </IconButton>
+                </Tooltip>
+              </div>
             </div>
 
             <div className="flex overflow-auto flex-wrap gap-8 justify-center items-center p-4 animate-text-focus max-h-[80dvh] max-w-[50rem]">

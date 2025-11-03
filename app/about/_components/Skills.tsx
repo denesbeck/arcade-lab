@@ -4,7 +4,7 @@ import Tooltip from "@mui/material/Tooltip";
 
 const Skills = () => {
   return (
-    <div className="overflow-x-auto animate-text-focus max-w-[30rem]">
+    <div className="overflow-x-auto py-1 animate-text-focus max-w-[30rem]">
       <Heading3>Skills</Heading3>
       <Info>Most of the time I work with the following tools:</Info>
       <div className="flex flex-wrap gap-4 items-center mt-3.5">
