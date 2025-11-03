@@ -4,7 +4,7 @@ import { BIO } from "../../_config/data";
 const Bio = () => {
   return (
     <>
-      <div className="flex overflow-x-auto flex-col gap-2 px-2 animate-text-focus max-w-[30rem]">
+      <div className="flex overflow-x-auto flex-col gap-2 animate-text-focus max-w-[30rem]">
         <Heading3>
           <div className="flex items-center space-x-3">
             <span>Bio</span>
