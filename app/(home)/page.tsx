@@ -1,6 +1,6 @@
 import Head from "next/head";
 import { ContactButton } from "./_components";
-import { INFO } from "@/_config/about";
+import { INFO } from "@/about/_config/data";
 import { Suspense } from "react";
 
 const Home = () => {
