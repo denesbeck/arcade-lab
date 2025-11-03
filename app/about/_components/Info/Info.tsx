@@ -4,7 +4,7 @@ import { INFO, INFO_ICONS } from "../../_config/data";
 
 const Info = () => {
   return (
-    <div className="flex overflow-auto flex-col gap-2 animate-text-focus sm:max-w-[40rem]">
+    <div className="flex overflow-auto flex-col gap-2 px-2 animate-text-focus sm:max-w-[40rem]">
       <Heading3>Info</Heading3>
       <div className="flex gap-4 justify-between items-start sm:py-4 animate-text-focus">
         <Avatar />

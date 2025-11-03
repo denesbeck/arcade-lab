@@ -1,4 +1,4 @@
-import { Heading3 } from "@/_components";
+import { Heading3, Info } from "@/_components";
 import { SKILLS } from "../_config/data";
 import Tooltip from "@mui/material/Tooltip";
 
@@ -6,6 +6,7 @@ const Skills = () => {
   return (
     <div className="overflow-x-auto px-2 pb-2 animate-text-focus max-w-[30rem]">
       <Heading3>Skills</Heading3>
+      <Info>Most of the time I work with the following tools:</Info>
       <div className="flex flex-wrap gap-4 items-center mt-3.5">
         {SKILLS.map((skill) => {
           const Icon = skill.icon;

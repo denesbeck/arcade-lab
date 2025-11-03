@@ -7,6 +7,7 @@ import GoBack from "./GoBack";
 import Heading1 from "./Heading1";
 import Heading2 from "./Heading2";
 import Heading3 from "./Heading3";
+import Info from "./Info";
 import Input from "./Input";
 import MacOSBar from "./MacOSBar";
 import Navbar from "./Navbar";
@@ -24,6 +25,7 @@ export {
   Heading1,
   Heading2,
   Heading3,
+  Info,
   Input,
   MacOSBar,
   Navbar,
