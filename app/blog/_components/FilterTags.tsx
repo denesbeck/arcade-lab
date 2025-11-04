@@ -1,22 +1,31 @@
 "use client";
-import { Badge, IconButton } from "@mui/material";
-import { useState } from "react";
-import { IoCheckmarkSharp, IoClose } from "react-icons/io5";
+import { Badge } from "@mui/material";
+import { useState, useMemo } from "react";
 import { FaHashtag } from "react-icons/fa";
-import { FaSkull } from "react-icons/fa6";
 import blogEntries from "../_config/data";
-import { DarkLayout, Tooltip } from "@/_components";
+import { DarkLayout, MacOSBar } from "@/_components";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
+import FilterActions from "./FilterActions";
 
 const FilterTags = () => {
   const [isOpen, setIsOpen] = useState(false);
   const searchParams = useSearchParams();
   const tags = searchParams.getAll("tag");
   const [selection, setSelection] = useState<string[]>(tags);
-  const allTags = Array.from([
-    ...new Set(blogEntries.map((entry) => entry.tags).flat()),
-  ]).sort();
+  const hasChanges = useMemo(() => {
+    const selectionSet = new Set(selection);
+    const tagsSet = new Set(tags);
+    if (selectionSet.size !== tagsSet.size) return true;
+    return [...selectionSet].some((tag) => !tagsSet.has(tag));
+  }, [selection, tags]);
+  const allTags = useMemo(
+    () =>
+      Array.from([
+        ...new Set(blogEntries.map((entry) => entry.tags).flat()),
+      ]).sort(),
+    [],
+  );
   const router = useRouter();
 
   const handleSelect = (tag: string) => {
@@ -28,7 +37,11 @@ const FilterTags = () => {
   };
 
   const handleApply = () => {
-    router.push(`/blog?${selection.map((tag) => `tag=${tag}`).join("&")}`);
+    router.push(
+      selection.length > 0
+        ? `/blog?${selection.map((tag) => `tag=${tag}`).join("&")}`
+        : "/blog",
+    );
     setIsOpen(false);
   };
 
@@ -58,35 +71,17 @@ const FilterTags = () => {
       {isOpen && (
         <DarkLayout>
           <>
-            <div className="flex absolute top-0 gap-3 justify-start items-center p-6 w-full">
-              <Tooltip arrow placement="bottom" title="Close">
-                <button
-                  onClick={handleCancel}
-                  className="flex justify-center items-center w-5 h-5 rounded-full cursor-pointer group bg-macos-red"
-                >
-                  <IoClose className="hidden text-white group-hover:block" />
-                </button>
-              </Tooltip>
-              <Tooltip arrow placement="bottom" title="Clear">
-                <button
-                  onClick={handleClear}
-                  className="flex justify-center items-center p-1 w-5 h-5 rounded-full cursor-pointer group bg-macos-yellow"
-                >
-                  <FaSkull className="hidden text-white group-hover:block" />
-                </button>
-              </Tooltip>
-              <Tooltip arrow placement="bottom" title="Apply">
-                <button
-                  onClick={handleApply}
-                  className="flex justify-center items-center w-5 h-5 rounded-full cursor-pointer group bg-macos-green"
-                >
-                  <IoCheckmarkSharp className="hidden text-white group-hover:block" />
-                </button>
-              </Tooltip>
+            <FilterActions
+              clear={handleClear}
+              apply={handleApply}
+              clearDisabled={tags.length === 0}
+              applyDisabled={!hasChanges}
+            />
+            <div className="flex absolute top-0 left-0 justify-start">
+              <MacOSBar close={handleCancel} />
             </div>
-
-            <div className="flex overflow-auto flex-wrap gap-8 justify-center items-center p-4 animate-text-focus max-h-[80dvh] max-w-[50rem]">
-              {[...allTags].map((tag) => (
+            <div className="flex overflow-auto flex-wrap gap-8 justify-center items-center p-4 animate-text-focus max-h-[70dvh] max-w-[50rem]">
+              {allTags.map((tag) => (
                 <button
                   key={tag}
                   onClick={() => handleSelect(tag)}

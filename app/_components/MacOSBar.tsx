@@ -2,7 +2,7 @@
 import { useRouter } from "next/navigation";
 
 interface MacOSBarProps {
-  close?: string;
+  close?: string | (() => void);
   size?: "sm" | "md";
 }
 
@@ -21,6 +21,7 @@ const MacOSBar = ({ size = "md", close }: MacOSBarProps) => {
   };
 
   const { dots, padding } = calcSize();
+  const isCloseFunction = typeof close === "function";
 
   return (
     <div
@@ -28,7 +29,7 @@ const MacOSBar = ({ size = "md", close }: MacOSBarProps) => {
     >
       <button
         disabled={!close}
-        onClick={() => router.push(close!)}
+        onClick={isCloseFunction ? close : () => router.push(close!)}
         className={`flex space-x-2 ${close && "cursor-pointer"}`}
       >
         <div className={`${dots} rounded-full bg-macos-red`} />
