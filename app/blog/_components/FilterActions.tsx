@@ -15,7 +15,7 @@ const FilterActions = ({
   applyDisabled,
 }: IFilterActions) => {
   return (
-    <div className="flex overflow-hidden fixed right-1/2 rounded-full ring translate-x-1/2 bottom-[5dvh] bg-black/20 animate-text-focus ring-dark-500">
+    <div className="flex overflow-hidden rounded-full ring min-h-[48px] bg-black/20 animate-text-focus ring-dark-500">
       <button
         onClick={clear}
         disabled={clearDisabled}

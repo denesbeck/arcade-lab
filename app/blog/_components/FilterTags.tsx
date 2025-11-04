@@ -70,17 +70,11 @@ const FilterTags = () => {
       </div>
       {isOpen && (
         <DarkLayout>
-          <div className="flex flex-col items-center h-full xs:justify-center">
-            <FilterActions
-              clear={handleClear}
-              apply={handleApply}
-              clearDisabled={tags.length === 0}
-              applyDisabled={!hasChanges}
-            />
-            <div className="flex absolute top-0 left-0 justify-start">
+          <div className="flex flex-col gap-4 justify-between items-center pb-8 h-full">
+            <div className="flex justify-start w-full">
               <MacOSBar close={handleCancel} />
             </div>
-            <div className="flex overflow-auto flex-wrap gap-8 justify-center items-center p-4 h-max mt-[50px] animate-text-focus max-h-[80dvh] max-w-[50rem]">
+            <div className="flex overflow-auto flex-wrap gap-8 justify-center items-center p-4 xs:mt-0 animate-text-focus max-h-[80dvh] max-w-[50rem]">
               {allTags.map((tag) => (
                 <button
                   key={tag}
@@ -91,6 +85,12 @@ const FilterTags = () => {
                 </button>
               ))}
             </div>
+            <FilterActions
+              clear={handleClear}
+              apply={handleApply}
+              clearDisabled={tags.length === 0}
+              applyDisabled={!hasChanges}
+            />
           </div>
         </DarkLayout>
       )}
