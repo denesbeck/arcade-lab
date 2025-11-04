@@ -3,7 +3,7 @@ import { Badge, IconButton } from "@mui/material";
 import { useState } from "react";
 import { IoCheckmarkSharp, IoClose } from "react-icons/io5";
 import { FaHashtag } from "react-icons/fa";
-import { LiaBroomSolid } from "react-icons/lia";
+import { FaSkull } from "react-icons/fa6";
 import blogEntries from "../_config/data";
 import { DarkLayout, Tooltip } from "@/_components";
 import { useSearchParams } from "next/navigation";
@@ -58,24 +58,31 @@ const FilterTags = () => {
       {isOpen && (
         <DarkLayout>
           <>
-            <div className="flex absolute top-2 gap-4 justify-between items-center px-2 w-full">
+            <div className="flex absolute top-0 gap-3 justify-start items-center p-6 w-full">
               <Tooltip arrow placement="bottom" title="Close">
-                <IconButton onClick={handleCancel}>
-                  <IoClose className="text-3xl text-pink-300" />
-                </IconButton>
+                <button
+                  onClick={handleCancel}
+                  className="flex justify-center items-center w-5 h-5 rounded-full cursor-pointer group bg-macos-red"
+                >
+                  <IoClose className="hidden text-white group-hover:block" />
+                </button>
               </Tooltip>
-              <div className="flex">
-                <Tooltip arrow placement="bottom" title="Clear">
-                  <IconButton onClick={handleClear}>
-                    <LiaBroomSolid className="text-3xl text-white" />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip arrow placement="bottom" title="Apply">
-                  <IconButton onClick={handleApply}>
-                    <IoCheckmarkSharp className="text-3xl text-primary" />
-                  </IconButton>
-                </Tooltip>
-              </div>
+              <Tooltip arrow placement="bottom" title="Clear">
+                <button
+                  onClick={handleClear}
+                  className="flex justify-center items-center p-1 w-5 h-5 rounded-full cursor-pointer group bg-macos-yellow"
+                >
+                  <FaSkull className="hidden text-white group-hover:block" />
+                </button>
+              </Tooltip>
+              <Tooltip arrow placement="bottom" title="Apply">
+                <button
+                  onClick={handleApply}
+                  className="flex justify-center items-center w-5 h-5 rounded-full cursor-pointer group bg-macos-green"
+                >
+                  <IoCheckmarkSharp className="hidden text-white group-hover:block" />
+                </button>
+              </Tooltip>
             </div>
 
             <div className="flex overflow-auto flex-wrap gap-8 justify-center items-center p-4 animate-text-focus max-h-[80dvh] max-w-[50rem]">
