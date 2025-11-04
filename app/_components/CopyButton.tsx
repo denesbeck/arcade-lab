@@ -1,5 +1,5 @@
 "use client";
-import { Tooltip } from "@mui/material";
+import { Tooltip } from "@/_components";
 import { useState } from "react";
 import { IoCopyOutline } from "react-icons/io5";
 

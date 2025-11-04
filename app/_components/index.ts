@@ -14,6 +14,7 @@ import Navbar from "./Navbar";
 import ScrollToTop from "./ScrollToTop";
 import Spinner from "./Spinner";
 import TextArea from "./TextArea";
+import Tooltip from "./Tooltip";
 
 export {
   Button,
@@ -32,4 +33,5 @@ export {
   ScrollToTop,
   Spinner,
   TextArea,
+  Tooltip,
 };

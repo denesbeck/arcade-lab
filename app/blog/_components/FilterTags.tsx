@@ -1,11 +1,11 @@
 "use client";
-import { Badge, IconButton, Tooltip } from "@mui/material";
+import { Badge, IconButton } from "@mui/material";
 import { useState } from "react";
 import { IoCheckmarkSharp, IoClose } from "react-icons/io5";
 import { FaHashtag } from "react-icons/fa";
 import { LiaBroomSolid } from "react-icons/lia";
 import blogEntries from "../_config/data";
-import { DarkLayout } from "@/_components";
+import { DarkLayout, Tooltip } from "@/_components";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 
