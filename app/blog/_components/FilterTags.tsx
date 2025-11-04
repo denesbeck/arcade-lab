@@ -59,7 +59,12 @@ const FilterTags = () => {
   return (
     <>
       <div className="flex fixed right-0 z-20 justify-end py-2 px-4 sm:px-8 top-[100px] animate-text-focus">
-        <Badge badgeContent={tags.length} color="primary">
+        <Badge
+          badgeContent={tags.length}
+          color="primary"
+          anchorOrigin={{ vertical: "top", horizontal: "right" }}
+          sx={{ "& .MuiBadge-badge": { top: 4, right: 4 } }}
+        >
           <button
             className="flex justify-center items-center p-2 w-11 h-11 rounded-full border cursor-pointer border-dark-500 bg-secondary animate-text-focus text-dark-50 hover:bg-dark-900"
             onClick={() => setIsOpen(true)}
