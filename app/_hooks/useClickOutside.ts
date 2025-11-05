@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 
 type ChildNodeWithId = ChildNode & { id: string };
 
@@ -9,8 +9,8 @@ function useClickOutside<T extends HTMLElement = HTMLElement>(
 ) {
   const ref = useRef<T>(null);
 
-  useEffect(() => {
-    const outside = (e: MouseEvent) => {
+  const outside = useCallback(
+    (e: MouseEvent) => {
       const el = ref?.current;
 
       let suppressHandler = false;
@@ -26,15 +26,17 @@ function useClickOutside<T extends HTMLElement = HTMLElement>(
       if (el && !suppressHandler && !el.contains(e.target as Node)) {
         action(e);
       }
-    };
+    },
+    [id, action],
+  );
 
+  useEffect(() => {
     document.addEventListener("mousedown", outside);
 
     return () => {
       document.removeEventListener("mousedown", outside);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [outside]);
 
   return ref;
 }

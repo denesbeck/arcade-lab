@@ -1,6 +1,6 @@
 "use client";
 import { Badge } from "@mui/material";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { FaHashtag } from "react-icons/fa";
 import blogEntries from "../_config/data";
 import { DarkLayout, MacOSBar } from "@/_components";
@@ -28,33 +28,36 @@ const FilterTags = () => {
   );
   const router = useRouter();
 
-  const handleSelect = (tag: string) => {
-    if (selection.includes(tag)) {
-      setSelection((prev) => prev.filter((el) => el !== tag));
-    } else {
-      setSelection((prev) => [...prev, tag]);
-    }
-  };
+  const handleSelect = useCallback(
+    (tag: string) => {
+      if (selection.includes(tag)) {
+        setSelection((prev) => prev.filter((el) => el !== tag));
+      } else {
+        setSelection((prev) => [...prev, tag]);
+      }
+    },
+    [selection],
+  );
 
-  const handleApply = () => {
+  const handleApply = useCallback(() => {
     router.push(
       selection.length > 0
         ? `/blog?${selection.map((tag) => `tag=${tag}`).join("&")}`
         : "/blog",
     );
     setIsOpen(false);
-  };
+  }, [selection, router]);
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     setSelection(tags);
     setIsOpen(false);
-  };
+  }, [tags]);
 
-  const handleClear = () => {
+  const handleClear = useCallback(() => {
     setSelection([]);
     router.push("/blog");
     setIsOpen(false);
-  };
+  }, [router]);
 
   return (
     <>

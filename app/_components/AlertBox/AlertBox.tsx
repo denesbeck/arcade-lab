@@ -1,7 +1,7 @@
 "use client";
 import { Portal } from "@mui/material";
 import { Alert } from "./_components";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 export type Severity = "error" | "warning" | "info" | "success";
 
@@ -22,24 +22,34 @@ interface IAlertBox {
 const AlertBox = ({ maxAlert = 5, context = "" }: IAlertBox) => {
   const [alerts, setAlerts] = useState<IAlertPayload[]>([]);
 
-  useEffect(() => {
-    function handleAlert(event: CustomEvent) {
+  const handleAlert = useCallback(
+    (event: CustomEvent) => {
       const alertEventDetail = event.detail as IAlertPayload;
       setAlerts((prev) => {
         // Check for duplicates using the current state
         if (prev.find((alert) => alert.id === alertEventDetail.id)) return prev;
         return [alertEventDetail, ...prev].slice(0, maxAlert);
       });
-    }
-    function handleCloseAlert(event: CustomEvent) {
-      const alertEventDetail = event.detail as IAlertPayload;
-      setAlerts((prev) =>
-        prev.filter((alert) => alert.id !== alertEventDetail.id),
-      );
-    }
-    function handlePurgeAlerts() {
-      setAlerts([]);
-    }
+    },
+    [maxAlert],
+  );
+
+  const handleCloseAlert = useCallback((event: CustomEvent) => {
+    const alertEventDetail = event.detail as IAlertPayload;
+    setAlerts((prev) =>
+      prev.filter((alert) => alert.id !== alertEventDetail.id),
+    );
+  }, []);
+
+  const handlePurgeAlerts = useCallback(() => {
+    setAlerts([]);
+  }, []);
+
+  const closeAlert = useCallback((id: string) => {
+    setAlerts((prev) => prev.filter((alert) => alert.id !== id));
+  }, []);
+
+  useEffect(() => {
 
     // @ts-expect-error: https://github.com/microsoft/TypeScript/issues/28357
     window.addEventListener(
@@ -71,7 +81,7 @@ const AlertBox = ({ maxAlert = 5, context = "" }: IAlertBox) => {
         handlePurgeAlerts,
       );
     };
-  }, [maxAlert, context]);
+  }, [context, handleAlert, handleCloseAlert, handlePurgeAlerts]);
 
   return (
     <Portal>
@@ -85,9 +95,7 @@ const AlertBox = ({ maxAlert = 5, context = "" }: IAlertBox) => {
               severity={el.severity}
               duration={el.duration}
               closable={el.closable}
-              close={() =>
-                setAlerts((prev) => prev.filter((alert) => alert.id !== el.id))
-              }
+              close={() => closeAlert(el.id)}
             />
           );
         })}

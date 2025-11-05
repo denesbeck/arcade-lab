@@ -1,9 +1,10 @@
+import { useCallback } from "react";
 import { IAlertPayload } from "../AlertBox";
 
 type AlertEventType = "alert-event" | "close-alert" | "purge-alerts";
 
 const useAlert = (context: string = "") => {
-  const alert = ({
+  const alert = useCallback(({
     id,
     title,
     message,
@@ -27,8 +28,9 @@ const useAlert = (context: string = "") => {
           },
         ),
       );
-  };
-  const closeAlert = (id: string) => {
+  }, [context]);
+
+  const closeAlert = useCallback((id: string) => {
     if (window)
       window.dispatchEvent(
         new CustomEvent(
@@ -40,8 +42,9 @@ const useAlert = (context: string = "") => {
           },
         ),
       );
-  };
-  const purgeAlerts = () => {
+  }, [context]);
+
+  const purgeAlerts = useCallback(() => {
     if (window)
       window.dispatchEvent(
         new CustomEvent(
@@ -51,7 +54,8 @@ const useAlert = (context: string = "") => {
           },
         ),
       );
-  };
+  }, [context]);
+
   return { alert, closeAlert, purgeAlerts };
 };
 

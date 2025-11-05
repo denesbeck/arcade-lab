@@ -3,7 +3,7 @@ import { FaRegCalendarAlt } from "react-icons/fa";
 import { useSearchParams } from "next/navigation";
 import Image, { StaticImageData } from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Skeleton, ThemeProvider } from "@mui/material";
 import { darkTheme } from "@/theme";
 
@@ -21,13 +21,13 @@ const BlogCard = ({ id, title, description, date, cover }: BlogCardProps) => {
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
 
-  const startLoad = () => {
+  const startLoad = useCallback(() => {
     setLoading(true);
-  };
+  }, []);
 
-  const handleLoad = () => {
+  const handleLoad = useCallback(() => {
     setLoading(false);
-  };
+  }, []);
 
   return (
     <Link

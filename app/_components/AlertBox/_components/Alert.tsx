@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Severity } from "../AlertBox";
 import {
   FaInfoCircle,
@@ -35,7 +35,7 @@ const Alert = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const calculateIcon = () => {
+  const icon = useMemo(() => {
     const ICON_STYLE = "mr-3 text-xl text-black";
 
     switch (severity) {
@@ -48,11 +48,11 @@ const Alert = ({
       case "success":
         return <FaCheckCircle className={ICON_STYLE} />;
       default:
-        break;
+        return null;
     }
-  };
+  }, [severity]);
 
-  const calculateStyle = () => {
+  const bgStyle = useMemo(() => {
     switch (severity) {
       case "error":
         return "bg-alert-error";
@@ -63,16 +63,16 @@ const Alert = ({
       case "success":
         return "bg-alert-success";
       default:
-        break;
+        return "";
     }
-  };
+  }, [severity]);
 
   return (
     <div
-      className={`animate-text-focus relative flex flex-col items-start px-4 py-2 text-black ${calculateStyle()} w-[30rem] max-w-[95dvw] rounded-sm`}
+      className={`animate-text-focus relative flex flex-col items-start px-4 py-2 text-black ${bgStyle} w-[30rem] max-w-[95dvw] rounded-sm`}
     >
       <div className="flex items-center">
-        {calculateIcon()}
+        {icon}
         <div className="font-bold text-wrap">{title}</div>
       </div>
       <div className="ml-8 text-sm text-wrap">{message}</div>

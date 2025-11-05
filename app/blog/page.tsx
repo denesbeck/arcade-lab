@@ -8,22 +8,28 @@ const Blog = async ({
 }) => {
   const tags = [(await searchParams).tag || []].flat();
 
-  const filteredEntries = blogEntries.filter((entry) =>
-    tags.every((tag) => entry.tags.includes(tag)),
+  // Pre-sort once to avoid sorting on every render
+  const sortedEntries = [...blogEntries].sort((a, b) =>
+    b.date.localeCompare(a.date),
   );
 
-  const entries = tags.length > 0 ? filteredEntries : blogEntries;
+  // Short-circuit filtering when no tags are selected
+  const entries =
+    tags.length === 0
+      ? sortedEntries
+      : sortedEntries.filter((entry) =>
+          tags.every((tag) => entry.tags.includes(tag)),
+        );
+
   return (
-    <div className="overflow-auto flex-col">
+    <div className="overflow-auto flex flex-col">
       <FilterTags />
       <div className="flex justify-center py-4">
         {entries.length === 0 ? (
           <NoRecords />
         ) : (
           <div className="mr-6 grid h-[110%] justify-center sm:w-dvw sm:[grid-template-columns:repeat(auto-fit,minmax(33rem,0))] sm:gap-12 sm:px-10">
-            {entries
-              .sort((a, b) => b.date.localeCompare(a.date))
-              .map((entry) => (
+            {entries.map((entry) => (
                 <BlogCard
                   key={entry.id}
                   id={entry.id}

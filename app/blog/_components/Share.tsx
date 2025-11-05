@@ -29,16 +29,22 @@ const SHARE_OPTIONS = [
 ];
 
 const Share = ({ id }: IShare) => {
+  const shareLinks = SHARE_OPTIONS.map((option) => ({
+    id: option.getId(id),
+    href: option.getHref(id),
+    icon: option.icon,
+  }));
+
   return (
     <div className="flex flex-col items-start px-6 mt-8 max-w-screen w-4xl">
       <div className="font-bold">Share this post on:</div>
       <div className="flex py-4 space-x-4">
-        {SHARE_OPTIONS.map((option) => {
-          const Icon = option.icon;
+        {shareLinks.map((link) => {
+          const Icon = link.icon;
           return (
             <Link
-              key={option.getId(id)}
-              href={option.getHref(id)}
+              key={link.id}
+              href={link.href}
               target="_blank"
               rel="noopener noreferrer"
             >

@@ -1,6 +1,6 @@
 "use client";
 import { usePathname } from "next/navigation";
-import { ReactElement, useState, useEffect } from "react";
+import { ReactElement, useState, useEffect, useCallback } from "react";
 import { RxHamburgerMenu } from "react-icons/rx";
 
 interface MenuProps {
@@ -18,10 +18,14 @@ const Menu = ({ children }: MenuProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
+  const toggleMenu = useCallback(() => {
+    setIsOpen((prevState) => !prevState);
+  }, []);
+
   return (
     <>
       <button
-        onClick={() => setIsOpen((prevState) => !prevState)}
+        onClick={toggleMenu}
         className={`z-30 cursor-pointer p-1 ${!isOpen && "hover:bg-secondary ring-2"} ring-secondary transition-colors duration-200 ease-in-out`}
       >
         <RxHamburgerMenu

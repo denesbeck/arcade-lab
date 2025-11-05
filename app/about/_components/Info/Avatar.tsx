@@ -1,16 +1,16 @@
 "use client";
 import profile from "@/../public/avatars/ghibli_avatar.png";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Skeleton, ThemeProvider } from "@mui/material";
 import { darkTheme } from "@/theme";
 
 const Avatar = () => {
   const [loading, setLoading] = useState(true);
 
-  const handleLoad = () => {
+  const handleLoad = useCallback(() => {
     setLoading(false);
-  };
+  }, []);
 
   return (
     <div className="hidden overflow-hidden mx-3 w-40 h-40 rounded-full ring-2 sm:block min-w-40 min-h-40 ring-primary">

@@ -1,7 +1,7 @@
 "use client";
 import { Button, GoBack, Heading2, Input, TextArea } from "@/_components";
 import { Turnstile } from "./_components";
-import { useRef, useState } from "react";
+import { useRef, useState, useCallback } from "react";
 import { contact } from "./actions";
 import { useAlert } from "@/_components/AlertBox/_hooks";
 import validate from "./_utils/validate";
@@ -14,7 +14,11 @@ const Contact = () => {
   const [loading, setLoading] = useState(false);
   const { alert } = useAlert("global");
 
-  const handleSubmit = async () => {
+  const handleTokenReceived = useCallback((token: string) => {
+    tsToken.current = token;
+  }, []);
+
+  const handleSubmit = useCallback(async () => {
     const { valid, messages } = validate(
       nameRef.current?.value || "",
       emailRef.current?.value || "",
@@ -62,7 +66,7 @@ const Contact = () => {
       window.turnstile.reset();
       return;
     }
-  };
+  }, [alert]);
 
   return (
     <div className="flex flex-col min-h-[calc(100dvh-100px)]">
@@ -78,9 +82,7 @@ const Contact = () => {
             <Input placeholder="Name" nameRef={nameRef} />
             <Input placeholder="Email" nameRef={emailRef} />
             <TextArea placeholder="Message" messageRef={messageRef} />
-            <Turnstile
-              getToken={(token: string) => (tsToken.current = token)}
-            />
+            <Turnstile getToken={handleTokenReceived} />
             <Button
               disabled={!tsToken}
               label={"Submit"}

@@ -1,5 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
+import { useMemo, useCallback } from "react";
 
 interface MacOSBarProps {
   close?: string | (() => void);
@@ -9,7 +10,7 @@ interface MacOSBarProps {
 const MacOSBar = ({ size = "md", close }: MacOSBarProps) => {
   const router = useRouter();
 
-  const calcSize = () => {
+  const { dots, padding } = useMemo(() => {
     switch (size) {
       case "sm":
         return { dots: "w-3 h-3", padding: "pb-4 px-1" };
@@ -18,10 +19,17 @@ const MacOSBar = ({ size = "md", close }: MacOSBarProps) => {
       default:
         return { dots: "w-4 h-4", padding: "py-4 px-6" };
     }
-  };
+  }, [size]);
 
-  const { dots, padding } = calcSize();
   const isCloseFunction = typeof close === "function";
+
+  const handleClick = useCallback(() => {
+    if (isCloseFunction) {
+      (close as () => void)();
+    } else {
+      router.push(close as string);
+    }
+  }, [close, isCloseFunction, router]);
 
   return (
     <div
@@ -29,7 +37,7 @@ const MacOSBar = ({ size = "md", close }: MacOSBarProps) => {
     >
       <button
         disabled={!close}
-        onClick={isCloseFunction ? close : () => router.push(close!)}
+        onClick={handleClick}
         className={`flex space-x-2 ${close && "cursor-pointer"}`}
       >
         <div className={`${dots} rounded-full bg-macos-red`} />
