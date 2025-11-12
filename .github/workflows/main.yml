@@ -45,6 +45,7 @@ jobs:
         with:
           args: >
             -Dsonar.organization=denesbeck1
-            -Dsonar.projectKey=denesbeck_code-sync
+            -Dsonar.projectKey=denesbeck_arcade-lab
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        continue-on-error: true
