@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useCallback } from "react";
+import { useCallback } from "react";
 import { FaArrowCircleLeft } from "react-icons/fa";
 
 interface IGoBack {
@@ -8,22 +8,15 @@ interface IGoBack {
 }
 
 const GoBack = ({ fallbackUrl }: IGoBack) => {
-  const [hasHistory, setHasHistory] = useState(false);
   const { back, push } = useRouter();
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      setHasHistory(window.history.length > 1);
-    }
-  }, []);
-
   const handleGoBack = useCallback(() => {
-    if (hasHistory) {
+    if (typeof window !== "undefined" && window.history.length > 1) {
       back();
     } else {
       push(fallbackUrl);
     }
-  }, [hasHistory, back, push, fallbackUrl]);
+  }, [back, push, fallbackUrl]);
 
   return (
     <div className="flex justify-end px-6 pb-2 w-full">
