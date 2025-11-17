@@ -125,7 +125,7 @@ The GitHub Actions (GHA) workflow is responsible for managing the deployment of 
 
 It's important to note that while the Lambda function is created through Terraform, it is initially just a placeholder with no actual code. The real function code is deployed through the GHA workflow.
 
-As mentioned earlier, for the `lambda-functions` repository, I leverage GitHub Environments to enable multi-region deployments. In the case of the lambda-functions-tf repo, I use Terraform modules and distinct providers for each region. This ensures that resources are deployed as expected and, if necessary, can be destroyed independently in each region.
+As mentioned earlier, for the `lambda-functions` repository, I leverage GitHub Environments to enable multi-region deployments. In the case of the `lambda-functions-tf` repo, I use Terraform modules and distinct providers for each region. This ensures that resources are deployed as expected and, if necessary, can be destroyed independently in each region.
 
 ## 💥 Key Features
 
