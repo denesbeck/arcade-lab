@@ -10,6 +10,19 @@ import techConference from "@/../public/blog/covers/tech_conference.png";
 
 const BLOG_ENTRIES: BlogEntry[] = [
   {
+    id: 8,
+    title: "Developing my own VCS",
+    description: "Learning Git the Hard Way",
+    date: "2025-11-13",
+    tags: ["git", "golang", "vcs", "csync"],
+    content: "developing-my-own-vcs",
+    cover: {
+      image: buildHomeServerSm,
+      original: buildHomeServer,
+      alt: "build_home_server",
+    },
+  },
+  {
     id: 7,
     title: "Building my home server P4",
     description: "Part 4: Docker, UFW and Nginx",

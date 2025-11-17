@@ -1,0 +1,160 @@
+# 👨🏻‍💻 Developing my own VCS
+
+_Learning Git the Hard Way_
+
+📅 2025-11-13
+
+I recently started learning Golang, but I tend to prefer learning a language through hands-on projects. So, I set out to find a cool project to dive into. I've always been curious about how Git works behind the scenes. Developers use it every day, but I wonder how many of us truly understand the challenges involved in designing a version control system (VCS) or are fully aware of the problems a VCS solves on a daily basis. As far as I'm concerned, I wasn't. So, I decided to build my own VCS - not to replace Git, but to learn Golang and explore the inner workings of a version control system.
+
+## 🚧 Scope
+
+First, I had to decide exactly what I wanted to build. Should I keep it simple or go for something more complex? And should I aim to create something completely different from Git, or just replicate it? I decided to start by copying Git and then extend or tweak its functionality as I went along. Git is packed with features, so I knew I'd have to focus on a smaller subset to keep things manageable.
+
+I defined the MVP (Minimum Viable Product) as a simple version control system with the following core features:
+
+- `init` - Initialize the version control system
+- `purge` - Purge all data
+- `config` - Config management (email, username)
+- `add` - Add the selected files to the staging area
+- `remove` - Remove the selected files from the staging area
+- `commit` - Commit the staged files
+- `status` - List the files that are staged for commit, tracked, untracked
+- `branch` - Branch management (new, drop, switch, default, current)
+- `workdir` - List the files that are committed
+- `history` - List all commits for the current branch
+
+I also wanted to include a `.gitignore`-like feature to allow or ignore certain files and directories.
+
+## ❓ How does Git work?
+
+At this point, I found myself asking: Does Git continuously scan the working directory? I soon realized that there's a distinction between Git's core functionality and the behavior seen in Git GUIs like LazyGit. For example, when I modify a file in LazyGit, it's almost immediately marked in the UI. But that's not actually Git doing the tracking. 
+
+Git doesn't have a daemon running in the background, constantly scanning files. This was actually a relief for me, as I didn't want to deal with developing a daemon to track file changes anyway. I wanted to keep things simple. I decided that the version control system would only scan the working directory when commands like `status`, `add`, or `remove` are called.
+
+Another key question I had was: How does Git track changes? Should I track just the differences between file versions? That sounded a bit complicated. Instead, I decided to break changes down into three categories: added, modified, and deleted files. I would then track changes based on these operations and take a snapshot of the files with each commit.
+
+It turned out that Git does something very similar: When you modify a file, Git compares the current version to the last committed version and stores a snapshot of the updated file. This approach lined up perfectly with my plan, so I was pretty satisfied with my decision.
+
+The next challenge was figuring out how to detect if a file was modified. When adding or deleting a file, it's straightforward to track changes by comparing the current state of the working directory to the previous commit. But when it comes to modifications, it's a bit more complicated. Git uses SHA-1 checksums to track file changes, and I decided to take a simpler approach by comparing the actual bytes of the files.
+
+I was considering a byte-by-byte comparison to detect changes in the files. However, I was concerned about potential performance issues when dealing with large files. To address this, I implemented a memory-efficient approach by comparing a fixed number of bytes at a time, which lets me handle files of any size. I also added two early termination steps: First, I compare the file sizes, and if they differ, the process stops right away, indicating a discrepancy. The second termination happens during the byte comparison, where I check 8–8KB chunks at a time to minimize memory usage. If a difference is detected in any chunk, the comparison ends and reports the discrepancy. This method eliminates the need to read the entire files, as hashing would require, and allows me to find the first difference more quickly.
+
+Overall, I find this approach to be efficient and flexible. However, in the future, I might explore the hashing approach and combine it with my method. That said, I believe for that most developers, especially in everyday scenarios, large files that would necessitate hashing are relatively uncommon.
+
+```golang
+func IsModified(file1, file2 string) (bool, error) {
+	Debug("Checking if files are modified: %s vs %s", file1, file2)
+	stat1, err := os.Stat(file1)
+	if err != nil {
+		Debug("Failed to stat first file: %s", file1)
+		return false, err
+	}
+	stat2, err := os.Stat(file2)
+	if err != nil {
+		Debug("Failed to stat second file: %s", file2)
+		return false, err
+	}
+	size1 := stat1.Size()
+	size2 := stat2.Size()
+
+	// Early termination here: Check file sizes first (instant rejection if different)
+	if size1 != size2 {
+		Debug("Files have different sizes")
+		return true, nil
+	}
+
+	f1, err := os.Open(file1)
+	if err != nil {
+		Debug("Failed to open first file: %s", file1)
+		return false, err
+	}
+	defer f1.Close()
+
+	f2, err := os.Open(file2)
+	if err != nil {
+		Debug("Failed to open first file: %s", file2)
+		return false, err
+	}
+	defer f2.Close()
+
+	// Memory optimization: Only uses 16KB total memory regardless of file size
+	const bufferSize = 8192 // 8KB
+	buffer1 := make([]byte, bufferSize)
+	buffer2 := make([]byte, bufferSize)
+
+	for {
+		n1, err1 := f1.Read(buffer1)
+		n2, err2 := f2.Read(buffer2)
+
+        // Early termination again: Stops immediately on first difference
+		if n1 != n2 {
+			Debug("Files are different (read different amounts)")
+			return true, nil
+		}
+
+		if !bytes.Equal(buffer1[:n1], buffer2[:n2]) {
+			Debug("Files are different")
+			return true, nil
+		}
+
+		if err1 == io.EOF && err2 == io.EOF {
+			Debug("Files are identical")
+			return false, nil
+		}
+		if err1 != nil {
+			Debug("Failed to read first file: %s", file1)
+			return false, err1
+		}
+		if err2 != nil {
+			Debug("Failed to read second file: %s", file2)
+			return false, err2
+		}
+	}
+}
+```
+
+## 📁 Folders
+
+The next big question was: Where does Git store its data, and how does it manage it? Git stores most of its data as objects in a structure known as the object database. These objects are stored in a hidden `.git` directory located at the root of the repository. This is where Git stores all the project history, commits, and other critical data.
+
+As I mentioned earlier, Git uses SHA-1 cryptographic hashes to uniquely identify objects. Every file, commit, and piece of data is assigned a SHA-1 hash, creating a unique identifier for each object. This method allows Git to efficiently track changes and easily detect any modifications by comparing the hashes.
+
+At this point, I decided to keep things simple. While the approach I chose may not be the most efficient performance-wise, it gets the job done. Here’s the folder structure I ended up with:
+
+```
+.csync
+├── branches/
+│   ├── <branch_name>/
+│   │   └── commits.json
+│   └── metadata.json
+├── commits/
+│   └── <commit_id>/
+│       ├── <file_unique_id>/
+│       │   └── <file_snapshot>
+│       ├── fileList.json
+│       ├── logs.json
+│       └── metadata.json
+├── staging/
+│   ├── added/
+│   │   └── <file_unique_id>/
+│   │       └── <file_snapshot>
+│   ├── modified/
+│   │   └── <file_unique_id>/
+│   │       └── <file_snapshot>
+│   ├─ removed/
+│   │   └── <file_unique_id>/
+│   │       └── <file_snapshot>
+│   └── logs.json
+└── config.json
+```
+
+Similar to Git, I store my data in a hidden folder called `.csync` in the root of the repository. Inside, the `branches` folder holds a directory for each branch. Each branch directory contains a `commits.json` file, which keeps track of the commit IDs for that specific branch. The `branches` folder also includes a `metadata.json` file, which stores the names of the default and current branches.
+
+The staging folder is divided into three subfolders: `added`, `modified,` and `removed`. Each of these subfolders stores the snapshot of the staged files according to their respective operations. Each file snapshot is stored in a folder with a unique identifier.
+
+- challenges with add
+- locking
+- csync ignore
+- switching to sql lite
+- cloud native solution
+- missing features: clone, push, pull, merge -- git protocol
