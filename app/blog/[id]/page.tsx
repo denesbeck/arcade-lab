@@ -14,7 +14,9 @@ export async function generateMetadata({ params }: IPost): Promise<Metadata> {
   const id = (await params).id;
   const post = blogEntries.find((entry) => entry.id.toString() === id);
   const { title, description, cover } = post || {};
-  const coverImageUrl = cover?.original.src || "";
+  const coverImageUrl = cover?.original.src 
+    ? `https://${domain}${cover.original.src}` 
+    : "";
 
   return {
     metadataBase: new URL(`https://${domain}/`),
