@@ -161,7 +161,8 @@ export const BIO = (
       <Emphasize>TypeScript</Emphasize>, but I&apos;m also comfortable working
       with other languages like <Emphasize>Python</Emphasize> and{" "}
       <Emphasize>Lua</Emphasize>. I&apos;m currently diving into{" "}
-      <Emphasize>Golang</Emphasize>. Feel free to check out my latest Go project{" "}
+      <Emphasize>Golang</Emphasize>. Feel free to check out my latest Go
+      project, <Emphasize>Code Sync</Emphasize>,{" "}
       <a
         target="_blank"
         className="underline text-active underline-offset-4"
