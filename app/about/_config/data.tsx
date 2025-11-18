@@ -168,7 +168,7 @@ export const BIO = (
         href="https://github.com/denesbeck/code-sync"
       >
         Code Sync
-      </a>, my lastest project written in Go.
+      </a>, my latest project written in Go.
     </p>
     <p>
       📁 Check out{" "}
