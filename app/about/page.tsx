@@ -1,6 +1,15 @@
 import { Suspense } from "react";
 import { Certificates, Info, Skills } from "./_components";
 import Bio from "./_components/Bio/Bio";
+import { Metadata } from "next";
+import { INFO } from "./_config/data";
+
+export const dynamic = "force-static";
+
+export const metadata: Metadata = {
+  title: "Arcade Lab | About",
+  description: `Learn more about ${INFO.Name}, a ${INFO.Role} at ${INFO.Company} based in ${INFO.Location}.`,
+};
 
 const About = () => {
   return (

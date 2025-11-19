@@ -1,5 +1,14 @@
 import blogEntries from "./_config/data";
 import { BlogCard, FilterTags, NoRecords } from "./_components";
+import { Metadata } from "next";
+
+export const revalidate = 3600; // Revalidate every 1h
+
+export const metadata: Metadata = {
+  title: "Arcade Lab | Blog",
+  description:
+    "Technical blog posts about software engineering, DevOps, and infrastructure.",
+};
 
 const Blog = async ({
   searchParams,
@@ -22,7 +31,7 @@ const Blog = async ({
         );
 
   return (
-    <div className="overflow-auto flex flex-col">
+    <div className="flex overflow-auto flex-col">
       <FilterTags />
       <div className="flex justify-center py-4">
         {entries.length === 0 ? (
@@ -30,17 +39,17 @@ const Blog = async ({
         ) : (
           <div className="mr-6 grid h-[110%] justify-center sm:w-dvw sm:[grid-template-columns:repeat(auto-fit,minmax(33rem,0))] sm:gap-12 sm:px-10">
             {entries.map((entry) => (
-                <BlogCard
-                  key={entry.id}
-                  id={entry.id}
-                  title={entry.title}
-                  description={entry.description}
-                  date={entry.date}
-                  tags={entry.tags}
-                  content={entry.content}
-                  cover={entry.cover}
-                />
-              ))}
+              <BlogCard
+                key={entry.id}
+                id={entry.id}
+                title={entry.title}
+                description={entry.description}
+                date={entry.date}
+                tags={entry.tags}
+                content={entry.content}
+                cover={entry.cover}
+              />
+            ))}
           </div>
         )}
       </div>

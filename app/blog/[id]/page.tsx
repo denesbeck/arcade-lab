@@ -10,12 +10,25 @@ interface IPost {
 
 const domain = process.env.NEXT_PUBLIC_DOMAIN;
 
+// Generate static params for all blog posts at build time
+export async function generateStaticParams() {
+  return blogEntries.map((entry) => ({
+    id: entry.id.toString(),
+  }));
+}
+
+// Only allow pre-generated blog post IDs
+export const dynamicParams = false;
+
+// Enable static generation with revalidation every hour
+export const revalidate = 3600;
+
 export async function generateMetadata({ params }: IPost): Promise<Metadata> {
   const id = (await params).id;
   const post = blogEntries.find((entry) => entry.id.toString() === id);
   const { title, description, cover } = post || {};
-  const coverImageUrl = cover?.original.src 
-    ? `https://${domain}${cover.original.src}` 
+  const coverImageUrl = cover?.original.src
+    ? `https://${domain}${cover.original.src}`
     : "";
 
   return {
