@@ -145,7 +145,7 @@ export const BIO = (
       interest in DevOps, security and infrastructure management.
     </p>
     <p className="mb-8">
-      🛠️ I&apos;m a huge <Emphasize>Nvim</Emphasize> and{" "}
+      🛠️ I&apos;m a huge <Emphasize>Neovim</Emphasize> and{" "}
       <Emphasize>Tmux</Emphasize> enthusiast — both help me optimize my
       development environment (check out{" "}
       <a
@@ -169,7 +169,8 @@ export const BIO = (
         href="https://github.com/denesbeck/code-sync"
       >
         Code Sync
-      </a>, my latest project written in Go.
+      </a>
+      , my latest project written in Go.
     </p>
     <p>
       📁 Check out{" "}
