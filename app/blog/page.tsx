@@ -4,10 +4,46 @@ import { Metadata } from "next";
 
 export const revalidate = 3600; // Revalidate every 1h
 
+const domain = process.env.NEXT_PUBLIC_DOMAIN || "arcade-lab.vercel.app";
+
 export const metadata: Metadata = {
-  title: "Arcade Lab | Blog",
-  description:
-    "Technical blog posts about software engineering, DevOps, and infrastructure.",
+  title: "Blog",
+  description: "Technical blog posts about software engineering, DevOps, cloud infrastructure, AWS, Kubernetes, CI/CD, and home server management by Denes Beck.",
+  keywords: [
+    "Software Engineering Blog",
+    "DevOps Blog",
+    "AWS Tutorials",
+    "Kubernetes Guide",
+    "Docker",
+    "CI/CD",
+    "GitHub Actions",
+    "Terraform",
+    "Ansible",
+    "Home Server",
+    "Linux",
+    "Next.js",
+    "Technical Writing",
+  ],
+  openGraph: {
+    title: "Technical Blog - Arcade Lab",
+    description: "In-depth technical articles about software engineering, DevOps, cloud infrastructure, and system administration.",
+    url: `https://${domain}/blog`,
+    type: "website",
+    images: [
+      {
+        url: `/logo/arcade_lab_logo.png`,
+        width: 1200,
+        height: 630,
+        alt: "Arcade Lab Blog",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Technical Blog - Arcade Lab",
+    description: "In-depth technical articles about software engineering, DevOps, cloud infrastructure, and system administration.",
+    creator: "@DenesBeck",
+  },
 };
 
 const Blog = async ({

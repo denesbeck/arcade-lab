@@ -5,9 +5,31 @@ import { Metadata } from "next";
 
 export const dynamic = "force-static";
 
+const domain = process.env.NEXT_PUBLIC_DOMAIN || "arcade-lab.vercel.app";
+
 export const metadata: Metadata = {
-  title: "Arcade Lab | Home",
-  description: `Hi, I'm ${INFO.Name}. I'm a ${INFO.Role} based in ${INFO.Location}.`,
+  title: "Home",
+  description: `Hi, I'm ${INFO.Name}. I'm a ${INFO.Role} at ${INFO.Company} based in ${INFO.Location}. Specializing in full-stack development, DevOps, and cloud infrastructure.`,
+  openGraph: {
+    title: `${INFO.Name} - ${INFO.Role}`,
+    description: `${INFO.Role} at ${INFO.Company} specializing in full-stack development, DevOps, and cloud infrastructure.`,
+    url: `https://${domain}`,
+    type: "profile",
+    images: [
+      {
+        url: `/logo/arcade_lab_logo.png`,
+        width: 1200,
+        height: 630,
+        alt: `${INFO.Name} - Arcade Lab`,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${INFO.Name} - ${INFO.Role}`,
+    description: `${INFO.Role} at ${INFO.Company} specializing in full-stack development, DevOps, and cloud infrastructure.`,
+    creator: "@DenesBeck",
+  },
 };
 
 const Home = () => {

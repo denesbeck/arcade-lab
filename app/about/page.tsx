@@ -6,9 +6,46 @@ import { INFO } from "./_config/data";
 
 export const dynamic = "force-static";
 
+const domain = process.env.NEXT_PUBLIC_DOMAIN || "arcade-lab.vercel.app";
+
 export const metadata: Metadata = {
-  title: "Arcade Lab | About",
-  description: `Learn more about ${INFO.Name}, a ${INFO.Role} at ${INFO.Company} based in ${INFO.Location}.`,
+  title: "About",
+  description: `Learn about ${INFO.Name}, a self-taught full-stack ${INFO.Role} with ${new Date().getFullYear() - 2019} years of experience. Specializing in Next.js, React, TypeScript, AWS, Kubernetes, and DevOps. Based in ${INFO.Location}, working at ${INFO.Company}.`,
+  keywords: [
+    "Denes Beck",
+    "Software Engineer",
+    "Full Stack Developer",
+    "Self-taught Developer",
+    "AWS Certified",
+    "Terraform Certified",
+    "Next.js Developer",
+    "React Developer",
+    "TypeScript",
+    "Golang",
+    "DevOps Engineer",
+    "Budapest",
+    "SEON",
+  ],
+  openGraph: {
+    title: `About ${INFO.Name} - ${INFO.Role}`,
+    description: `Self-taught full-stack ${INFO.Role} with ${new Date().getFullYear() - 2019} years of experience. AWS & Terraform certified. Specializing in scalable applications and infrastructure automation.`,
+    url: `https://${domain}/about`,
+    type: "profile",
+    images: [
+      {
+        url: `/logo/arcade_lab_logo.png`,
+        width: 1200,
+        height: 630,
+        alt: `${INFO.Name} - About`,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `About ${INFO.Name}`,
+    description: `Self-taught full-stack ${INFO.Role} with ${new Date().getFullYear() - 2019} years of experience. AWS & Terraform certified.`,
+    creator: "@DenesBeck",
+  },
 };
 
 const About = () => {
