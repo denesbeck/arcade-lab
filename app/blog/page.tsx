@@ -73,7 +73,7 @@ const Blog = async ({
         {entries.length === 0 ? (
           <NoRecords />
         ) : (
-          <div className="mr-6 grid h-[110%] justify-center sm:w-dvw sm:[grid-template-columns:repeat(auto-fit,minmax(33rem,0))] sm:gap-12 sm:px-10">
+          <div className="mr-6 grid justify-center sm:w-dvw sm:[grid-template-columns:repeat(auto-fit,minmax(33rem,0))] sm:gap-12 sm:px-10">
             {entries.map((entry) => (
               <BlogCard
                 key={entry.id}
