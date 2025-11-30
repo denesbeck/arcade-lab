@@ -30,6 +30,9 @@ export async function generateMetadata({ params }: IPost): Promise<Metadata> {
   const coverImageUrl = cover?.original.src
     ? `https://${domain}${cover.original.src}`
     : "";
+  const twitterImageUrl = cover?.xImage.src
+    ? `https://${domain}${cover.xImage.src}`
+    : "";
 
   return {
     metadataBase: new URL(`https://${domain}/`),
@@ -52,7 +55,7 @@ export async function generateMetadata({ params }: IPost): Promise<Metadata> {
       description: description,
       title: title,
       creator: "@DenesBeck",
-      images: [{ url: coverImageUrl }],
+      images: [{ url: twitterImageUrl }],
     },
   };
 }
@@ -70,7 +73,9 @@ const Post = async ({ params }: IPost) => {
     "@type": "BlogPosting",
     headline: post?.title,
     description: post?.description,
-    image: post?.cover?.original.src ? `https://${domain}${post.cover.original.src}` : "",
+    image: post?.cover?.original.src
+      ? `https://${domain}${post.cover.original.src}`
+      : "",
     datePublished: post?.date,
     dateModified: post?.date,
     author: {

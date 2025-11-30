@@ -1,4 +1,8 @@
 import { BlogEntry } from "../_interfaces/blog";
+import buildHomeServerX from "@/../public/blog/covers/building_home_server_x.png";
+import lambdaDeployX from "@/../public/blog/covers/lambda_deploy_x.png";
+import tektonCicdX from "@/../public/blog/covers/tekton_cicd_x.png";
+import techConferenceX from "@/../public/blog/covers/tech_conference_x.png";
 import buildHomeServerSm from "@/../public/blog/covers/building_home_server_sm.png";
 import lambdaDeploySm from "@/../public/blog/covers/lambda_deploy_sm.png";
 import tektonCicdSm from "@/../public/blog/covers/tekton_cicd_sm.png";
@@ -40,6 +44,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
     cover: {
       image: buildHomeServerSm,
       original: buildHomeServer,
+      xImage: buildHomeServerX,
       alt: "build_home_server",
     },
   },
@@ -64,6 +69,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
     cover: {
       image: buildHomeServerSm,
       original: buildHomeServer,
+      xImage: buildHomeServerX,
       alt: "build_home_server",
     },
   },
@@ -77,6 +83,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
     cover: {
       image: buildHomeServerSm,
       original: buildHomeServer,
+      xImage: buildHomeServerX,
       alt: "build_home_server",
     },
   },
@@ -99,6 +106,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
     cover: {
       image: buildHomeServerSm,
       original: buildHomeServer,
+      xImage: buildHomeServerX,
       alt: "build_home_server",
     },
   },
@@ -113,6 +121,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
     cover: {
       image: lambdaDeploySm,
       original: lambdaDeploy,
+      xImage: lambdaDeployX,
       alt: "lambda_deploy",
     },
   },
@@ -126,6 +135,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
     cover: {
       image: techConferenceSm,
       original: techConference,
+      xImage: techConferenceX,
       alt: "tech_conference",
     },
   },
@@ -144,7 +154,12 @@ const BLOG_ENTRIES: BlogEntry[] = [
       "docker",
     ],
     content: "migrating-to-tekton",
-    cover: { image: tektonCicdSm, original: tektonCicd, alt: "tekton_cicd" },
+    cover: {
+      image: tektonCicdSm,
+      original: tektonCicd,
+      xImage: tektonCicdX,
+      alt: "tekton_cicd",
+    },
   },
 ];
 

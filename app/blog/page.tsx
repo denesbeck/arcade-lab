@@ -8,7 +8,8 @@ const domain = process.env.NEXT_PUBLIC_DOMAIN || "arcade-lab.vercel.app";
 
 export const metadata: Metadata = {
   title: "Blog",
-  description: "Technical blog posts about software engineering, DevOps, cloud infrastructure, AWS, Kubernetes, CI/CD, and home server management by Denes Beck.",
+  description:
+    "Technical blog posts about software engineering, DevOps, cloud infrastructure, AWS, Kubernetes, CI/CD, and home server management by Denes Beck.",
   keywords: [
     "Software Engineering Blog",
     "DevOps Blog",
@@ -26,7 +27,8 @@ export const metadata: Metadata = {
   ],
   openGraph: {
     title: "Technical Blog - Arcade Lab",
-    description: "In-depth technical articles about software engineering, DevOps, cloud infrastructure, and system administration.",
+    description:
+      "In-depth technical articles about software engineering, DevOps, cloud infrastructure, and system administration.",
     url: `https://${domain}/blog`,
     type: "website",
     images: [
@@ -41,7 +43,8 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Technical Blog - Arcade Lab",
-    description: "In-depth technical articles about software engineering, DevOps, cloud infrastructure, and system administration.",
+    description:
+      "In-depth technical articles about software engineering, DevOps, cloud infrastructure, and system administration.",
     creator: "@DenesBeck",
   },
 };
@@ -73,7 +76,7 @@ const Blog = async ({
         {entries.length === 0 ? (
           <NoRecords />
         ) : (
-          <div className="mr-6 grid justify-center sm:w-dvw sm:[grid-template-columns:repeat(auto-fit,minmax(33rem,0))] sm:gap-12 sm:px-10">
+          <div className="grid justify-center mr-6 sm:gap-12 sm:px-10 sm:w-dvw sm:[grid-template-columns:repeat(auto-fit,minmax(33rem,0))]">
             {entries.map((entry) => (
               <BlogCard
                 key={entry.id}

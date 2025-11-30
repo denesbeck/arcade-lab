@@ -7,5 +7,10 @@ export interface BlogEntry {
   date: string;
   content: string;
   tags: string[];
-  cover: { image: StaticImageData; original: StaticImageData; alt: string };
+  cover: {
+    image: StaticImageData;
+    original: StaticImageData;
+    xImage: StaticImageData;
+    alt: string;
+  };
 }
