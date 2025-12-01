@@ -166,9 +166,9 @@ export const BIO = (
       <a
         target="_blank"
         className="underline text-active underline-offset-4"
-        href="https://github.com/denesbeck/code-sync"
+        href="https://github.com/denesbeck/nexio"
       >
-        Code Sync
+        Nexio
       </a>
       , my latest project written in Go.
     </p>
