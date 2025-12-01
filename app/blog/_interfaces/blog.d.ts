@@ -12,5 +12,7 @@ export interface BlogEntry {
     original: StaticImageData;
     xImage: StaticImageData;
     alt: string;
+    ogImage: string; // absolute path for OG meta tags (e.g., "/blog/covers/image.png")
+    ogImageX: string; // absolute path for Twitter/X meta tags
   };
 }

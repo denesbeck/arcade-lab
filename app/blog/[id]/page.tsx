@@ -27,12 +27,6 @@ export async function generateMetadata({ params }: IPost): Promise<Metadata> {
   const id = (await params).id;
   const post = blogEntries.find((entry) => entry.id.toString() === id);
   const { title, description, cover, tags, date } = post || {};
-  const coverImageUrl = cover?.original.src
-    ? `https://${domain}${cover.original.src}`
-    : "";
-  const twitterImageUrl = cover?.xImage.src
-    ? `https://${domain}${cover.xImage.src}`
-    : "";
 
   return {
     metadataBase: new URL(`https://${domain}/`),
@@ -44,7 +38,7 @@ export async function generateMetadata({ params }: IPost): Promise<Metadata> {
       title: title,
       description: description,
       url: `https://${domain}/blog/${id}`,
-      images: [{ url: coverImageUrl }],
+      images: cover?.ogImage ? [{ url: cover.ogImage }] : [],
       type: "article",
       siteName: "Arcade Lab",
       publishedTime: date,
@@ -55,7 +49,7 @@ export async function generateMetadata({ params }: IPost): Promise<Metadata> {
       description: description,
       title: title,
       creator: "@DenesBeck",
-      images: [{ url: twitterImageUrl }],
+      images: cover?.ogImageX ? [{ url: cover.ogImageX }] : [],
     },
   };
 }
@@ -73,9 +67,7 @@ const Post = async ({ params }: IPost) => {
     "@type": "BlogPosting",
     headline: post?.title,
     description: post?.description,
-    image: post?.cover?.original.src
-      ? `https://${domain}${post.cover.original.src}`
-      : "",
+    image: post?.cover?.ogImage ? `https://${domain}${post.cover.ogImage}` : "",
     datePublished: post?.date,
     dateModified: post?.date,
     author: {

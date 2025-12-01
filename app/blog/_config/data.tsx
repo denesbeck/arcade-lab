@@ -28,6 +28,8 @@ const BLOG_ENTRIES: BlogEntry[] = [
       original: developingMyOwnVcs,
       xImage: developingMyOwnVcsX,
       alt: "developing_my_own_vcs",
+      ogImage: "/blog/covers/developing_my_own_vcs.png",
+      ogImageX: "/blog/covers/developing_my_own_vcs_x.png",
     },
   },
   {
@@ -50,6 +52,8 @@ const BLOG_ENTRIES: BlogEntry[] = [
       original: buildHomeServer,
       xImage: buildHomeServerX,
       alt: "build_home_server",
+      ogImage: "/blog/covers/building_home_server.png",
+      ogImageX: "/blog/covers/building_home_server_x.png",
     },
   },
   {
@@ -75,6 +79,8 @@ const BLOG_ENTRIES: BlogEntry[] = [
       original: buildHomeServer,
       xImage: buildHomeServerX,
       alt: "build_home_server",
+      ogImage: "/blog/covers/building_home_server.png",
+      ogImageX: "/blog/covers/building_home_server_x.png",
     },
   },
   {
@@ -89,6 +95,8 @@ const BLOG_ENTRIES: BlogEntry[] = [
       original: buildHomeServer,
       xImage: buildHomeServerX,
       alt: "build_home_server",
+      ogImage: "/blog/covers/building_home_server.png",
+      ogImageX: "/blog/covers/building_home_server_x.png",
     },
   },
   {
@@ -112,6 +120,8 @@ const BLOG_ENTRIES: BlogEntry[] = [
       original: buildHomeServer,
       xImage: buildHomeServerX,
       alt: "build_home_server",
+      ogImage: "/blog/covers/building_home_server.png",
+      ogImageX: "/blog/covers/building_home_server_x.png",
     },
   },
   {
@@ -127,6 +137,8 @@ const BLOG_ENTRIES: BlogEntry[] = [
       original: lambdaDeploy,
       xImage: lambdaDeployX,
       alt: "lambda_deploy",
+      ogImage: "/blog/covers/lambda_deploy.png",
+      ogImageX: "/blog/covers/lambda_deploy_x.png",
     },
   },
   {
@@ -141,6 +153,8 @@ const BLOG_ENTRIES: BlogEntry[] = [
       original: techConference,
       xImage: techConferenceX,
       alt: "tech_conference",
+      ogImage: "/blog/covers/tech_conference.png",
+      ogImageX: "/blog/covers/tech_conference_x.png",
     },
   },
   {
@@ -163,6 +177,8 @@ const BLOG_ENTRIES: BlogEntry[] = [
       original: tektonCicd,
       xImage: tektonCicdX,
       alt: "tekton_cicd",
+      ogImage: "/blog/covers/tekton_cicd.png",
+      ogImageX: "/blog/covers/tekton_cicd_x.png",
     },
   },
 ];
