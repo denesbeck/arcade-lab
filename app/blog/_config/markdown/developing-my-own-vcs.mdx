@@ -4,7 +4,7 @@ _Learning Git the Hard Way_
 
 📅 2025-11-13
 
-I recently started learning Golang, but I tend to prefer learning a language through hands-on projects. So, I set out to find a cool project to dive into. I've always been curious about how Git works behind the scenes. Developers use it every day, but I wonder how many of us truly understand the challenges involved in designing a version control system (VCS) or are fully aware of the problems a VCS solves on a daily basis. As far as I'm concerned, I wasn't. So, I decided to build my own VCS - not to replace Git, but to learn Golang and explore the inner workings of a version control system.
+I recently started learning Golang, but I tend to prefer learning a language through hands-on projects. So, I set out to find a cool project to dive into. I\'ve always been curious about how Git works behind the scenes. Developers use it every day, but I wonder how many of us truly understand the challenges involved in designing a version control system (VCS) or are fully aware of the problems a VCS solves on a daily basis. As far as I\'m concerned, I wasn\'t. So, I decided to build my own VCS - not to replace Git, but to learn Golang and explore the inner workings of a version control system.
 
 ## 🚧 Scope
 
@@ -27,7 +27,7 @@ I also wanted to include a `.gitignore`-like feature to allow or ignore certain 
 
 ## ❓ How does Git work?
 
-At this point, I found myself asking: Does Git continuously scan the working directory? I soon realized that there's a distinction between Git's core functionality and the behavior seen in Git GUIs like LazyGit. For example, when I modify a file in LazyGit, it's almost immediately marked in the UI. But that's not actually Git doing the tracking. 
+At this point, I found myself asking: Does Git continuously scan the working directory? I soon realized that there's a distinction between Git's core functionality and the behavior seen in Git GUIs like [LazyGit](https://github.com/jesseduffield/lazygit). For example, when I modify a file in LazyGit, it's almost immediately marked in the UI. But that's not actually Git doing the tracking. 
 
 Git doesn't have a daemon running in the background, constantly scanning files. This was actually a relief for me, as I didn't want to deal with developing a daemon to track file changes anyway. I wanted to keep things simple. I decided that the version control system would only scan the working directory when commands like `status`, `add`, or `remove` are called.
 
@@ -119,10 +119,10 @@ The next big question was: Where does Git store its data, and how does it manage
 
 As I mentioned earlier, Git uses SHA-1 cryptographic hashes to uniquely identify objects. Every file, commit, and piece of data is assigned a SHA-1 hash, creating a unique identifier for each object. This method allows Git to efficiently track changes and easily detect any modifications by comparing the hashes.
 
-At this point, I decided to keep things simple. While the approach I chose may not be the most efficient performance-wise, it gets the job done. Here’s the folder structure I ended up with:
+At this point, I decided to keep things simple. While the approach I chose may not be the most efficient performance-wise, it gets the job done. Here's the folder structure I ended up with:
 
 ```
-.csync
+.nexio
 ├── branches/
 │   ├── <branch_name>/
 │   │   └── commits.json
@@ -148,13 +148,110 @@ At this point, I decided to keep things simple. While the approach I chose may n
 └── config.json
 ```
 
-Similar to Git, I store my data in a hidden folder called `.csync` in the root of the repository. Inside, the `branches` folder holds a directory for each branch. Each branch directory contains a `commits.json` file, which keeps track of the commit IDs for that specific branch. The `branches` folder also includes a `metadata.json` file, which stores the names of the default and current branches.
+Similar to Git, I store my data in a hidden folder called `.nexio` (Nexio is the name of my project) in the root of the repository. Inside, the `branches` folder holds a directory for each branch. Each branch directory contains a `commits.json` file, which keeps track of the commit IDs for that specific branch. The `branches` folder also includes a `metadata.json` file, which stores the names of the default and current branches.
 
-The staging folder is divided into three subfolders: `added`, `modified,` and `removed`. Each of these subfolders stores the snapshot of the staged files according to their respective operations. Each file snapshot is stored in a folder with a unique identifier.
+Each commit is stored in the commit directory, where it has its own subfolder named after its commit ID. Inside each commit's folder are subfolders named with file IDs, each containing a snapshot of a file affected by that commit. Using file ID folders prevents conflicts between files that share the same name.
 
-- challenges with add
-- locking
-- csync ignore
-- switching to sql lite
-- cloud native solution
-- missing features: clone, push, pull, merge -- git protocol
+In the commits directory, there is a file called `fileList.json`. This file lists all files tracked by Nexio and includes a reference to the commit that contains the latest version of each file. By having this file, Nexio can retrieve the correct file snapshots from the appropriate commit when switching branches. The `logs.json` file is a snapshot of the staging `logs.json`, created during the commit operation. The `metadata.json` file stores the commit's metadata, including the author\'s name, email, and commit message.
+
+The staging directory is divided into three subfolders — added, modified, and removed. Each subfolder stores snapshots of the staged files corresponding to its operation type. Every file snapshot is placed in a folder identified by a unique file ID, which is generated during staging. These file IDs are the same ones used in the commits directory, ensuring consistent identification of files across staging and commits. The `logs.json` file, which is also saved for each commit as mentioned earlier, records all operations performed in the staging area.
+
+## ❌ Ignore file
+
+Just like Git, Nexio also supports an ignore file, which in Nexio is called the rules file (`.nexio.rules.yml`). Instead of copying Git\'s plain text format, I wanted to make it simpler, so I chose a `.yml` format because it\'s more user-friendly. The file contains two arrays: `ignore` and `allow`.
+
+By default, every file is allowed to be tracked, even if it is not listed in the rules file. However, if a file appears in the `ignore` array, it will be excluded by the VCS. This behavior can be overridden if the same file is also listed in the `allow` array. Functionally, this works the same way as Git.
+
+| Type | Example | Behavior |
+|------|---------|----------|
+| Glob | *.txt | Matches .txt files |
+| Glob | **/*.go | Matches .go in any subdirectory |
+| Regex | ^test.*\.log$ | Raw regex if it compiles |
+
+## ⚔️ Challenges
+
+I ran into plenty of challenges while building the VCS, but these are the ones that really stuck with me and taught me the most about Go and VCS concepts.
+
+### ➕ Add command
+
+One of the biggest challenge was defining the workflow for the add command. Although it may seem basic, this command is critical because it serves as the first entry point for file operations in the VCS—everything else depends on it. It is essential to handle every possible scenario correctly. I aimed to cover all cases that could occur:
+
+| File State | Condition | Action |
+|------------|-----------|--------|
+| Staged as **added** | File no longer exists | Remove from staging |
+| Staged as **added** | File modified | Update staging |
+| Staged as **added** | File not modified | No action |
+| Staged as **modified** | File no longer exists | Remove & log as removed |
+| Staged as **modified** | File changed again | Update staging |
+| Staged as **modified** | File unchanged | No action |
+| Staged as **removed** | File exists again with modifications | Stage as modified |
+| Staged as **removed** | File exists again without modifications | Remove from staging |
+| Staged as **removed** | File still doesn't exist | No action |
+| Committed | File deleted | Stage as removed |
+| Committed | File modified | Stage as modified |
+| Committed | File not modified | No action |
+| Not committed | New file | Stage as added |
+
+There are still some edge cases that I haven't fully handled yet. I plan to review the `add` command more thoroughly in the future, this time with the help of AI assistance, to ensure that all scenarios are correctly addressed. The most important recent fix ensures that the staging area and the actual file system remain fully in sync.
+
+### 🔒 Locking
+
+The locking mechanism uses atomic file creation to implement a simple mutex. The key insight is leveraging the OS-level atomicity of file creation with exclusive flags.
+
+#### 🛑 What is a Mutex?
+Mutex stands for Mutual Exclusion. It's a synchronization primitive that ensures only one process or thread can access a shared resource at a time.
+
+#### 🛁 Analogy
+Think of a bathroom with a lock:
+- When you enter, you acquire the lock (turn the latch)
+- Others must wait outside until you're done
+- When you leave, you release the lock (unlock the door)
+- Now someone else can enter
+
+#### ❔ How It Works
+```golang
+os.OpenFile(path, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0644)
+```
+
+The combination of `O_CREATE` and `O_EXCL` flags tells the OS to create the file only if it doesn't exist. When two processes race to create the same file, only one wins—the OS guarantees this atomicity.
+
+#### 🔢 The Algorithm
+1. **Acquire:** Attempt to create a `.lock` file exclusively. If it exists, retry every 10ms until timeout.
+2. **Release:** Close and delete the lock file.
+
+#### ❔ Why This Pattern?
+- **Simple:** No external dependencies—just the filesystem
+- **Portable:** Works across platforms
+- **Debuggable:** The lock file contains the PID of the holder
+
+#### 🚀 Usage
+```golang
+WithLock("/path/to/resource", 5*time.Second, func() error {
+    // Critical section - only one process runs this at a time
+    return doWork()
+})
+```
+
+#### 😮 Caveats
+This is cooperative locking - it only works if all processes agree to check the lock. It won't prevent a rogue process from accessing the resource directly.
+
+## 🌈 UI
+Git is a titan. As I mentioned earlier, I never intended to replace it, but I wanted to create a VCS that stands out in its own way. I have many ambitious plans to introduce unique features, but the first step was enhancing the user experience by developing an elegant UI. To achieve this, I used [pterm](https://github.com/pterm/pterm), a Go library for building visually appealing terminal interfaces. The UI is structured with reusable components, making it both modular and maintainable.
+
+## 🛠️ Missing features
+There are several core features I plan to add in the future that will make this app MVP-ready, including:
+
+| Phase   | Features                |
+|---------|------------------------|
+| Phase 1 | clone, push, pull       |
+| Phase 2 | merge, diff             |
+| Phase 3 | pre-commit hooks, CI/CD |
+
+For the remote storage, I'm considering using AWS S3. This approach keeps the product self-hosted by default while maintaining simplicity, flexibility, and ease of getting started.
+
+For CI/CD, I plan to integrate AWS SQS and Lambda functions. Users will be able to define their CI/CD workflows using YAML, apply these workflows, and monitor their execution directly from the CLI through a modern, intuitive UI.
+
+For pre-commit hooks, I plan to keep things simple by running Bash scripts inside containers.
+
+## 🕰️ Future
+Overall, my goal is to build a self-hosted, simple, and user-friendly VCS that still offers modern features. Most importantly, I want to continue learning Golang and deepen my understanding of VCS. I'm looking forward to seeing how this hobby project will evolve.

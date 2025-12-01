@@ -1,31 +1,35 @@
 import { BlogEntry } from "../_interfaces/blog";
+import developingMyOwnVcsX from "@/../public/blog/covers/developing_my_own_vcs_x.png";
 import buildHomeServerX from "@/../public/blog/covers/building_home_server_x.png";
 import lambdaDeployX from "@/../public/blog/covers/lambda_deploy_x.png";
 import tektonCicdX from "@/../public/blog/covers/tekton_cicd_x.png";
 import techConferenceX from "@/../public/blog/covers/tech_conference_x.png";
+import developingMyOwnVcsSm from "@/../public/blog/covers/developing_my_own_vcs_sm.png";
 import buildHomeServerSm from "@/../public/blog/covers/building_home_server_sm.png";
 import lambdaDeploySm from "@/../public/blog/covers/lambda_deploy_sm.png";
 import tektonCicdSm from "@/../public/blog/covers/tekton_cicd_sm.png";
 import techConferenceSm from "@/../public/blog/covers/tech_conference_sm.png";
+import developingMyOwnVcs from "@/../public/blog/covers/developing_my_own_vcs.png";
 import buildHomeServer from "@/../public/blog/covers/building_home_server.png";
 import lambdaDeploy from "@/../public/blog/covers/lambda_deploy.png";
 import tektonCicd from "@/../public/blog/covers/tekton_cicd.png";
 import techConference from "@/../public/blog/covers/tech_conference.png";
 
 const BLOG_ENTRIES: BlogEntry[] = [
-  // {
-  //   id: 8,
-  //   title: "Developing my own VCS",
-  //   description: "Learning Git the Hard Way",
-  //   date: "2025-11-13",
-  //   tags: ["git", "golang", "vcs", "csync"],
-  //   content: "developing-my-own-vcs",
-  //   cover: {
-  //     image: buildHomeServerSm,
-  //     original: buildHomeServer,
-  //     alt: "build_home_server",
-  //   },
-  // },
+  {
+    id: 8,
+    title: "Developing my own VCS",
+    description: "Learning Git the Hard Way",
+    date: "2025-11-13",
+    tags: ["git", "golang", "vcs", "csync"],
+    content: "developing-my-own-vcs",
+    cover: {
+      image: developingMyOwnVcsSm,
+      original: developingMyOwnVcs,
+      xImage: developingMyOwnVcsX,
+      alt: "developing_my_own_vcs",
+    },
+  },
   {
     id: 7,
     title: "Building my home server P4",
