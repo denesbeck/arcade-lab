@@ -11,19 +11,19 @@ const SHARE_OPTIONS = [
   {
     getId: (id: string) => `${id}_linkedin`,
     getHref: (id: string) =>
-      `https://www.linkedin.com/sharing/share-offsite/?url=https://${domain}/blog/${id}`,
+      `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(`https://${domain}/blog/${id}`)}`,
     icon: FaLinkedin,
   },
   {
     getId: (id: string) => `${id}_facebook`,
     getHref: (id: string) =>
-      `https://www.facebook.com/sharer.php?u=https://${domain}/blog/${id}`,
+      `https://www.facebook.com/sharer.php?u=${encodeURIComponent(`https://${domain}/blog/${id}`)}`,
     icon: FaFacebook,
   },
   {
     getId: (id: string) => `${id}_twitter`,
     getHref: (id: string) =>
-      `https://twitter.com/intent/tweet?url=https://${domain}/blog/${id}`,
+      `https://twitter.com/intent/tweet?url=${encodeURIComponent(`https://${domain}/blog/${id}`)}`,
     icon: FaTwitter,
   },
 ];
