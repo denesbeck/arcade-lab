@@ -19,7 +19,7 @@ import {
   FaBriefcase,
   FaLinkedin,
 } from "react-icons/fa";
-import { FaGolang, FaXTwitter } from "react-icons/fa6";
+import { FaGolang } from "react-icons/fa6";
 import { HiIdentification } from "react-icons/hi2";
 import { Emphasize } from "@/_components";
 
@@ -46,7 +46,6 @@ export const CONNECTIONS = [
     url: "https://www.linkedin.com/in/denesbeck",
     icon: FaLinkedin,
   },
-  { url: "https://x.com/DenesBeck", icon: FaXTwitter },
   {
     url: "https://www.credly.com/users/denesbeck",
     icon: SiCredly,
