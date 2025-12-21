@@ -1,0 +1,204 @@
+# 🗄️ Blob-Based Storage Optimization
+
+_Transforming Nexio with Content-Addressable Storage_
+
+📅 2025-12-21
+
+## 🧭 Introduction
+
+As Nexio evolved, I started noticing inefficiencies in how it stored file snapshots. Every commit was duplicating files, even when they hadn't changed. This approach, while simple, doesn't scale well. Imagine committing a 1MB file 10 times without modifications — you'd end up with 10MB of redundant data. It was time for an optimization.
+
+In this post, I'll walk you through how I transformed Nexio from raw file storage to a **content-addressable blob store**, achieving up to 97% storage savings while significantly improving performance.
+
+## 🎯 The Problem
+
+The original Nexio storage had some fundamental issues:
+
+| Issue | Impact |
+|-------|--------|
+| Full file copies per commit | Disk usage grows linearly with commits |
+| Byte-by-byte comparison | Slow change detection for large files |
+| Flat directory structure | Performance degrades with many files |
+| No deduplication | Identical files stored multiple times |
+
+For a version control system to be practical, especially at scale, these problems needed to be addressed.
+
+## 🛠️ The Solution: Content-Addressable Storage
+
+The key insight is simple: **store content by its hash**. If two files have the same content, they produce the same hash and only need to be stored once. This is the same principle Git uses with its object database.
+
+### The Optimization Stack
+
+| Component | Technology | Purpose |
+|-----------|------------|---------|
+| **Hashing** | BLAKE3 | Fastest cryptographic hash, enables deduplication |
+| **Compression** | Zlib (level 6) | 50-90% size reduction for text files |
+| **Sharding** | 2-character prefix | Distributes blobs across ~256 subdirectories |
+
+## ❓ Why BLAKE3?
+
+When choosing a hash algorithm, I had several options: MD5, SHA-1, SHA-256, or BLAKE3. I chose BLAKE3 because:
+
+1. **Speed**: BLAKE3 is 3-4x faster than SHA-256
+2. **Security**: Cryptographically secure (unlike MD5 or SHA-1)
+3. **Simplicity**: Single algorithm for all file sizes
+
+The Go implementation I used is `lukechampine.com/blake3`, which provides excellent performance with a simple API.
+
+## 🔄 How It Works
+
+Here's the flow when adding a file to Nexio:
+
+```
+1. File: src/main.go (10KB)
+        |
+        v
+2. BLAKE3 hash -> "ab3f7c9e2d1a8b4f6e..."
+        |
+        v
+3. Zlib compress -> ~3KB
+        |
+        v
+4. Shard path -> .nexio/objects/ab/3f7c9e2d1a8b4f6e...
+        |
+        v
+5. Dedup check -> Skip write if blob exists
+```
+
+The magic happens at step 5: if the blob already exists (same hash = same content), we skip writing entirely. This is where the massive storage savings come from.
+
+## 📁 New Directory Structure
+
+The updated `.nexio` directory now includes an `objects` folder:
+
+```
+.nexio/
+├── objects/                        # Content-addressable blob store
+│   ├── 00/
+│   ├── 01/
+│   ├── ...
+│   ├── ab/
+│   │   ├── 3f7c9e2d1a8b4f6e...     # Compressed blob
+│   │   └── cdef123456789012...     # Compressed blob
+│   ├── ...
+│   └── ff/
+├── staging/
+│   └── logs.json                   # Enhanced with blobHash field
+├── commits/
+│   └── <commit-hash>/
+│       ├── fileList.json           # Enhanced with blobHash + mode
+│       ├── metadata.json
+│       └── logs.json
+├── branches/
+└── config.json
+```
+
+The raw file copies that previously lived in `staging/added/`, `staging/modified/`, and `commits/<hash>/<file-id>/` are now gone. All file content lives in `objects/` with automatic deduplication.
+
+## 🧩 The Blob Module
+
+I created a new `blob.go` file with the following core functions:
+
+| Function | Description |
+|----------|-------------|
+| `HashFile(path)` | Compute BLAKE3 hash of file (streaming, memory efficient) |
+| `HashBytes(data)` | Compute BLAKE3 hash of byte slice |
+| `BlobPath(hash)` | Return sharded path: `ab3f...` -> `.nexio/objects/ab/3f...` |
+| `BlobExists(hash)` | Check if blob exists (for deduplication) |
+| `WriteBlob(path)` | Hash, compress, store blob. Skip if exists. Return hash. |
+| `ReadBlob(hash)` | Read and decompress blob content |
+| `RestoreBlob(hash, destPath, mode)` | Decompress blob to destination with permissions |
+
+The `WriteBlob` function is the workhorse — it handles the entire pipeline from reading the source file to storing the compressed blob.
+
+## 🧹 Garbage Collection
+
+With content-addressable storage, we need a way to clean up orphaned blobs. I added a new `nexio clean` command:
+
+```bash
+nexio clean
+```
+
+The algorithm is straightforward:
+
+1. Collect all blob hashes referenced in commits' `fileList.json` and staging `logs.json`
+2. Walk `.nexio/objects/**/*`
+3. Clean up empty shard directories
+4. Delete any blob not in the referenced set
+5. Delete any shard directory with no remaining blobs
+6. Report: "Cleaned X blobs, freed Y MB"
+
+This will run automatically before `nexio push` and after `nexio pull` (to be implemented) or can be executed manually to keep storage tidy.
+
+## 📊 Results
+
+The storage improvements are dramatic:
+
+| Scenario | Before (Raw) | After (Blobs) | Savings |
+|----------|--------------|---------------|---------|
+| 10 commits, same 1MB file | 10MB | ~300KB | **97%** |
+| 100KB source file | 100KB | ~30KB | **70%** |
+| 10 identical files | 1MB | 100KB | **90%** |
+| 10,000 objects | 1 directory | ~39 files/shard | **O(1) lookup** |
+
+Performance also improved significantly:
+
+| Operation | Before | After |
+|-----------|--------|-------|
+| **File comparison** | Byte-by-byte (slow) | Hash comparison (instant) |
+| **Duplicate detection** | None | Automatic via content hash |
+| **Storage per commit** | Full file copies | Only new/changed blobs |
+| **Directory listing** | Degrades with scale | Constant via sharding |
+
+## 🎨 Design Decisions
+
+Several key decisions shaped this implementation:
+
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| Hash algorithm | BLAKE3 | 3-4x faster than SHA-256, cryptographically secure |
+| Compression | Zlib level 6 | Good balance of speed and compression ratio |
+| Shard prefix | 2 characters | ~256 directories, handles millions of objects |
+| Staging storage | Hash reference only | Most efficient, no duplicate storage |
+| Orphan cleanup | Manual + auto on push/pull | Clean before upload, after download |
+| File permissions | Full `uint32` | Preserves exact Unix permissions |
+
+### What I Didn't Implement
+
+| Feature | Reason to Defer |
+|---------|-----------------|
+| **Chunking** | Overhead exceeds benefit for source code files |
+| **Delta compression** | Significant complexity; whole-file dedup is sufficient |
+| **Packfiles** | Only needed for very large repos (100k+ objects) |
+| **Migration** | Fresh implementation; no legacy repos to support |
+
+These features would add complexity without proportional benefit for typical source code repositories. If Nexio grows to handle very large repos, they can be added later.
+
+## 💡 Lessons Learned
+
+1. **Hash-based deduplication is powerful**: The simplicity of "same content = same hash = store once" provides enormous benefits with minimal complexity.
+
+2. **Sharding prevents filesystem bottlenecks**: A single directory with thousands of files performs poorly on most filesystems. The 2-character prefix sharding keeps directories small.
+
+3. **Compression compounds savings**: Combining deduplication with compression means you're both eliminating duplicates AND shrinking what remains.
+
+4. **Keep it simple**: I deliberately avoided features like chunking and delta compression. For source code, whole-file deduplication is usually sufficient.
+
+## 🔮 Future
+
+This blob storage system sets the foundation for several future features:
+
+- **Remote sync**: Efficiently transfer only missing blobs between remotes
+- **Shallow clones**: Fetch only the blobs needed for a specific commit
+- **Integrity verification**: Use hashes to detect storage corruption
+
+The content-addressable architecture makes all of these features much easier to implement.
+
+## 🔗 Resources
+
+If you're interested in learning more about content-addressable storage:
+
+- [BLAKE3 Paper](https://github.com/BLAKE3-team/BLAKE3-specs)
+- [Git Internals - Git Objects](https://git-scm.com/book/en/v2/Git-Internals-Git-Objects)
+
+💻 Check out Nexio at [GitHub](https://github.com/denesbeck/nexio).
