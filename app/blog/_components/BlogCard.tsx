@@ -49,7 +49,7 @@ const BlogCard = ({ id, title, description, date, cover }: BlogCardProps) => {
         quality={100}
         src={cover.image}
         alt={cover.alt}
-        className="hidden h-full max-h-40 xs:block animate-text-focus max-w-40"
+        className="hidden h-full max-h-40 min-w-40 min-h-40 xs:block animate-text-focus max-w-40"
         onLoadStart={startLoad}
         onLoad={handleLoad}
       />

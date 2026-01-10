@@ -20,6 +20,30 @@ import blobStorageOptimization from "@/../public/blog/covers/blob_storage_optimi
 
 const BLOG_ENTRIES: BlogEntry[] = [
   {
+    id: 10,
+    title: "CloudGoat: Beanstalk Secrets",
+    description: "Write-up: From low-privilege user to admin (AWS CLI)",
+    date: "2026-01-11",
+    tags: [
+      "cloudgoat",
+      "aws",
+      "beanstalk",
+      "iam",
+      "privesc",
+      "exploit",
+      "vulnerability",
+    ],
+    content: "cloudgoat__beanstalk-secrets-writeup",
+    cover: {
+      image: blobStorageOptimizationSm,
+      original: blobStorageOptimization,
+      xImage: blobStorageOptimizationX,
+      alt: "blob_storage_optimization",
+      ogImage: "/blog/covers/blob_storage_optimization.png",
+      ogImageX: "/blog/covers/blob_storage_optimization_x.png",
+    },
+  },
+  {
     id: 9,
     title: "Nexio: Storage optimization",
     description: "Transforming Nexio with Content-Addressable Storage",
