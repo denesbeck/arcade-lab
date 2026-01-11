@@ -26,7 +26,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
     id: 11,
     title: "CloudGoat: Beanstalk Secrets (Pacu)",
     description: "Write-up: From low-privilege user to admin (Pacu approach)",
-    date: "2026-01-12",
+    date: "2026-01-11",
     tags: [
       "cloudgoat",
       "aws",
