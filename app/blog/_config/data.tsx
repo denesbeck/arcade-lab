@@ -23,6 +23,31 @@ import beanstalkSecretsSm from "@/../public/blog/covers/cloudgoat__beanstalk_sec
 
 const BLOG_ENTRIES: BlogEntry[] = [
   {
+    id: 11,
+    title: "CloudGoat: Beanstalk Secrets (Pacu)",
+    description: "Write-up: From low-privilege user to admin (Pacu approach)",
+    date: "2026-01-12",
+    tags: [
+      "cloudgoat",
+      "aws",
+      "pacu",
+      "beanstalk",
+      "iam",
+      "privesc",
+      "exploit",
+      "vulnerability",
+    ],
+    content: "cloudgoat__beanstalk-secrets-pacu",
+    cover: {
+      image: beanstalkSecretsSm,
+      original: beanstalkSecrets,
+      xImage: beanstalkSecretsX,
+      alt: "cloudgoat__beanstalk-secrets-pacu",
+      ogImage: "/blog/covers/cloudgoat__beanstalk_secrets.png",
+      ogImageX: "/blog/covers/cloudgoat__beanstalk_secrets_x.png",
+    },
+  },
+  {
     id: 10,
     title: "CloudGoat: Beanstalk Secrets (AWS CLI)",
     description:
@@ -31,18 +56,19 @@ const BLOG_ENTRIES: BlogEntry[] = [
     tags: [
       "cloudgoat",
       "aws",
+      "awscli",
       "beanstalk",
       "iam",
       "privesc",
       "exploit",
       "vulnerability",
     ],
-    content: "cloudgoat__beanstalk-secrets-writeup",
+    content: "cloudgoat__beanstalk-secrets-awscli",
     cover: {
       image: beanstalkSecretsSm,
       original: beanstalkSecrets,
       xImage: beanstalkSecretsX,
-      alt: "blob_storage_optimization",
+      alt: "cloudgoat__beanstalk-secrets-awscli",
       ogImage: "/blog/covers/cloudgoat__beanstalk_secrets.png",
       ogImageX: "/blog/covers/cloudgoat__beanstalk_secrets_x.png",
     },
