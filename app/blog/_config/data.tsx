@@ -17,6 +17,9 @@ import lambdaDeploy from "@/../public/blog/covers/lambda_deploy.png";
 import tektonCicd from "@/../public/blog/covers/tekton_cicd.png";
 import techConference from "@/../public/blog/covers/tech_conference.png";
 import blobStorageOptimization from "@/../public/blog/covers/blob_storage_optimization.png";
+import beanstalkSecrets from "@/../public/blog/covers/cloudgoat__beanstalk_secrets.png";
+import beanstalkSecretsX from "@/../public/blog/covers/cloudgoat__beanstalk_secrets_x.png";
+import beanstalkSecretsSm from "@/../public/blog/covers/cloudgoat__beanstalk_secrets_sm.png";
 
 const BLOG_ENTRIES: BlogEntry[] = [
   {
@@ -35,12 +38,12 @@ const BLOG_ENTRIES: BlogEntry[] = [
     ],
     content: "cloudgoat__beanstalk-secrets-writeup",
     cover: {
-      image: blobStorageOptimizationSm,
-      original: blobStorageOptimization,
-      xImage: blobStorageOptimizationX,
+      image: beanstalkSecretsSm,
+      original: beanstalkSecrets,
+      xImage: beanstalkSecretsX,
       alt: "blob_storage_optimization",
-      ogImage: "/blog/covers/blob_storage_optimization.png",
-      ogImageX: "/blog/covers/blob_storage_optimization_x.png",
+      ogImage: "/blog/covers/cloudgoat__beanstalk_secrets.png",
+      ogImageX: "/blog/covers/cloudgoat__beanstalk_secrets_x.png",
     },
   },
   {
