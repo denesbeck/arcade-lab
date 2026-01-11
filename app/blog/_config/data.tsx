@@ -24,8 +24,9 @@ import beanstalkSecretsSm from "@/../public/blog/covers/cloudgoat__beanstalk_sec
 const BLOG_ENTRIES: BlogEntry[] = [
   {
     id: 10,
-    title: "CloudGoat: Beanstalk Secrets",
-    description: "Write-up: From low-privilege user to admin (AWS CLI)",
+    title: "CloudGoat: Beanstalk Secrets (AWS CLI)",
+    description:
+      "Write-up: From low-privilege user to admin (AWS CLI approach)",
     date: "2026-01-11",
     tags: [
       "cloudgoat",
