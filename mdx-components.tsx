@@ -76,7 +76,7 @@ const components: MDXComponents = {
 
   // Inline Code
   code: ({ children }) => (
-    <code className="inline-block py-1 px-1 font-mono text-sm break-words rounded text-dark-200 bg-dark-700">
+    <code className="inline-block py-1 px-1 max-w-full font-mono text-sm break-words rounded text-dark-200 bg-dark-700">
       {children}
     </code>
   ),
