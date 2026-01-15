@@ -3,6 +3,7 @@ import { Certificates, Info, Skills } from "./_components";
 import Bio from "./_components/Bio/Bio";
 import { Metadata } from "next";
 import { INFO } from "./_config/data";
+import { Avatar } from "./_components/Info";
 
 export const dynamic = "force-static";
 
@@ -56,6 +57,9 @@ const About = () => {
         {/* main container */}
         <div className="grid grid-cols-1 gap-4 px-4 lg:grid-cols-2 lg:gap-8">
           <div className="flex flex-col gap-4 justify-between">
+            <div className="flex justify-center items-center w-full sm:hidden">
+              <Avatar autoHide={false} />
+            </div>
             <Info />
             <div className="block my-2 border-b-2 border-secondary" />
             <Skills />

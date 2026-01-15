@@ -5,7 +5,11 @@ import { useState, useCallback } from "react";
 import { Skeleton, ThemeProvider } from "@mui/material";
 import { darkTheme } from "@/theme";
 
-const Avatar = () => {
+interface IAvatar {
+  autoHide?: boolean;
+}
+
+const Avatar = ({ autoHide = true }: IAvatar) => {
   const [loading, setLoading] = useState(true);
 
   const handleLoad = useCallback(() => {
@@ -13,7 +17,9 @@ const Avatar = () => {
   }, []);
 
   return (
-    <div className="hidden overflow-hidden mx-3 w-40 h-40 rounded-full ring-2 sm:block min-w-40 min-h-40 ring-primary">
+    <div
+      className={`${autoHide ? "hidden" : ""} overflow-hidden mx-3 w-40 h-40 rounded-full ring-2 sm:block min-w-40 min-h-40 ring-primary`}
+    >
       {loading && (
         <ThemeProvider theme={darkTheme}>
           <Skeleton
