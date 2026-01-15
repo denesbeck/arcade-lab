@@ -1,10 +1,15 @@
 "use server";
-import AWS from "aws-sdk";
-import { InvocationRequest } from "aws-sdk/clients/lambda";
+import {
+  InvocationType,
+  InvokeCommand,
+  LambdaClient,
+} from "@aws-sdk/client-lambda";
 
-const contactLambda = new AWS.Lambda({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+const contactLambda = new LambdaClient({
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID as string,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY as string,
+  },
   region: process.env.AWS_REGION,
 });
 
@@ -18,12 +23,14 @@ interface IContactPayload {
 export async function contact(payload: IContactPayload) {
   const params = {
     FunctionName: process.env.CONTACT_LAMBDA,
-    InvocationType: "RequestResponse",
+    InvocationType: "RequestResponse" as InvocationType,
     Payload: JSON.stringify(payload),
   };
 
+  const cmd = new InvokeCommand(params);
+
   try {
-    await contactLambda.invoke(params as InvocationRequest).promise();
+    await contactLambda.send(cmd);
     return {
       success: true,
       message: "Message sent successfully!",
