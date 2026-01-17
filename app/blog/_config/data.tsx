@@ -23,11 +23,41 @@ import beanstalkSecretsSm from "@/../public/blog/covers/cloudgoat__beanstalk_sec
 
 const BLOG_ENTRIES: BlogEntry[] = [
   {
+    id: 12,
+    title: "CloudGoat: SNS Secrets",
+    description: "Write-up: Exploiting SNS subscriptions to leak API keys",
+    date: "2026-01-17",
+    hidden: true,
+    tags: [
+      "hack",
+      "cloudgoat",
+      "aws",
+      "pacu",
+      "awscli",
+      "sns",
+      "api-gw",
+      "iam",
+      "exploit",
+      "vulnerability",
+    ],
+    content: "cloudgoat__sns-secrets",
+    cover: {
+      image: beanstalkSecretsSm,
+      original: beanstalkSecrets,
+      xImage: beanstalkSecretsX,
+      alt: "cloudgoat__sns-secrets",
+      ogImage: "/blog/covers/cloudgoat__beanstalk_secrets.png",
+      ogImageX: "/blog/covers/cloudgoat__beanstalk_secrets_x.png",
+    },
+  },
+  {
     id: 11,
     title: "CloudGoat: Beanstalk Secrets (Pacu)",
     description: "Write-up: From low-privilege user to admin (Pacu approach)",
     date: "2026-01-11",
+    hidden: false,
     tags: [
+      "hack",
       "cloudgoat",
       "aws",
       "pacu",
@@ -53,7 +83,9 @@ const BLOG_ENTRIES: BlogEntry[] = [
     description:
       "Write-up: From low-privilege user to admin (AWS CLI approach)",
     date: "2026-01-11",
+    hidden: false,
     tags: [
+      "hack",
       "cloudgoat",
       "aws",
       "awscli",
@@ -78,6 +110,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
     title: "Nexio: Storage optimization",
     description: "Transforming Nexio with Content-Addressable Storage",
     date: "2025-12-21",
+    hidden: false,
     tags: [
       "blake3",
       "zlib",
@@ -105,6 +138,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
     title: "Developing my own VCS",
     description: "Learning Git the Hard Way",
     date: "2025-11-13",
+    hidden: false,
     tags: ["git", "golang", "vcs", "nexio"],
     content: "developing-my-own-vcs",
     cover: {
@@ -121,6 +155,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
     title: "Building my home server P4",
     description: "Part 4: Docker, UFW and Nginx",
     date: "2025-10-26",
+    hidden: false,
     tags: [
       "linux",
       "ubuntu",
@@ -145,6 +180,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
     title: "Building my home server P3",
     description: "Part 3: Volumes and backup",
     date: "2025-10-11",
+    hidden: false,
     tags: [
       "linux",
       "ubuntu",
@@ -172,6 +208,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
     title: "Building my home server P2",
     description: "Part 2: SMB with Samba",
     date: "2025-10-03",
+    hidden: false,
     tags: ["linux", "ubuntu", "smb", "samba", "home-server"],
     content: "building-my-home-server-p2",
     cover: {
@@ -188,6 +225,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
     title: "Building my home server P1",
     description: "Part 1: Starting and connecting to the server",
     date: "2025-10-03",
+    hidden: false,
     tags: [
       "linux",
       "ubuntu",
@@ -214,6 +252,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
     description:
       "Automating AWS Lambda and Layer Deployments with GitHub Actions",
     date: "2025-10-19",
+    hidden: false,
     tags: ["aws", "lambda", "cicd", "github-actions", "terraform", "oidc"],
     content: "lambda-deployments",
     cover: {
@@ -230,6 +269,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
     title: "IBM Tech 2024 Conference",
     description: "Insights and takeaways from the IBM Tech 2024 conference.",
     date: "2024-03-22",
+    hidden: false,
     tags: ["ibm", "red-hat", "openshift", "ansible", "security", "watsonx"],
     content: "ibm-tech-2024-conference",
     cover: {
@@ -247,6 +287,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
     description:
       "This blog post is about my experience migrating from Travis CI to Tekton.",
     date: "2023-12-13",
+    hidden: false,
     tags: [
       "cicd",
       "tekton",

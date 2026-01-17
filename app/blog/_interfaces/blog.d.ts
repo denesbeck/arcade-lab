@@ -5,6 +5,7 @@ export interface BlogEntry {
   title: string;
   description: string;
   date: string;
+  hidden: boolean;
   content: string;
   tags: string[];
   cover: {

@@ -3,6 +3,7 @@ import { GoBack, ScrollToTop } from "@/_components";
 import blogEntries from "../_config/data";
 import { Share, Tag } from "../_components";
 import { Metadata } from "next/types";
+import { redirect } from "next/navigation";
 
 interface IPost {
   params: Promise<{ id: string }>;
@@ -57,6 +58,9 @@ export async function generateMetadata({ params }: IPost): Promise<Metadata> {
 const Post = async ({ params }: IPost) => {
   const { id } = await params;
   const post = blogEntries.find((entry) => entry.id.toString() === id);
+
+  if (post?.hidden) redirect("/blog");
+
   const { default: Post } = await import(
     `../_config/markdown/${post?.content}.mdx`
   );

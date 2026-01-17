@@ -13,7 +13,8 @@ export const metadata: Metadata = {
     default: "Arcade Lab | Denes Beck - Software Engineer",
     template: "%s | Arcade Lab",
   },
-  description: "Personal portfolio and technical blog of Denes Beck, a Software Engineer specializing in full-stack development, DevOps, and cloud infrastructure.",
+  description:
+    "Personal portfolio and technical blog of Denes Beck, a Software Engineer specializing in full-stack development, DevOps, and cloud infrastructure.",
   keywords: [
     "Denes Beck",
     "Software Engineer",
@@ -42,7 +43,8 @@ export const metadata: Metadata = {
     url: `https://${domain}`,
     siteName: "Arcade Lab",
     title: "Arcade Lab | Denes Beck - Software Engineer",
-    description: "Personal portfolio and technical blog of Denes Beck, a Software Engineer specializing in full-stack development, DevOps, and cloud infrastructure.",
+    description:
+      "Personal portfolio and technical blog of Denes Beck, a Software Engineer specializing in full-stack development, DevOps, and cloud infrastructure.",
     images: [
       {
         url: `/logo/arcade_lab_logo.png`,
@@ -55,7 +57,8 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Arcade Lab | Denes Beck - Software Engineer",
-    description: "Personal portfolio and technical blog of Denes Beck, a Software Engineer specializing in full-stack development, DevOps, and cloud infrastructure.",
+    description:
+      "Personal portfolio and technical blog of Denes Beck, a Software Engineer specializing in full-stack development, DevOps, and cloud infrastructure.",
     creator: "@DenesBeck",
     images: [`/logo/arcade_lab_logo.png`],
   },

@@ -77,18 +77,20 @@ const Blog = async ({
           <NoRecords />
         ) : (
           <div className="grid justify-center mr-6 sm:gap-12 sm:px-10 sm:w-dvw sm:[grid-template-columns:repeat(auto-fit,minmax(33rem,0))]">
-            {entries.map((entry) => (
-              <BlogCard
-                key={entry.id}
-                id={entry.id}
-                title={entry.title}
-                description={entry.description}
-                date={entry.date}
-                tags={entry.tags}
-                content={entry.content}
-                cover={entry.cover}
-              />
-            ))}
+            {entries
+              .filter((el) => !el.hidden)
+              .map((entry) => (
+                <BlogCard
+                  key={entry.id}
+                  id={entry.id}
+                  title={entry.title}
+                  description={entry.description}
+                  date={entry.date}
+                  tags={entry.tags}
+                  content={entry.content}
+                  cover={entry.cover}
+                />
+              ))}
           </div>
         )}
       </div>
