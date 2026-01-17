@@ -20,6 +20,9 @@ import blobStorageOptimization from "@/../public/blog/covers/blob_storage_optimi
 import beanstalkSecrets from "@/../public/blog/covers/cloudgoat__beanstalk_secrets.png";
 import beanstalkSecretsX from "@/../public/blog/covers/cloudgoat__beanstalk_secrets_x.png";
 import beanstalkSecretsSm from "@/../public/blog/covers/cloudgoat__beanstalk_secrets_sm.png";
+import snsSecrets from "@/../public/blog/covers/cloudgoat__sns_secrets.png";
+import snsSecretsX from "@/../public/blog/covers/cloudgoat__sns_secrets_x.png";
+import snsSecretsSm from "@/../public/blog/covers/cloudgoat__sns_secrets_sm.png";
 
 const BLOG_ENTRIES: BlogEntry[] = [
   {
@@ -27,7 +30,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
     title: "CloudGoat: SNS Secrets",
     description: "Write-up: Exploiting SNS subscriptions to leak API keys",
     date: "2026-01-17",
-    hidden: true,
+    hidden: false,
     tags: [
       "hack",
       "cloudgoat",
@@ -42,12 +45,12 @@ const BLOG_ENTRIES: BlogEntry[] = [
     ],
     content: "cloudgoat__sns-secrets",
     cover: {
-      image: beanstalkSecretsSm,
-      original: beanstalkSecrets,
-      xImage: beanstalkSecretsX,
+      image: snsSecretsSm,
+      original: snsSecrets,
+      xImage: snsSecretsX,
       alt: "cloudgoat__sns-secrets",
-      ogImage: "/blog/covers/cloudgoat__beanstalk_secrets.png",
-      ogImageX: "/blog/covers/cloudgoat__beanstalk_secrets_x.png",
+      ogImage: "/blog/covers/cloudgoat__sns_secrets.png",
+      ogImageX: "/blog/covers/cloudgoat__sns_secrets_x.png",
     },
   },
   {
