@@ -74,7 +74,7 @@ const Blog = async ({
       <FilterTags />
       <div className="flex justify-center py-4">
         {entries.length === 0 ? (
-          <NoRecords />
+          <NoRecords message="No results based on your tag selection." />
         ) : (
           <div className="grid justify-center mr-6 sm:gap-6 sm:px-10 sm:w-dvw sm:[grid-template-columns:repeat(auto-fit,minmax(33rem,0))]">
             {entries

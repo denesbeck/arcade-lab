@@ -79,8 +79,8 @@ const Contact = () => {
           <div className="hidden absolute w-48 h-48 border-r-2 border-b-2 transition-all duration-200 ease-in-out sm:block border-primary -right-[24px] -bottom-[24px] group-hover:-right-[16px] group-hover:-bottom-[16px]" />
           <div className="flex relative flex-col p-6 min-w-max ring-2 transition-all duration-200 ease-in-out hover:ring-gray-500 hover:ring-offset-2 ring-secondary ring-offset-root h-max max-w-[90dvw] gap-[1rem] backdrop-blur-md">
             <Heading2>Contact </Heading2>
-            <Input placeholder="Name" nameRef={nameRef} />
-            <Input placeholder="Email" nameRef={emailRef} />
+            <Input placeholder="Name" inputRef={nameRef} />
+            <Input placeholder="Email" inputRef={emailRef} />
             <TextArea placeholder="Message" messageRef={messageRef} />
             <Turnstile getToken={handleTokenReceived} />
             <Button

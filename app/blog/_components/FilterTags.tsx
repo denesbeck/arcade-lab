@@ -8,6 +8,7 @@ import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import FilterActions from "./FilterActions";
 import SearchTags from "./SearchTags";
+import NoRecords from "./NoRecords";
 
 const FilterTags = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -96,7 +97,7 @@ const FilterTags = () => {
             </div>
             <div className="flex overflow-auto flex-wrap gap-8 justify-center items-center p-4 xs:mt-0 animate-text-focus max-h-[80dvh] max-w-[90%]">
               {allTags.length === 0 ? (
-                <div>💀 No results based on your search.</div>
+                <NoRecords />
               ) : (
                 allTags.map((tag) => (
                   <button
