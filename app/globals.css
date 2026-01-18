@@ -63,6 +63,7 @@
   --color-macos-red: var(--color-red-400);
   --color-macos-yellow: var(--color-yellow-400);
   --color-macos-green: var(--color-green-400);
+  --color-search: var(--color-blue-300);
 }
 
 @font-face {

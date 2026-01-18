@@ -7,12 +7,15 @@ import { DarkLayout, MacOSBar } from "@/_components";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import FilterActions from "./FilterActions";
+import SearchTags from "./SearchTags";
 
 const FilterTags = () => {
   const [isOpen, setIsOpen] = useState(false);
   const searchParams = useSearchParams();
   const tags = searchParams.getAll("tag");
   const [selection, setSelection] = useState<string[]>(tags);
+  const [search, setSearch] = useState("");
+
   const hasChanges = useMemo(() => {
     const selectionSet = new Set(selection);
     const tagsSet = new Set(tags);
@@ -22,9 +25,14 @@ const FilterTags = () => {
   const allTags = useMemo(
     () =>
       Array.from([
-        ...new Set(blogEntries.map((entry) => entry.tags).flat()),
+        ...new Set(
+          blogEntries
+            .map((entry) => entry.tags)
+            .flat()
+            .filter((tag) => tag.toLowerCase().includes(search.toLowerCase())),
+        ),
       ]).sort(),
-    [],
+    [search],
   );
   const router = useRouter();
 
@@ -70,7 +78,10 @@ const FilterTags = () => {
         >
           <button
             className="flex justify-center items-center p-2 w-11 h-11 rounded-full border cursor-pointer border-dark-500 bg-secondary animate-text-focus text-dark-50 hover:bg-dark-900"
-            onClick={() => setIsOpen(true)}
+            onClick={() => {
+              setIsOpen(true);
+              setSearch("");
+            }}
           >
             <FaHashtag className="w-5 h-5 text-dark-100" />
           </button>
@@ -79,19 +90,24 @@ const FilterTags = () => {
       {isOpen && (
         <DarkLayout>
           <div className="flex flex-col gap-4 justify-between items-center pb-8 h-full">
-            <div className="flex justify-start w-full">
+            <div className="flex justify-between w-full">
               <MacOSBar close={handleCancel} />
+              <SearchTags search={(value) => setSearch(value)} />
             </div>
-            <div className="flex overflow-auto flex-wrap gap-8 justify-center items-center p-4 xs:mt-0 animate-text-focus max-h-[80dvh] max-w-[50rem]">
-              {allTags.map((tag) => (
-                <button
-                  key={tag}
-                  onClick={() => handleSelect(tag)}
-                  className={`sm:text-xl ${selection.includes(tag) ? "text-primary scale-110" : "text-gray-200"} cursor-pointer transition-all duration-200 ease-in-out hover:scale-110`}
-                >
-                  #{tag}
-                </button>
-              ))}
+            <div className="flex overflow-auto flex-wrap gap-8 justify-center items-center p-4 xs:mt-0 animate-text-focus max-h-[80dvh] max-w-[90%]">
+              {allTags.length === 0 ? (
+                <div>💀 No results based on your search.</div>
+              ) : (
+                allTags.map((tag) => (
+                  <button
+                    key={tag}
+                    onClick={() => handleSelect(tag)}
+                    className={`sm:text-xl ${selection.includes(tag) ? "text-primary scale-110" : "text-dark-100"} cursor-pointer transition-all duration-200 ease-in-out hover:scale-110`}
+                  >
+                    #{tag}
+                  </button>
+                ))
+              )}
             </div>
             <FilterActions
               clear={handleClear}

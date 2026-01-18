@@ -9,6 +9,7 @@ import Heading2 from "./Heading2";
 import Heading3 from "./Heading3";
 import Info from "./Info";
 import Input from "./Input";
+import Kbd from "./Kbd";
 import MacOSBar from "./MacOSBar";
 import Navbar from "./Navbar";
 import ScrollToTop from "./ScrollToTop";
@@ -28,6 +29,7 @@ export {
   Heading3,
   Info,
   Input,
+  Kbd,
   MacOSBar,
   Navbar,
   ScrollToTop,
