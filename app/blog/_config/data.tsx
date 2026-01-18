@@ -32,7 +32,8 @@ const BLOG_ENTRIES: BlogEntry[] = [
     date: "2026-01-17",
     hidden: false,
     tags: [
-      "hack",
+      "hacking",
+      "write-up",
       "cloudgoat",
       "aws",
       "pacu",
@@ -60,7 +61,8 @@ const BLOG_ENTRIES: BlogEntry[] = [
     date: "2026-01-11",
     hidden: false,
     tags: [
-      "hack",
+      "hacking",
+      "write-up",
       "cloudgoat",
       "aws",
       "pacu",
@@ -88,7 +90,8 @@ const BLOG_ENTRIES: BlogEntry[] = [
     date: "2026-01-11",
     hidden: false,
     tags: [
-      "hack",
+      "hacking",
+      "write-up",
       "cloudgoat",
       "aws",
       "awscli",

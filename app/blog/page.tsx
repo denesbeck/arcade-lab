@@ -76,7 +76,7 @@ const Blog = async ({
         {entries.length === 0 ? (
           <NoRecords />
         ) : (
-          <div className="grid justify-center mr-6 sm:gap-12 sm:px-10 sm:w-dvw sm:[grid-template-columns:repeat(auto-fit,minmax(33rem,0))]">
+          <div className="grid justify-center mr-6 sm:gap-6 sm:px-10 sm:w-dvw sm:[grid-template-columns:repeat(auto-fit,minmax(33rem,0))]">
             {entries
               .filter((el) => !el.hidden)
               .map((entry) => (

@@ -17,7 +17,14 @@ interface BlogCardProps {
   cover: { image: StaticImageData; alt: string };
 }
 
-const BlogCard = ({ id, title, description, date, cover }: BlogCardProps) => {
+const BlogCard = ({
+  id,
+  title,
+  description,
+  date,
+  tags,
+  cover,
+}: BlogCardProps) => {
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
 
@@ -32,7 +39,7 @@ const BlogCard = ({ id, title, description, date, cover }: BlogCardProps) => {
   return (
     <Link
       href={`/blog/${id}?${searchParams.toString()}`}
-      className="flex overflow-hidden border-b-2 transition-all duration-200 ease-in-out cursor-pointer sm:border-b-0 sm:ring-2 last:border-b-0 ring-offset-root border-secondary ring-primary group animate-text-focus max-h-[11rem] min-h-[11rem] sm:active:ring-active sm:hover:ring-offset-4"
+      className={`flex overflow-hidden relative border-b-2 transition-all duration-200 ease-in-out cursor-pointer sm:border-b-0 sm:ring-2 last:border-b-0 ring-offset-root border-secondary ${tags.includes("write-up") ? "ring-blue-300" : "ring-primary"} group animate-text-focus max-h-[11rem] min-h-[11rem] sm:active:ring-active sm:hover:ring-offset-4`}
     >
       {loading && (
         <ThemeProvider theme={darkTheme}>
@@ -58,9 +65,11 @@ const BlogCard = ({ id, title, description, date, cover }: BlogCardProps) => {
           {title}
         </h1>
         <p className="flex-1 text-sm text-left md:w-full">{description}</p>
-        <div className="flex justify-start items-center space-x-2 w-full xs:justify-end">
-          <FaRegCalendarAlt />
-          <div className="text-sm">{date}</div>
+        <div className="flex gap-4 justify-start items-center w-full xs:justify-between">
+          <div className="flex items-center space-x-2">
+            <FaRegCalendarAlt />
+            <div className="text-sm whitespace-nowrap">{date}</div>
+          </div>
         </div>
       </div>
     </Link>
