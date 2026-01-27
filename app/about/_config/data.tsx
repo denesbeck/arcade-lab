@@ -2,11 +2,13 @@ import { RiNextjsFill, RiTailwindCssFill } from "react-icons/ri";
 import {
   SiCredly,
   SiTypescript,
+  SiLua,
   SiTerraform,
   SiAnsible,
   SiKubernetes,
   SiDocker,
   SiGithubactions,
+  SiTekton,
 } from "react-icons/si";
 import {
   FaGithub,
@@ -101,8 +103,16 @@ export const SKILLS = [
     icon: FaGolang,
   },
   {
+    name: "Lua",
+    icon: SiLua,
+  },
+  {
     name: "GitHub Actions",
     icon: SiGithubactions,
+  },
+  {
+    name: "Tekton",
+    icon: SiTekton,
   },
   {
     name: "Linux",
