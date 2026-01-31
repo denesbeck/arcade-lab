@@ -19,9 +19,10 @@ const SearchTags = ({ search }: ISearchTags) => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleClear = () => {
+    setIsOpen(false);
     setValue("");
     search("");
-    inputRef.current?.focus();
+    inputRef.current?.blur();
   };
 
   useEffect(() => {
@@ -53,8 +54,7 @@ const SearchTags = ({ search }: ISearchTags) => {
 
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        setIsOpen(false);
-        inputRef.current?.blur();
+        handleClear();
       }
     };
 
@@ -68,6 +68,7 @@ const SearchTags = ({ search }: ISearchTags) => {
       document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("keydown", handleEscape);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   return (
