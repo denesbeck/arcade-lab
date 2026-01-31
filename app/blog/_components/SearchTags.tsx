@@ -54,6 +54,7 @@ const SearchTags = ({ search }: ISearchTags) => {
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setIsOpen(false);
+        inputRef.current?.blur();
       }
     };
 
@@ -70,27 +71,32 @@ const SearchTags = ({ search }: ISearchTags) => {
   }, [isOpen]);
 
   return (
-    <div className="p-5" ref={containerRef}>
+    <div
+      className="p-5 w-full min-w-[250px] xs:max-w-[250px]"
+      ref={containerRef}
+    >
       <button
-        className={`flex justify-between items-center ${isOpen && "ring-search"} p-2 min-w-[200px] rounded-full ring-2 cursor-pointer ring-dark-100 hover:ring-search`}
+        className={`flex justify-between w-full items-center ${isOpen && "ring-search"} p-2 rounded-full ring-2 cursor-pointer ring-dark-100 hover:ring-search`}
         onClick={() => setIsOpen(!isOpen)}
       >
-        <IoSearch className="text-2xl text-dark-100" />
-        <input
-          ref={inputRef}
-          type="search"
-          value={value}
-          placeholder="Search..."
-          className={`${isOpen ? "w-48 ml-3" : "w-20"} ml-4 placeholder:text-sm placeholder:text-dark-200 outline-none transition-all duration-200 ease-in-out [&::-webkit-search-cancel-button]:appearance-none`}
-          onClick={(e) => {
-            e.stopPropagation();
-            setIsOpen(true);
-          }}
-          onChange={(e) => {
-            setValue(e.target.value);
-            search(e.target.value);
-          }}
-        />
+        <div className="flex items-center space-x-3">
+          <IoSearch className="text-2xl text-dark-100" />
+          <input
+            ref={inputRef}
+            type="search"
+            value={value}
+            placeholder="Search..."
+            className={`${isOpen ? "w-[80px]" : "w-20"} placeholder:text-sm placeholder:text-dark-200 outline-none transition-all duration-200 ease-in-out [&::-webkit-search-cancel-button]:appearance-none`}
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsOpen(true);
+            }}
+            onChange={(e) => {
+              setValue(e.target.value);
+              search(e.target.value);
+            }}
+          />
+        </div>
         <Kbd>{isOpen ? "Esc" : `${isMac ? "⌘ " : "Ctrl+"}K`}</Kbd>
       </button>
     </div>
