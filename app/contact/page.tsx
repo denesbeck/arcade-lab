@@ -1,6 +1,13 @@
 'use client'
 import { useCallback, useRef, useState } from 'react'
-import { Button, GoBack, Heading2, Input, TextArea } from '@/_components'
+import {
+  AnimatedBorder,
+  Button,
+  GoBack,
+  Heading2,
+  Input,
+  TextArea,
+} from '@/_components'
 import { useAlert } from '@/_components/AlertBox/_hooks'
 import { Turnstile } from './_components'
 import validate from './_utils/validate'
@@ -72,11 +79,7 @@ const Contact = () => {
     <div className="flex flex-col min-h-[calc(100dvh-100px)]">
       <GoBack fallbackUrl="/" />
       <div className="flex flex-col items-center pt-6 my-auto w-dvw animate-slide-in-from-bottom pb-[60px] lg:pb-[100px]">
-        <div className="relative group">
-          <div className="hidden absolute w-12 h-12 border-t-2 border-r-2 transition-all duration-200 ease-in-out sm:block border-primary -top-[24px] -right-[24px] group-hover:-top-[16px] group-hover:-right-[16px]" />
-          <div className="hidden absolute w-48 h-48 border-t-2 border-l-2 transition-all duration-200 ease-in-out sm:block border-primary -top-[24px] -left-[24px] group-hover:-top-[16px] group-hover:-left-[16px]" />
-          <div className="hidden absolute w-12 h-12 border-b-2 border-l-2 transition-all duration-200 ease-in-out sm:block border-primary -bottom-[24px] -left-[24px] group-hover:-bottom-[16px] group-hover:-left-[16px]" />
-          <div className="hidden absolute w-48 h-48 border-r-2 border-b-2 transition-all duration-200 ease-in-out sm:block border-primary -right-[24px] -bottom-[24px] group-hover:-right-[16px] group-hover:-bottom-[16px]" />
+        <AnimatedBorder>
           <div className="flex relative flex-col p-6 min-w-max ring-2 transition-all duration-200 ease-in-out hover:ring-gray-500 hover:ring-offset-2 ring-secondary ring-offset-root h-max max-w-[90dvw] gap-[1rem] backdrop-blur-md">
             <Heading2>Contact </Heading2>
             <Input placeholder="Name" inputRef={nameRef} />
@@ -90,7 +93,7 @@ const Contact = () => {
               loading={loading}
             />
           </div>
-        </div>
+        </AnimatedBorder>
       </div>
     </div>
   )

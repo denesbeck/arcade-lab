@@ -1,3 +1,4 @@
+import AnimatedBorder from './AnimatedBorder'
 import Button from './Button'
 import CopyButton from './CopyButton'
 import DarkLayout from './DarkLayout'
@@ -18,6 +19,7 @@ import TextArea from './TextArea'
 import Tooltip from './Tooltip'
 
 export {
+  AnimatedBorder,
   Button,
   CopyButton,
   DarkLayout,
