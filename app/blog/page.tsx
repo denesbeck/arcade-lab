@@ -1,73 +1,73 @@
-import blogEntries from "./_config/data";
-import { BlogCard, FilterTags, NoRecords } from "./_components";
-import { Metadata } from "next";
+import { Metadata } from 'next'
+import { BlogCard, FilterTags, NoRecords } from './_components'
+import blogEntries from './_config/data'
 
-export const revalidate = 3600; // Revalidate every 1h
+export const revalidate = 3600 // Revalidate every 1h
 
-const domain = process.env.NEXT_PUBLIC_DOMAIN || "arcade-lab.vercel.app";
+const domain = process.env.NEXT_PUBLIC_DOMAIN || 'arcade-lab.vercel.app'
 
 export const metadata: Metadata = {
-  title: "Blog",
+  title: 'Blog',
   description:
-    "Technical blog posts about software engineering, DevOps, cloud infrastructure, AWS, Kubernetes, CI/CD, and home server management by Denes Beck.",
+    'Technical blog posts about software engineering, DevOps, cloud infrastructure, AWS, Kubernetes, CI/CD, and home server management by Denes Beck.',
   keywords: [
-    "Software Engineering Blog",
-    "DevOps Blog",
-    "AWS Tutorials",
-    "Kubernetes Guide",
-    "Docker",
-    "CI/CD",
-    "GitHub Actions",
-    "Terraform",
-    "Ansible",
-    "Home Server",
-    "Linux",
-    "Next.js",
-    "Technical Writing",
+    'Software Engineering Blog',
+    'DevOps Blog',
+    'AWS Tutorials',
+    'Kubernetes Guide',
+    'Docker',
+    'CI/CD',
+    'GitHub Actions',
+    'Terraform',
+    'Ansible',
+    'Home Server',
+    'Linux',
+    'Next.js',
+    'Technical Writing',
   ],
   openGraph: {
-    title: "Technical Blog - Arcade Lab",
+    title: 'Technical Blog - Arcade Lab',
     description:
-      "In-depth technical articles about software engineering, DevOps, cloud infrastructure, and system administration.",
+      'In-depth technical articles about software engineering, DevOps, cloud infrastructure, and system administration.',
     url: `https://${domain}/blog`,
-    type: "website",
+    type: 'website',
     images: [
       {
         url: `/logo/arcade_lab_logo.png`,
         width: 1200,
         height: 630,
-        alt: "Arcade Lab Blog",
+        alt: 'Arcade Lab Blog',
       },
     ],
   },
   twitter: {
-    card: "summary_large_image",
-    title: "Technical Blog - Arcade Lab",
+    card: 'summary_large_image',
+    title: 'Technical Blog - Arcade Lab',
     description:
-      "In-depth technical articles about software engineering, DevOps, cloud infrastructure, and system administration.",
-    creator: "@DenesBeck",
+      'In-depth technical articles about software engineering, DevOps, cloud infrastructure, and system administration.',
+    creator: '@DenesBeck',
   },
-};
+}
 
 const Blog = async ({
   searchParams,
 }: {
-  searchParams: Promise<{ tag?: string[] }>;
+  searchParams: Promise<{ tag?: string[] }>
 }) => {
-  const tags = [(await searchParams).tag || []].flat();
+  const tags = [(await searchParams).tag || []].flat()
 
   // Pre-sort once to avoid sorting on every render
   const sortedEntries = [...blogEntries].sort((a, b) =>
-    b.date.localeCompare(a.date),
-  );
+    b.date.localeCompare(a.date)
+  )
 
   // Short-circuit filtering when no tags are selected
   const entries =
     tags.length === 0
       ? sortedEntries
       : sortedEntries.filter((entry) =>
-          tags.every((tag) => entry.tags.includes(tag)),
-        );
+          tags.every((tag) => entry.tags.includes(tag))
+        )
 
   return (
     <div className="flex overflow-auto flex-col">
@@ -95,7 +95,7 @@ const Blog = async ({
         )}
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Blog;
+export default Blog

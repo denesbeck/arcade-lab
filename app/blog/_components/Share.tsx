@@ -1,11 +1,11 @@
-import Link from "next/link";
-import { FaFacebook, FaLinkedin, FaTwitter } from "react-icons/fa6";
+import Link from 'next/link'
+import { FaFacebook, FaLinkedin, FaTwitter } from 'react-icons/fa6'
 
 interface IShare {
-  id: string;
+  id: string
 }
 
-const domain = process.env.NEXT_PUBLIC_DOMAIN;
+const domain = process.env.NEXT_PUBLIC_DOMAIN
 
 const SHARE_OPTIONS = [
   {
@@ -26,21 +26,21 @@ const SHARE_OPTIONS = [
       `https://twitter.com/intent/tweet?url=${encodeURIComponent(`https://${domain}/blog/${id}`)}`,
     icon: FaTwitter,
   },
-];
+]
 
 const Share = ({ id }: IShare) => {
   const shareLinks = SHARE_OPTIONS.map((option) => ({
     id: option.getId(id),
     href: option.getHref(id),
     icon: option.icon,
-  }));
+  }))
 
   return (
     <div className="flex flex-col items-start px-6 mt-8 max-w-screen w-4xl">
       <div className="font-bold">Share this post on:</div>
       <div className="flex py-4 space-x-4">
         {shareLinks.map((link) => {
-          const Icon = link.icon;
+          const Icon = link.icon
           return (
             <Link
               key={link.id}
@@ -50,11 +50,11 @@ const Share = ({ id }: IShare) => {
             >
               <Icon className="w-7 h-7 transition-all duration-200 ease-in-out hover:scale-110 text-slate-200 hover:text-primary" />
             </Link>
-          );
+          )
         })}
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Share;
+export default Share

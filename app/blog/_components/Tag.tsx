@@ -1,7 +1,7 @@
-import Link from "next/link";
+import Link from 'next/link'
 
 interface ITag {
-  name: string;
+  name: string
 }
 
 const Tag = ({ name }: ITag) => {
@@ -15,7 +15,7 @@ const Tag = ({ name }: ITag) => {
     >
       #{name}
     </Link>
-  );
-};
+  )
+}
 
-export default Tag;
+export default Tag

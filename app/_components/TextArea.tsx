@@ -1,8 +1,8 @@
-import { RefObject } from "react";
+import { RefObject } from 'react'
 
 interface ITextArea {
-  placeholder: string;
-  messageRef: RefObject<HTMLTextAreaElement | null>;
+  placeholder: string
+  messageRef: RefObject<HTMLTextAreaElement | null>
 }
 
 const TextArea = ({ placeholder, messageRef }: ITextArea) => {
@@ -12,7 +12,7 @@ const TextArea = ({ placeholder, messageRef }: ITextArea) => {
       className="py-3 px-4 bg-transparent ring-2 ring-primary min-w-[300px] focus-visible:ring-focus focus-visible:outline-hidden active:ring-active"
       ref={messageRef}
     />
-  );
-};
+  )
+}
 
-export default TextArea;
+export default TextArea

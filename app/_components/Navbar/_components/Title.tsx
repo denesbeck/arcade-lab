@@ -1,13 +1,14 @@
-import Image from "next/image";
+import Image from 'next/image'
+
 interface TitleProps {
-  mr?: boolean;
-  ml?: boolean;
+  mr?: boolean
+  ml?: boolean
 }
 
 const Title = ({ mr = false, ml = false }: TitleProps) => {
   return (
     <div
-      className={`${mr && "mr-auto"} ${ml && "ml-auto"} animate-text-focus z-30 py-2 text-lg font-semibold text-nowrap select-none`}
+      className={`${mr && 'mr-auto'} ${ml && 'ml-auto'} animate-text-focus z-30 py-2 text-lg font-semibold text-nowrap select-none`}
     >
       <Image
         src="/logo/arcade_lab_logo_120.png"
@@ -19,7 +20,7 @@ const Title = ({ mr = false, ml = false }: TitleProps) => {
       />
       <span className="ml-2">Arcade Lab</span>
     </div>
-  );
-};
+  )
+}
 
-export default Title;
+export default Title

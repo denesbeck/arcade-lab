@@ -1,11 +1,11 @@
-import { IconType } from "react-icons";
+import { IconType } from 'react-icons'
 
 interface SocialProps {
-  url: string;
-  icon: IconType;
+  url: string
+  icon: IconType
 }
 const Social = ({ url, icon }: SocialProps) => {
-  const Icon = icon;
+  const Icon = icon
   return (
     <a
       className="transition-all duration-200 ease-in-out hover:scale-110 hover:brightness-125"
@@ -14,7 +14,7 @@ const Social = ({ url, icon }: SocialProps) => {
     >
       <Icon className="text-3xl" />
     </a>
-  );
-};
+  )
+}
 
-export default Social;
+export default Social

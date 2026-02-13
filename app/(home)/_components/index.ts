@@ -1,3 +1,3 @@
-import ContactButton from "./ContactButton";
+import ContactButton from './ContactButton'
 
-export { ContactButton };
+export { ContactButton }

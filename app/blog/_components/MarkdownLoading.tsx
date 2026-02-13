@@ -1,4 +1,4 @@
-import { Skeleton } from "@mui/material";
+import { Skeleton } from '@mui/material'
 
 const MarkdownLoading = () => {
   return (
@@ -24,7 +24,7 @@ const MarkdownLoading = () => {
       <Skeleton animation="wave" />
       <Skeleton animation="wave" />
     </div>
-  );
-};
+  )
+}
 
-export default MarkdownLoading;
+export default MarkdownLoading

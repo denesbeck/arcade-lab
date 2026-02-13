@@ -1,20 +1,20 @@
-import { useEffect, useMemo } from "react";
-import { Severity } from "../AlertBox";
+import { useEffect, useMemo } from 'react'
 import {
-  FaInfoCircle,
   FaCheckCircle,
-  FaExclamationTriangle,
   FaExclamationCircle,
-} from "react-icons/fa";
-import { IoMdClose } from "react-icons/io";
+  FaExclamationTriangle,
+  FaInfoCircle,
+} from 'react-icons/fa'
+import { IoMdClose } from 'react-icons/io'
+import { Severity } from '../AlertBox'
 
 interface IAlert {
-  title: string;
-  message: string;
-  severity: Severity;
-  duration?: number;
-  closable?: boolean;
-  close: () => void;
+  title: string
+  message: string
+  severity: Severity
+  duration?: number
+  closable?: boolean
+  close: () => void
 }
 
 const Alert = ({
@@ -27,45 +27,45 @@ const Alert = ({
 }: IAlert) => {
   useEffect(() => {
     const timeout = setTimeout(() => {
-      close();
-    }, duration);
+      close()
+    }, duration)
     return () => {
-      clearTimeout(timeout);
-    };
+      clearTimeout(timeout)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [])
 
   const icon = useMemo(() => {
-    const ICON_STYLE = "mr-3 text-xl text-black";
+    const ICON_STYLE = 'mr-3 text-xl text-black'
 
     switch (severity) {
-      case "error":
-        return <FaExclamationCircle className={ICON_STYLE} />;
-      case "warning":
-        return <FaExclamationTriangle className={ICON_STYLE} />;
-      case "info":
-        return <FaInfoCircle className={ICON_STYLE} />;
-      case "success":
-        return <FaCheckCircle className={ICON_STYLE} />;
+      case 'error':
+        return <FaExclamationCircle className={ICON_STYLE} />
+      case 'warning':
+        return <FaExclamationTriangle className={ICON_STYLE} />
+      case 'info':
+        return <FaInfoCircle className={ICON_STYLE} />
+      case 'success':
+        return <FaCheckCircle className={ICON_STYLE} />
       default:
-        return null;
+        return null
     }
-  }, [severity]);
+  }, [severity])
 
   const bgStyle = useMemo(() => {
     switch (severity) {
-      case "error":
-        return "bg-alert-error";
-      case "warning":
-        return "bg-alert-warning";
-      case "info":
-        return "bg-alert-info";
-      case "success":
-        return "bg-alert-success";
+      case 'error':
+        return 'bg-alert-error'
+      case 'warning':
+        return 'bg-alert-warning'
+      case 'info':
+        return 'bg-alert-info'
+      case 'success':
+        return 'bg-alert-success'
       default:
-        return "";
+        return ''
     }
-  }, [severity]);
+  }, [severity])
 
   return (
     <div
@@ -85,7 +85,7 @@ const Alert = ({
         </button>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default Alert;
+export default Alert

@@ -1,37 +1,37 @@
-import { Suspense } from "react";
-import { Certificates, Info, Skills } from "./_components";
-import Bio from "./_components/Bio/Bio";
-import { Metadata } from "next";
-import { INFO } from "./_config/data";
-import { Avatar } from "./_components/Info";
+import { Metadata } from 'next'
+import { Suspense } from 'react'
+import { Certificates, Info, Skills } from './_components'
+import Bio from './_components/Bio/Bio'
+import { Avatar } from './_components/Info'
+import { INFO } from './_config/data'
 
-export const dynamic = "force-static";
+export const dynamic = 'force-static'
 
-const domain = process.env.NEXT_PUBLIC_DOMAIN || "arcade-lab.vercel.app";
+const domain = process.env.NEXT_PUBLIC_DOMAIN || 'arcade-lab.vercel.app'
 
 export const metadata: Metadata = {
-  title: "About",
+  title: 'About',
   description: `Learn about ${INFO.Name}, a self-taught full-stack ${INFO.Role} with ${new Date().getFullYear() - 2019} years of experience. Specializing in Next.js, React, TypeScript, AWS, Kubernetes, and DevOps. Based in ${INFO.Location}, working at ${INFO.Company}.`,
   keywords: [
-    "Denes Beck",
-    "Software Engineer",
-    "Full Stack Developer",
-    "Self-taught Developer",
-    "AWS Certified",
-    "Terraform Certified",
-    "Next.js Developer",
-    "React Developer",
-    "TypeScript",
-    "Golang",
-    "DevOps Engineer",
-    "Budapest",
-    "SEON",
+    'Denes Beck',
+    'Software Engineer',
+    'Full Stack Developer',
+    'Self-taught Developer',
+    'AWS Certified',
+    'Terraform Certified',
+    'Next.js Developer',
+    'React Developer',
+    'TypeScript',
+    'Golang',
+    'DevOps Engineer',
+    'Budapest',
+    'SEON',
   ],
   openGraph: {
     title: `About ${INFO.Name} - ${INFO.Role}`,
     description: `Self-taught full-stack ${INFO.Role} with ${new Date().getFullYear() - 2019} years of experience. AWS & Terraform certified. Specializing in scalable applications and infrastructure automation.`,
     url: `https://${domain}/about`,
-    type: "profile",
+    type: 'profile',
     images: [
       {
         url: `/logo/arcade_lab_logo.png`,
@@ -42,12 +42,12 @@ export const metadata: Metadata = {
     ],
   },
   twitter: {
-    card: "summary_large_image",
+    card: 'summary_large_image',
     title: `About ${INFO.Name}`,
     description: `Self-taught full-stack ${INFO.Role} with ${new Date().getFullYear() - 2019} years of experience. AWS & Terraform certified.`,
-    creator: "@DenesBeck",
+    creator: '@DenesBeck',
   },
-};
+}
 
 const About = () => {
   return (
@@ -73,7 +73,7 @@ const About = () => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default About;
+export default About

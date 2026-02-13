@@ -1,6 +1,6 @@
-import Badge from "./Badge";
-import Certificates from "./Certificates";
+import Badge from './Badge'
+import Certificates from './Certificates'
 
-export { Badge };
+export { Badge }
 
-export default Certificates;
+export default Certificates

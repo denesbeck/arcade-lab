@@ -1,11 +1,11 @@
-import { GiMineExplosion } from "react-icons/gi";
-import { IoCheckmarkSharp } from "react-icons/io5";
+import { GiMineExplosion } from 'react-icons/gi'
+import { IoCheckmarkSharp } from 'react-icons/io5'
 
 interface IFilterActions {
-  clear: () => void;
-  apply: () => void;
-  clearDisabled: boolean;
-  applyDisabled: boolean;
+  clear: () => void
+  apply: () => void
+  clearDisabled: boolean
+  applyDisabled: boolean
 }
 
 const FilterActions = ({
@@ -33,7 +33,7 @@ const FilterActions = ({
         <span>Apply</span>
       </button>
     </div>
-  );
-};
+  )
+}
 
-export default FilterActions;
+export default FilterActions

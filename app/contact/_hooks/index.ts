@@ -1,3 +1,3 @@
-import useTurnstile from "./useTurnstile";
+import useTurnstile from './useTurnstile'
 
-export { useTurnstile };
+export { useTurnstile }

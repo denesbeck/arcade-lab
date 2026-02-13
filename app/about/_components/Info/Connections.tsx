@@ -1,5 +1,5 @@
-import { Social } from ".";
-import { CONNECTIONS } from "../../_config/data";
+import { CONNECTIONS } from '../../_config/data'
+import { Social } from '.'
 
 const Connections = () => {
   return (
@@ -8,7 +8,7 @@ const Connections = () => {
         <Social key={url} url={url} icon={icon} />
       ))}
     </div>
-  );
-};
+  )
+}
 
-export default Connections;
+export default Connections

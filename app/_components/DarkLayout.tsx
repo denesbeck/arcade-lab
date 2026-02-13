@@ -1,23 +1,23 @@
-"use client";
-import { Portal } from "@mui/material";
-import { ReactElement, useEffect } from "react";
+'use client'
+import { Portal } from '@mui/material'
+import { ReactElement, useEffect } from 'react'
 
 interface DarkLayoutProps {
-  children: ReactElement;
-  id?: string;
+  children: ReactElement
+  id?: string
 }
 
 const DarkLayout = ({ children, id }: DarkLayoutProps) => {
   useEffect(() => {
     // Prevent body scroll when modal is open
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const originalOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
 
     return () => {
       // Restore original overflow when modal closes
-      document.body.style.overflow = originalOverflow;
-    };
-  }, []);
+      document.body.style.overflow = originalOverflow
+    }
+  }, [])
 
   return (
     <Portal>
@@ -28,7 +28,7 @@ const DarkLayout = ({ children, id }: DarkLayoutProps) => {
         {children}
       </div>
     </Portal>
-  );
-};
+  )
+}
 
-export default DarkLayout;
+export default DarkLayout

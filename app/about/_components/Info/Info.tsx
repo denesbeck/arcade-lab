@@ -1,6 +1,6 @@
-import { Heading3 } from "@/_components";
-import { Avatar, Connections } from ".";
-import { INFO, INFO_ICONS } from "../../_config/data";
+import { Heading3 } from '@/_components'
+import { INFO, INFO_ICONS } from '../../_config/data'
+import { Avatar, Connections } from '.'
 
 const Info = () => {
   return (
@@ -11,7 +11,7 @@ const Info = () => {
         <div className="flex justify-between space-x-4 sm:flex-col sm:w-max w-dvw">
           <div>
             {Object.entries(INFO).map(([key, value]) => {
-              const Icon = INFO_ICONS[key as keyof typeof INFO_ICONS];
+              const Icon = INFO_ICONS[key as keyof typeof INFO_ICONS]
               return (
                 <div key={key} className="flex space-x-4 sm:max-w-[40dvw]">
                   <div className="flex items-center space-x-2 h-6">
@@ -22,14 +22,14 @@ const Info = () => {
                   </div>
                   <div>{value}</div>
                 </div>
-              );
+              )
             })}
           </div>
           <Connections />
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Info;
+export default Info

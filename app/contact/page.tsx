@@ -1,72 +1,72 @@
-"use client";
-import { Button, GoBack, Heading2, Input, TextArea } from "@/_components";
-import { Turnstile } from "./_components";
-import { useRef, useState, useCallback } from "react";
-import { contact } from "./actions";
-import { useAlert } from "@/_components/AlertBox/_hooks";
-import validate from "./_utils/validate";
+'use client'
+import { useCallback, useRef, useState } from 'react'
+import { Button, GoBack, Heading2, Input, TextArea } from '@/_components'
+import { useAlert } from '@/_components/AlertBox/_hooks'
+import { Turnstile } from './_components'
+import validate from './_utils/validate'
+import { contact } from './actions'
 
 const Contact = () => {
-  const nameRef = useRef<HTMLInputElement>(null);
-  const emailRef = useRef<HTMLInputElement>(null);
-  const messageRef = useRef<HTMLTextAreaElement>(null);
-  const tsToken = useRef<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const { alert } = useAlert("global");
+  const nameRef = useRef<HTMLInputElement>(null)
+  const emailRef = useRef<HTMLInputElement>(null)
+  const messageRef = useRef<HTMLTextAreaElement>(null)
+  const tsToken = useRef<string | null>(null)
+  const [loading, setLoading] = useState(false)
+  const { alert } = useAlert('global')
 
   const handleTokenReceived = useCallback((token: string) => {
-    tsToken.current = token;
-  }, []);
+    tsToken.current = token
+  }, [])
 
   const handleSubmit = useCallback(async () => {
     const { valid, messages } = validate(
-      nameRef.current?.value || "",
-      emailRef.current?.value || "",
-      messageRef.current?.value || "",
-    );
+      nameRef.current?.value || '',
+      emailRef.current?.value || '',
+      messageRef.current?.value || ''
+    )
     if (!valid) {
       alert({
-        id: "contact-invalid",
-        title: "Invalid input",
-        message: messages.join("\n"),
-        severity: "error",
-      });
-      return;
+        id: 'contact-invalid',
+        title: 'Invalid input',
+        message: messages.join('\n'),
+        severity: 'error',
+      })
+      return
     }
 
-    setLoading(true);
+    setLoading(true)
     if (tsToken.current) {
       const res = await contact({
         token: tsToken.current,
-        name: nameRef.current?.value || "",
-        email: emailRef.current?.value || "",
-        message: messageRef.current?.value || "",
-      });
+        name: nameRef.current?.value || '',
+        email: emailRef.current?.value || '',
+        message: messageRef.current?.value || '',
+      })
 
       if (!res.success) {
         alert({
-          id: "contact-error",
-          title: "Error",
+          id: 'contact-error',
+          title: 'Error',
           message: res.message,
-          severity: "error",
-        });
+          severity: 'error',
+        })
       } else {
         alert({
-          id: "contact-success",
-          title: "Success",
+          id: 'contact-success',
+          title: 'Success',
           message: res.message,
-          severity: "success",
-        });
+          severity: 'success',
+        })
       }
-      setLoading(false);
-      nameRef.current!.value = "";
-      emailRef.current!.value = "";
-      messageRef.current!.value = "";
+      setLoading(false)
+      nameRef.current!.value = ''
+      emailRef.current!.value = ''
+      messageRef.current!.value = ''
       // @ts-expect-error: Turnstile object should be present
-      window.turnstile.reset();
-      return;
+      window.turnstile.reset()
+      return
     }
-  }, [alert]);
+  }, [alert])
 
   return (
     <div className="flex flex-col min-h-[calc(100dvh-100px)]">
@@ -85,7 +85,7 @@ const Contact = () => {
             <Turnstile getToken={handleTokenReceived} />
             <Button
               disabled={!tsToken}
-              label={"Submit"}
+              label={'Submit'}
               action={handleSubmit}
               loading={loading}
             />
@@ -93,7 +93,7 @@ const Contact = () => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Contact;
+export default Contact

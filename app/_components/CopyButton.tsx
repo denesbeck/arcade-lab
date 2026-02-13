@@ -1,20 +1,20 @@
-"use client";
-import { Tooltip } from "@/_components";
-import { useState, useCallback } from "react";
-import { IoCopyOutline } from "react-icons/io5";
+'use client'
+import { useCallback, useState } from 'react'
+import { IoCopyOutline } from 'react-icons/io5'
+import { Tooltip } from '@/_components'
 
 interface ICopyButton {
-  content: string;
+  content: string
 }
 
 const CopyButton = ({ content }: ICopyButton) => {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false)
 
   const handleCopy = useCallback(() => {
-    navigator.clipboard.writeText(content);
-    setOpen(true);
-    setTimeout(() => setOpen(false), 5000);
-  }, [content]);
+    navigator.clipboard.writeText(content)
+    setOpen(true)
+    setTimeout(() => setOpen(false), 5000)
+  }, [content])
 
   return (
     <Tooltip
@@ -28,7 +28,7 @@ const CopyButton = ({ content }: ICopyButton) => {
         <IoCopyOutline className="w-5 h-5 text-dark-200" />
       </button>
     </Tooltip>
-  );
-};
+  )
+}
 
-export default CopyButton;
+export default CopyButton

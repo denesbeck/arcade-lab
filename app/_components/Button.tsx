@@ -1,10 +1,10 @@
-import { Spinner } from ".";
+import { Spinner } from '.'
 
 interface ButtonProps {
-  disabled?: boolean;
-  label: string;
-  action: () => void;
-  loading?: boolean;
+  disabled?: boolean
+  label: string
+  action: () => void
+  loading?: boolean
 }
 
 const Button = ({
@@ -22,7 +22,7 @@ const Button = ({
       {loading && <Spinner />}
       <span>{label}</span>
     </button>
-  );
-};
+  )
+}
 
-export default Button;
+export default Button

@@ -1,6 +1,6 @@
-import { Heading3, Info } from "@/_components";
-import { Badge } from ".";
-import { CERTIFICATES } from "../../_config/data";
+import { Heading3, Info } from '@/_components'
+import { CERTIFICATES } from '../../_config/data'
+import { Badge } from '.'
 
 const Certificates = () => {
   return (
@@ -13,7 +13,7 @@ const Certificates = () => {
         ))}
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Certificates;
+export default Certificates

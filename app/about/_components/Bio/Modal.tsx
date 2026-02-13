@@ -1,31 +1,30 @@
-import { DarkLayout, MacOSBar } from "@/_components";
-import { ReactElement, useMemo, useCallback } from "react";
-import { useClickOutside } from "@/_hooks";
-import { useSearchParams } from "next/navigation";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from 'next/navigation'
+import { ReactElement, useCallback, useMemo } from 'react'
+import { DarkLayout, MacOSBar } from '@/_components'
+import { useClickOutside } from '@/_hooks'
 
 interface ModalProps {
-  children: ReactElement;
+  children: ReactElement
 }
 
 const Modal = ({ children }: ModalProps) => {
-  const { push } = useRouter();
-  const searchParams = useSearchParams();
+  const { push } = useRouter()
+  const searchParams = useSearchParams()
 
   const closeUrl = useMemo(() => {
-    const mutableParams = new URLSearchParams(searchParams.toString());
-    mutableParams.delete("modalOpen");
-    return "/about?" + mutableParams.toString();
-  }, [searchParams]);
+    const mutableParams = new URLSearchParams(searchParams.toString())
+    mutableParams.delete('modalOpen')
+    return '/about?' + mutableParams.toString()
+  }, [searchParams])
 
   const handleClickOutside = useCallback(() => {
-    push(closeUrl);
-  }, [push, closeUrl]);
+    push(closeUrl)
+  }, [push, closeUrl])
 
-  const ref = useClickOutside<HTMLDivElement>(handleClickOutside);
-  const isOpen = searchParams.has("modalOpen");
+  const ref = useClickOutside<HTMLDivElement>(handleClickOutside)
+  const isOpen = searchParams.has('modalOpen')
 
-  if (!isOpen) return;
+  if (!isOpen) return
   return (
     <DarkLayout>
       <div
@@ -38,7 +37,7 @@ const Modal = ({ children }: ModalProps) => {
         </div>
       </div>
     </DarkLayout>
-  );
-};
+  )
+}
 
-export default Modal;
+export default Modal

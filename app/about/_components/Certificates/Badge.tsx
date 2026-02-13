@@ -1,10 +1,10 @@
-import Image from "next/image";
+import Image from 'next/image'
 
 interface BadgeProps {
-  url: string;
-  size?: number;
-  img: string;
-  alt: string;
+  url: string
+  size?: number
+  img: string
+  alt: string
 }
 
 const Badge = ({ url, size = 28, img, alt }: BadgeProps) => {
@@ -26,7 +26,7 @@ const Badge = ({ url, size = 28, img, alt }: BadgeProps) => {
         loading="lazy"
       />
     </a>
-  );
-};
+  )
+}
 
-export default Badge;
+export default Badge

@@ -1,8 +1,8 @@
-import { RefObject } from "react";
+import { RefObject } from 'react'
 
 interface IInput {
-  placeholder: string;
-  inputRef: RefObject<HTMLInputElement | null>;
+  placeholder: string
+  inputRef: RefObject<HTMLInputElement | null>
 }
 
 const Input = ({ placeholder, inputRef }: IInput) => {
@@ -12,7 +12,7 @@ const Input = ({ placeholder, inputRef }: IInput) => {
       className="py-3 px-4 bg-transparent ring-2 ring-primary min-w-[300px] focus-visible:ring-focus focus-visible:outline-hidden active:ring-active"
       ref={inputRef}
     />
-  );
-};
+  )
+}
 
-export default Input;
+export default Input

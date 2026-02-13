@@ -1,18 +1,18 @@
-import { useEffect } from "react";
-import { useTurnstile } from "../_hooks";
+import { useEffect } from 'react'
+import { useTurnstile } from '../_hooks'
 
 interface ITurnstile {
-  getToken: (token: string) => void;
+  getToken: (token: string) => void
 }
 
-const SITE_KEY = process.env.NEXT_PUBLIC_TS_SITE_KEY;
+const SITE_KEY = process.env.NEXT_PUBLIC_TS_SITE_KEY
 const Turnstile = ({ getToken }: ITurnstile) => {
-  const { token } = useTurnstile();
+  const { token } = useTurnstile()
 
   useEffect(() => {
-    if (token) getToken(token);
+    if (token) getToken(token)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token]);
+  }, [token])
 
   return (
     <div
@@ -22,7 +22,7 @@ const Turnstile = ({ getToken }: ITurnstile) => {
       data-callback="onTurnstileSuccess"
       data-theme="dark"
     />
-  );
-};
+  )
+}
 
-export default Turnstile;
+export default Turnstile

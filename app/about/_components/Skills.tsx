@@ -1,5 +1,5 @@
-import { Heading3, Info, Tooltip } from "@/_components";
-import { SKILLS } from "../_config/data";
+import { Heading3, Info, Tooltip } from '@/_components'
+import { SKILLS } from '../_config/data'
 
 const Skills = () => {
   return (
@@ -8,16 +8,16 @@ const Skills = () => {
       <Info>Most of the time I work with the following tools:</Info>
       <div className="flex flex-wrap gap-4 items-center mt-3.5">
         {SKILLS.map((skill) => {
-          const Icon = skill.icon;
+          const Icon = skill.icon
           return (
             <Tooltip key={skill.name} arrow title={skill.name}>
               <Icon className="text-3xl transition-all duration-200 ease-in-out hover:scale-110 text-primary hover:brightness-125" />
             </Tooltip>
-          );
+          )
         })}
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Skills;
+export default Skills

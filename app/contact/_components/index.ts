@@ -1,3 +1,3 @@
-import Turnstile from "./Turnstile";
+import Turnstile from './Turnstile'
 
-export { Turnstile };
+export { Turnstile }

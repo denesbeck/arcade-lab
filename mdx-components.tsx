@@ -1,6 +1,6 @@
-import { CopyButton, MacOSBar } from "@/_components";
-import type { MDXComponents } from "mdx/types";
-import Image from "next/image";
+import type { MDXComponents } from 'mdx/types'
+import Image from 'next/image'
+import { CopyButton, MacOSBar } from '@/_components'
 
 const components: MDXComponents = {
   // Wrapper for all MDX content (e.g., for margin, padding, and layout)
@@ -83,25 +83,25 @@ const components: MDXComponents = {
 
   // Code Block (preformatted code)
   pre: ({ children }) => {
-    let codeString = "";
+    let codeString = ''
 
-    const codeChild = children?.props?.children;
+    const codeChild = children?.props?.children
 
-    if (typeof codeChild === "string") {
-      codeString = codeChild;
+    if (typeof codeChild === 'string') {
+      codeString = codeChild
     } else if (Array.isArray(codeChild)) {
       codeString = codeChild
         .map((child) => {
           // if child is a string, keep it; if it's an element, try to get its children
-          if (typeof child === "string") return child;
-          if (typeof child === "object" && child?.props?.children) {
-            return typeof child.props.children === "string"
+          if (typeof child === 'string') return child
+          if (typeof child === 'object' && child?.props?.children) {
+            return typeof child.props.children === 'string'
               ? child.props.children
-              : "";
+              : ''
           }
-          return "";
+          return ''
         })
-        .join("");
+        .join('')
     }
     return (
       <pre className="relative p-5 my-6 text-sm rounded-lg text-dark-200 bg-dark-700">
@@ -109,7 +109,7 @@ const components: MDXComponents = {
         <CopyButton content={codeString} />
         <span className="whitespace-pre-wrap break-words">{children}</span>
       </pre>
-    );
+    )
   },
 
   // Images
@@ -118,11 +118,11 @@ const components: MDXComponents = {
       <Image
         src={src}
         alt={alt}
-        width={Number(alt.split("+")[0].split("_")[0])}
-        height={Number(alt.split("+")[0].split("_")[1])}
+        width={Number(alt.split('+')[0].split('_')[0])}
+        height={Number(alt.split('+')[0].split('_')[1])}
         className="my-8 mx-auto rounded-lg"
       />
-    );
+    )
   },
 
   // Blockquotes
@@ -168,8 +168,8 @@ const components: MDXComponents = {
   td: ({ children }) => (
     <td className="py-3 px-4 break-words text-dark-200">{children}</td>
   ),
-};
+}
 
 export function useMDXComponents(): MDXComponents {
-  return components;
+  return components
 }

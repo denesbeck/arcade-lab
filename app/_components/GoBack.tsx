@@ -1,22 +1,22 @@
-"use client";
-import { useRouter } from "next/navigation";
-import { useCallback } from "react";
-import { FaArrowCircleLeft } from "react-icons/fa";
+'use client'
+import { useRouter } from 'next/navigation'
+import { useCallback } from 'react'
+import { FaArrowCircleLeft } from 'react-icons/fa'
 
 interface IGoBack {
-  fallbackUrl: string;
+  fallbackUrl: string
 }
 
 const GoBack = ({ fallbackUrl }: IGoBack) => {
-  const { back, push } = useRouter();
+  const { back, push } = useRouter()
 
   const handleGoBack = useCallback(() => {
-    if (typeof window !== "undefined" && window.history.length > 1) {
-      back();
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      back()
     } else {
-      push(fallbackUrl);
+      push(fallbackUrl)
     }
-  }, [back, push, fallbackUrl]);
+  }, [back, push, fallbackUrl])
 
   return (
     <div className="flex justify-end px-6 pb-2 w-full">
@@ -28,7 +28,7 @@ const GoBack = ({ fallbackUrl }: IGoBack) => {
         <span>Go back</span>
       </button>
     </div>
-  );
-};
+  )
+}
 
-export default GoBack;
+export default GoBack

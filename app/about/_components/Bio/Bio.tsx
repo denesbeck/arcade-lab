@@ -1,5 +1,5 @@
-import { Heading3 } from "@/_components";
-import { BIO } from "../../_config/data";
+import { Heading3 } from '@/_components'
+import { BIO } from '../../_config/data'
 
 const Bio = () => {
   return (
@@ -13,7 +13,7 @@ const Bio = () => {
         <div className="overflow-hidden break-words text-ellipsis">{BIO}</div>
       </div>
     </>
-  );
-};
+  )
+}
 
-export default Bio;
+export default Bio

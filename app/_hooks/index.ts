@@ -1,3 +1,3 @@
-import useClickOutside from "./useClickOutside";
+import useClickOutside from './useClickOutside'
 
-export { useClickOutside };
+export { useClickOutside }

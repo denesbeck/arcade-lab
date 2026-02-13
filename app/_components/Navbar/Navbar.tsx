@@ -1,17 +1,17 @@
-"use client";
-import { usePathname } from "next/navigation";
-import { Menu, Navitem, Title } from "./_components";
-import { navItems } from "@/_config/navigation";
-import { Portal } from "@mui/material";
+'use client'
+import { Portal } from '@mui/material'
+import { usePathname } from 'next/navigation'
+import { navItems } from '@/_config/navigation'
+import { Menu, Navitem, Title } from './_components'
 
 const Navbar = () => {
-  const pathname = usePathname();
+  const pathname = usePathname()
 
   return (
     <Portal>
       <nav className="flex fixed top-0 z-10 items-center py-2 px-6 w-full animate-text-focus h-max backdrop-blur-md">
         <Title mr />
-        {pathname !== "/contact" && (
+        {pathname !== '/contact' && (
           <>
             <div className="hidden justify-center items-center py-1 space-x-4 w-max sm:flex animate-text-focus">
               {navItems.map((item) => (
@@ -35,7 +35,7 @@ const Navbar = () => {
         )}
       </nav>
     </Portal>
-  );
-};
+  )
+}
 
-export default Navbar;
+export default Navbar

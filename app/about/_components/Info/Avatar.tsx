@@ -1,24 +1,24 @@
-"use client";
-import profile from "@/../public/avatars/ghibli_avatar.png";
-import Image from "next/image";
-import { useState, useCallback } from "react";
-import { Skeleton, ThemeProvider } from "@mui/material";
-import { darkTheme } from "@/theme";
+'use client'
+import { Skeleton, ThemeProvider } from '@mui/material'
+import Image from 'next/image'
+import { useCallback, useState } from 'react'
+import profile from '@/../public/avatars/ghibli_avatar.png'
+import { darkTheme } from '@/theme'
 
 interface IAvatar {
-  autoHide?: boolean;
+  autoHide?: boolean
 }
 
 const Avatar = ({ autoHide = true }: IAvatar) => {
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true)
 
   const handleLoad = useCallback(() => {
-    setLoading(false);
-  }, []);
+    setLoading(false)
+  }, [])
 
   return (
     <div
-      className={`${autoHide ? "hidden" : ""} overflow-hidden mx-3 w-40 h-40 rounded-full ring-2 sm:block min-w-40 min-h-40 ring-primary`}
+      className={`${autoHide ? 'hidden' : ''} overflow-hidden mx-3 w-40 h-40 rounded-full ring-2 sm:block min-w-40 min-h-40 ring-primary`}
     >
       {loading && (
         <ThemeProvider theme={darkTheme}>
@@ -42,7 +42,7 @@ const Avatar = ({ autoHide = true }: IAvatar) => {
         onLoad={() => handleLoad()}
       />
     </div>
-  );
-};
+  )
+}
 
-export default Avatar;
+export default Avatar

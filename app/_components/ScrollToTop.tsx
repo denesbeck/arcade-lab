@@ -1,29 +1,29 @@
-"use client";
-import { useEffect, useState, useCallback } from "react";
+'use client'
+import { useCallback, useEffect, useState } from 'react'
 
 const ScrollToTop = () => {
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(false)
 
   const handleScroll = useCallback(() => {
     if (window.scrollY > 200) {
-      setVisible(true);
+      setVisible(true)
     } else {
-      setVisible(false);
+      setVisible(false)
     }
-  }, []);
+  }, [])
 
   const scrollToTop = useCallback(() => {
     window.scrollTo({
       top: 0,
-      behavior: "smooth",
-    });
-  }, []);
+      behavior: 'smooth',
+    })
+  }, [])
 
   useEffect(() => {
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener('scroll', handleScroll)
 
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [handleScroll]);
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [handleScroll])
 
   return (
     <>
@@ -36,7 +36,7 @@ const ScrollToTop = () => {
         </button>
       )}
     </>
-  );
-};
+  )
+}
 
-export default ScrollToTop;
+export default ScrollToTop
