@@ -33,7 +33,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
     title: 'CloudGoat: Data Secrets',
     description:
       'Write-up: Exploiting EC2 User Data and IMDS to escalate privileges',
-    date: '2026-02-17',
+    date: '2026-02-19',
     hidden: false,
     tags: [
       'hacking',
