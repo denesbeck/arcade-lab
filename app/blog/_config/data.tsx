@@ -7,6 +7,9 @@ import buildHomeServerX from '@/../public/blog/covers/building_home_server_x.png
 import beanstalkSecrets from '@/../public/blog/covers/cloudgoat__beanstalk_secrets.png'
 import beanstalkSecretsSm from '@/../public/blog/covers/cloudgoat__beanstalk_secrets_sm.png'
 import beanstalkSecretsX from '@/../public/blog/covers/cloudgoat__beanstalk_secrets_x.png'
+import dataSecrets from '@/../public/blog/covers/cloudgoat__data_secrets.png'
+import dataSecretsSm from '@/../public/blog/covers/cloudgoat__data_secrets_sm.png'
+import dataSecretsX from '@/../public/blog/covers/cloudgoat__data_secrets_x.png'
 import snsSecrets from '@/../public/blog/covers/cloudgoat__sns_secrets.png'
 import snsSecretsSm from '@/../public/blog/covers/cloudgoat__sns_secrets_sm.png'
 import snsSecretsX from '@/../public/blog/covers/cloudgoat__sns_secrets_x.png'
@@ -25,6 +28,36 @@ import tektonCicdX from '@/../public/blog/covers/tekton_cicd_x.png'
 import { BlogEntry } from '../_interfaces/blog'
 
 const BLOG_ENTRIES: BlogEntry[] = [
+  {
+    id: 13,
+    title: 'CloudGoat: Data Secrets',
+    description:
+      'Write-up: Exploiting EC2 User Data and IMDS to escalate privileges',
+    date: '2026-02-17',
+    hidden: false,
+    tags: [
+      'hacking',
+      'write-up',
+      'cloudgoat',
+      'aws',
+      'pacu',
+      'ec2',
+      'lambda',
+      'secrets_manager',
+      'iam',
+      'exploit',
+      'vulnerability',
+    ],
+    content: 'cloudgoat__data-secrets',
+    cover: {
+      image: dataSecretsSm,
+      original: dataSecrets,
+      xImage: dataSecretsX,
+      alt: 'cloudgoat__data-secrets',
+      ogImage: '/blog/covers/cloudgoat__data_secrets.png',
+      ogImageX: '/blog/covers/cloudgoat__data_secrets_x.png',
+    },
+  },
   {
     id: 12,
     title: 'CloudGoat: SNS Secrets',
