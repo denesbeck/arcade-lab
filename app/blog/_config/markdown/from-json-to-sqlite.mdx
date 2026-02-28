@@ -1,0 +1,250 @@
+# 🗃️ From JSON Files to SQLite
+
+_How a Simple Benchmark Convinced Me to Rewrite Nexio's Storage Layer_
+
+📅 2026-02-28
+
+## 🧭 Introduction
+
+In my [previous posts](/blog/8), I shared how I built Nexio from scratch, and then [optimized its blob storage](/blog/9) with content-addressable deduplication and compression. But there was still a major bottleneck hiding in plain sight: the metadata layer. Every staging operation, commit lookup, and branch query was reading and writing JSON files. For small repositories, this was fine. For anything beyond a few hundred files, it was painfully slow.
+
+In this post, I'll walk through how I benchmarked the problem, designed a SQLite-based replacement, and navigated the tricky parts of the migration — including a subtle branching model issue that forced me to rethink how commits relate to branches entirely.
+
+## 🐌 The Problem
+
+Nexio's original architecture stored all metadata as JSON files:
+
+```
+.nexio/
+├── staging/
+│   └── logs.json          # Array of staged file entries
+├── commits/
+│   └── <commit-id>/
+│       ├── fileList.json   # Array of tracked files
+│       ├── logs.json       # Staging snapshot
+│       └── metadata.json   # Author, message
+├── branches/
+│   ├── <branch-name>/
+│   │   └── commits.json    # Linked list of commits
+│   └── metadata.json       # Default/current branch
+└── config.json
+```
+
+The fundamental issue? Every operation required a full read-parse-modify-write cycle. Adding a file to staging meant reading the entire `logs.json`, parsing it, appending one entry, serializing the whole thing, and writing it back. This is O(n) per operation, and when you're staging 5,000 files sequentially, the total cost becomes O(n^2).
+
+## 📊 The Benchmark That Changed Everything
+
+Before committing to a rewrite, I wanted hard numbers. I wrote a benchmark script (`scripts/benchmark_storage.go`) that compared JSON vs SQLite across different repository sizes. The results were eye-opening:
+
+### Staging Operations
+
+| Files | JSON Add All | SQLite Add (batch) | Speedup |
+|-------|--------------|-------------------|---------|
+| 100 | 10ms | 418μs | **24x** |
+| 1,000 | 508ms | 2.2ms | **233x** |
+| 5,000 | 12s | 12.6ms | **955x** |
+| 10,000 | 48s | 23ms | **2,070x** |
+
+### File Lookups
+
+| Files | JSON | SQLite | Speedup |
+|-------|------|--------|---------|
+| 100 | 116μs | 10μs | **11.5x** |
+| 1,000 | 967μs | 10μs | **97x** |
+| 5,000 | 4.6ms | 11μs | **403x** |
+| 10,000 | 9ms | 11μs | **840x** |
+
+The pattern was clear: JSON degrades quadratically while SQLite stays nearly constant. At 10,000 files, running `nexio status` would take around **3 minutes** with JSON (10,000 lookups x ~8ms each) versus roughly **200ms** with SQLite. That's the difference between a usable tool and a frustrating one.
+
+### Why the Gap Is So Large
+
+| Operation | JSON | SQLite |
+|-----------|------|--------|
+| Add single entry | O(n) - rewrite entire file | O(log n) - B-tree insert |
+| Add n entries sequentially | O(n^2) | O(n log n) |
+| Lookup by path | O(n) - linear scan | O(log n) - index lookup |
+| Collect all hashes | O(commits x files) | O(files) - single query |
+
+JSON has no indexes. Every lookup is a linear scan. SQLite uses B-tree indexes, making lookups logarithmic regardless of table size.
+
+## 🏗️ The New Architecture
+
+With blob storage already handled by the `objects/` directory (see [blob storage optimization](/blog/blob-storage-optimization)), and `config.json` being rarely accessed and human-editable, the migration target was focused: replace all the JSON metadata files with a single SQLite database.
+
+```
+.nexio/
+├── objects/       # Unchanged - content-addressable blob storage
+├── index.db       # NEW - single SQLite database for all metadata
+└── config.json    # Unchanged - user configuration
+```
+
+Gone are the `staging/`, `commits/`, and `branches/` directories. Everything lives in `index.db` now.
+
+### The Schema
+
+I chose `modernc.org/sqlite`, a pure Go SQLite implementation that requires no CGO. This keeps the build simple — just `go build` and you're done, no C compiler needed.
+
+The database has five tables:
+
+```sql
+-- Branch pointers
+CREATE TABLE branches (
+    name        TEXT PRIMARY KEY,
+    head_commit TEXT,
+    is_default  INTEGER DEFAULT 0,
+    is_current  INTEGER DEFAULT 0,
+    created_at  TEXT DEFAULT (datetime('now'))
+);
+
+-- Commit history (shared across branches)
+CREATE TABLE commits (
+    id           TEXT PRIMARY KEY,
+    parent_id    TEXT,
+    timestamp    TEXT NOT NULL,
+    message      TEXT NOT NULL,
+    author_name  TEXT NOT NULL,
+    author_email TEXT NOT NULL,
+    FOREIGN KEY (parent_id) REFERENCES commits(id)
+);
+
+-- Staging area
+CREATE TABLE staging (
+    id        TEXT PRIMARY KEY,
+    op        TEXT NOT NULL CHECK (op IN ('ADD', 'MOD', 'REM')),
+    path      TEXT NOT NULL,
+    blob_hash TEXT
+);
+
+-- File snapshots per commit
+CREATE TABLE files (
+    id        TEXT PRIMARY KEY,
+    commit_id TEXT NOT NULL,
+    path      TEXT NOT NULL,
+    blob_hash TEXT NOT NULL,
+    mode      INTEGER NOT NULL,
+    FOREIGN KEY (commit_id) REFERENCES commits(id)
+);
+
+-- Staging state at time of commit
+CREATE TABLE commit_logs (
+    id        TEXT PRIMARY KEY,
+    commit_id TEXT NOT NULL,
+    op        TEXT NOT NULL,
+    path      TEXT NOT NULL,
+    blob_hash TEXT,
+    FOREIGN KEY (commit_id) REFERENCES commits(id)
+);
+```
+
+With WAL mode enabled and proper indexes on paths, commit IDs, and blob hashes, lookups stay fast regardless of repository size.
+
+## 🧩 The Branching Problem
+
+This is where things got interesting. My first attempt at the schema included a `branch` column on the `commits` table:
+
+```sql
+-- First attempt (broken)
+CREATE TABLE commits (
+    id     TEXT PRIMARY KEY,
+    branch TEXT NOT NULL,          -- which branch owns this commit
+    ...
+    FOREIGN KEY (branch) REFERENCES branches(name)
+);
+```
+
+The idea seemed straightforward: each commit belongs to a branch. But this model breaks when you create a branch.
+
+In the old JSON system, each branch had its own `commits.json` file, so the same commit ID could appear in multiple branches independently. When creating a new branch from an existing one, Nexio simply copied the JSON file. But with a SQL `PRIMARY KEY` on `id`, a commit can only exist once. You can't insert the same commit ID with a different branch value — it violates the uniqueness constraint.
+
+I tried `INSERT OR IGNORE` to work around it, but that silently dropped the new rows. I tried a composite primary key `(id, branch)`, but that meant duplicating commit data across branches. Neither approach felt right.
+
+### The Fix: Shared Commits
+
+The solution was to remove the `branch` column entirely and let commits be shared across branches. A branch is just a pointer — it has a `head_commit` that points to the latest commit. To find all commits on a branch, you walk the `parent_id` chain from the head:
+
+```
+Branch "main":    head_commit -> C3 -> C2 -> C1 -> nil
+Branch "feature": head_commit -> C5 -> C4 -> C3 -> C2 -> C1 -> nil
+```
+
+Creating a branch becomes trivial: just create a new branch record pointing to the same `head_commit` as the source branch. No commit copying, no duplication. When you make a new commit on a branch, only that branch's `head_commit` moves forward.
+
+Dropping a branch requires a bit more care — you have to check which commits are still reachable from other branches before deleting anything. But this is a correct model, and it's actually how Git works too.
+
+## ⚡ Implementation Details
+
+A few things I learned during the migration:
+
+### Foreign Key Ordering Matters
+
+With foreign keys enabled (`PRAGMA foreign_keys=ON`), the order of INSERT operations becomes critical. In `runCoreCommitCommand`, the original order was:
+
+```
+1. ProcessFileList()     -- INSERT into files
+2. DBSaveCommitLogs()    -- INSERT into commit_logs
+3. RegisterCommit()      -- INSERT into commits
+```
+
+This fails because `files` and `commit_logs` have foreign keys referencing `commits(id)`, so the commit row must exist first. The fix was simply reordering:
+
+```
+1. RegisterCommit()      -- INSERT into commits (must come first)
+2. ProcessFileList()     -- INSERT into files
+3. DBSaveCommitLogs()    -- INSERT into commit_logs
+4. TruncateLogs()        -- DELETE from staging
+```
+
+### File IDs Must Be Regenerated Per Commit
+
+When creating a new commit, Nexio carries forward unchanged files from the previous commit's file list. Initially, I reused the same file record IDs, which caused `UNIQUE constraint` violations since those IDs already existed in the `files` table. The fix: generate fresh IDs for every file entry in every commit. Each commit gets its own complete set of file records.
+
+### DB Lifecycle in Tests
+
+Since tests call helper functions directly instead of going through Cobra's command hooks, the database lifecycle needed special handling. `InitDB()` now closes any existing connection before opening a new one, preventing stale connection issues when tests rapidly create and destroy repositories.
+
+### File-Based Locking Is Gone
+
+The old `lock.go` implemented a file-based mutex using `O_CREATE|O_EXCL` flags (which I actually [wrote about](/blog/developing-my-own-vcs) as a learning exercise). With SQLite handling concurrency through WAL mode and its own internal locking, the file-based lock became redundant and was deleted.
+
+## 🧮 The Numbers
+
+After the migration, the entire test suite (156 tests) passes with 74.4% coverage. Here's how the architecture compares:
+
+| Aspect | JSON (Before) | SQLite (After) |
+|--------|---------------|----------------|
+| Staging 10,000 files | 48 seconds | 23 milliseconds |
+| File lookup (10K repo) | 9ms | 11μs |
+| `nexio status` (10K files) | ~3 minutes | ~200ms |
+| Concurrent access | File locking | ACID transactions |
+| Storage overhead | Many small files | Single `index.db` |
+| Human readability | Easy to inspect | Requires `sqlite3` CLI |
+
+The trade-off is clear: you lose the ability to casually inspect JSON files, but you gain orders-of-magnitude better performance and proper transactional safety. For a version control system, this is the right trade.
+
+## 💡 Lessons Learned
+
+1. **Benchmark before you rewrite.** I was tempted to "just switch to SQLite" based on intuition. Running the benchmark first gave me concrete numbers to justify the effort and helped identify exactly where the bottlenecks were.
+
+2. **Data models matter more than storage engines.** The biggest challenge wasn't switching from JSON to SQL — it was getting the commit/branch relationship right. The `branch` column on commits seemed logical but was fundamentally wrong for a system where branches share history.
+
+3. **Foreign keys are a feature, not a nuisance.** The FK constraint failures were annoying during development, but they caught real ordering bugs that would have been silent data corruption with JSON files.
+
+4. **Pure Go SQLite is production-ready.** `modernc.org/sqlite` worked flawlessly. No CGO, no system dependencies, cross-compilation just works. The performance is more than adequate for a local tool.
+
+5. **Simplify when you can.** Since Nexio isn't in production yet, I skipped the original plan's feature flags, dual backends, and migration tooling. Direct replacement was faster and left less dead code behind.
+
+## 🔮 Future
+
+With the metadata layer now on solid ground, there are some natural next steps:
+
+- **Schema migrations**: The `schema_version` table is in place for future schema changes without losing data.
+- **Query optimization**: Some operations still make multiple queries where a single JOIN would suffice. There's room to optimize further.
+- **Remote sync**: With metadata in SQLite and blobs as content-addressed files, syncing to a remote becomes a well-defined problem: transfer missing blobs + ship the SQLite diff.
+
+## 🔗 Resources
+
+- [modernc.org/sqlite](https://pkg.go.dev/modernc.org/sqlite) - Pure Go SQLite driver
+- [SQLite WAL Mode](https://www.sqlite.org/wal.html) - Write-Ahead Logging for concurrent reads
+- [BLAKE3](https://github.com/BLAKE3-team/BLAKE3-specs) - Hash algorithm used for blob storage
+
+💻 Check out Nexio at [GitHub](https://github.com/denesbeck/nexio).

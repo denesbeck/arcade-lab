@@ -16,6 +16,9 @@ import snsSecretsX from '@/../public/blog/covers/cloudgoat__sns_secrets_x.png'
 import developingMyOwnVcs from '@/../public/blog/covers/developing_my_own_vcs.png'
 import developingMyOwnVcsSm from '@/../public/blog/covers/developing_my_own_vcs_sm.png'
 import developingMyOwnVcsX from '@/../public/blog/covers/developing_my_own_vcs_x.png'
+import fromJsonToSqlite from '@/../public/blog/covers/from_json_to_sqlite.png'
+import fromJsonToSqliteSm from '@/../public/blog/covers/from_json_to_sqlite_sm.png'
+import fromJsonToSqliteX from '@/../public/blog/covers/from_json_to_sqlite_x.png'
 import lambdaDeploy from '@/../public/blog/covers/lambda_deploy.png'
 import lambdaDeploySm from '@/../public/blog/covers/lambda_deploy_sm.png'
 import lambdaDeployX from '@/../public/blog/covers/lambda_deploy_x.png'
@@ -28,6 +31,24 @@ import tektonCicdX from '@/../public/blog/covers/tekton_cicd_x.png'
 import { BlogEntry } from '../_interfaces/blog'
 
 const BLOG_ENTRIES: BlogEntry[] = [
+  {
+    id: 14,
+    title: 'From JSON Files to SQLite',
+    description:
+      "How a Simple Benchmark Convinced Me to Rewrite Nexio's Storage Layer",
+    date: '2026-02-28',
+    hidden: false,
+    tags: ['sqlite', 'golang', 'vcs', 'nexio', 'performance', 'optimization'],
+    content: 'from-json-to-sqlite',
+    cover: {
+      image: fromJsonToSqliteSm,
+      original: fromJsonToSqlite,
+      xImage: fromJsonToSqliteX,
+      alt: 'from-json-to-sqlite',
+      ogImage: '/blog/covers/from_json_to_sqlite.png',
+      ogImageX: '/blog/covers/from_json_to_sqlite_x.png',
+    },
+  },
   {
     id: 13,
     title: 'CloudGoat: Data Secrets',
