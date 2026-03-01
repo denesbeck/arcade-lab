@@ -1,0 +1,140 @@
+# 🏗️ Building my home server: Part 7
+
+_Media server with ErsatzTV and Jellyfin_
+
+📅 2026-03-07
+
+In my previous blog post, I covered setting up centralized logging with Loki and Promtail. In this post, I'm deploying a media server stack using [ErsatzTV](https://ersatztv.org/) and [Jellyfin](https://jellyfin.org/). The idea is simple: I have a collection of movies on my server, and I want to stream them on my local network. But instead of just browsing a library and picking something to watch, I wanted the experience of flipping through TV channels — like cable TV, but with my own content. ErsatzTV handles the channel side, and Jellyfin acts as the media player.
+
+## 🤔 Why This Combo?
+
+**Jellyfin** is a free, open-source media server. It organizes your media library, provides metadata (posters, descriptions, subtitles), and streams content to any device with a web browser or a Jellyfin client app. Think of it as a self-hosted Netflix. It's the most popular open-source alternative to Plex, with no account requirements and no premium tier — everything is free.
+
+**ErsatzTV** is a lesser-known but very cool project. It lets you create custom IPTV channels from your media library. You define channels, assign content to them, configure schedules, and ErsatzTV generates an HDHomeRun-compatible tuner and an M3U playlist. Jellyfin can then pick up these channels via its Live TV feature, giving you a channel-surfing experience with your own movies and shows.
+
+ErsatzTV exposes an M3U playlist and an XMLTV guide that any IPTV-capable player can consume. Jellyfin supports M3U tuners natively in its Live TV feature, which makes the integration straightforward.
+
+Together, they create a setup where you can either browse the Jellyfin library on-demand or tune into a channel that's playing something continuously — just like turning on the TV.
+
+## 🐳 Docker Compose
+
+Both services run as Docker containers. Since they need to communicate with each other (Jellyfin needs to reach ErsatzTV's tuner endpoint), I put them on a shared Docker network:
+
+```yaml
+networks:
+  media:
+    driver: bridge
+
+services:
+  ersatztv:
+    image: ghcr.io/ersatztv/ersatztv
+    container_name: ersatztv
+    environment:
+      - TZ=Europe/Budapest
+    ports:
+      - "127.0.0.1:8409:8409"
+    volumes:
+      - /path/to/ersatztv/config:/config
+      - /path/to/movies:/media:ro
+    tmpfs:
+      - /transcode
+    devices:
+      - /dev/dri:/dev/dri
+    networks:
+      - media
+    restart: unless-stopped
+  jellyfin:
+    image: jellyfin/jellyfin
+    container_name: jellyfin
+    environment:
+      - TZ=Europe/Budapest
+    ports:
+      - "127.0.0.1:8096:8096"
+    volumes:
+      - /path/to/jellyfin/config:/config
+      - /path/to/jellyfin/cache:/cache
+      - /path/to/movies:/media:ro
+    networks:
+      - media
+    restart: unless-stopped
+```
+
+A few things worth noting:
+
+- **Shared network**: The `media` bridge network allows the containers to reach each other by container name. This is important because Jellyfin needs to connect to ErsatzTV's HDHomeRun tuner at `http://ersatztv:8409`. Without a shared network, Jellyfin wouldn't be able to resolve the `ersatztv` hostname.
+
+- **Hardware acceleration**: The `/dev/dri` device pass-through gives ErsatzTV access to the GPU for hardware-accelerated transcoding. This is particularly useful for IPTV channel generation, where ErsatzTV needs to transcode media in real time to maintain a continuous stream. Without it, transcoding falls back to CPU, which can struggle on lower-powered hardware.
+
+- **tmpfs for transcoding**: The `/transcode` directory is mounted as a `tmpfs` (in-memory filesystem). Transcoding generates a lot of temporary files, and writing them to disk would cause unnecessary I/O wear — especially on an SSD. Using `tmpfs` keeps everything in RAM, which is both faster and easier on the hardware.
+
+- **Read-only media**: The movies directory is mounted as `:ro` (read-only) in both containers. Neither service needs to write to the media library — they only need to read the files for playback and transcoding.
+
+- **Localhost binding**: Following the same pattern as all my other services, both ports are bound to `127.0.0.1` and accessed through my Nginx reverse proxy at `https://jellyfin.arcade-lab.io` and `https://ersatz.arcade-lab.io`.
+
+## 📺 Connecting Jellyfin to ErsatzTV
+
+Once both containers are running, the next step is to connect them so Jellyfin can pick up ErsatzTV's channels.
+
+### 1. Create Channels in ErsatzTV
+
+First, open the ErsatzTV web UI at `https://ersatz.arcade-lab.io` and create your channels. Each channel needs a name, a number, and content assigned to it. You can set up schedules (e.g., "play movies from this collection in shuffle mode") or manually curate playlists. ErsatzTV also lets you configure FFmpeg profiles per channel — for example, setting the resolution, codec, and bitrate for the transcoded stream.
+
+### 2. Add ErsatzTV as a Tuner in Jellyfin
+
+In Jellyfin, go to **Dashboard → Live TV** and add a new tuner device:
+
+- **Tuner Type**: M3U Tuner
+- **URL**: `http://ersatztv:8409/iptv/channels.m3u`
+
+Since both containers are on the `media` network, Jellyfin can reach ErsatzTV by its container name. After adding the tuner, Jellyfin will discover the available channels from the M3U playlist.
+
+### 3. Set Up the Guide
+
+Still in Jellyfin's Live TV settings, add a new guide data provider:
+
+- **Guide Source**: XML TV (XMLTV)
+- **URL**: `http://ersatztv:8409/iptv/xmltv.xml`
+
+This pulls the electronic program guide (EPG) data from ErsatzTV, so Jellyfin knows what's currently playing and what's coming up next on each channel.
+
+After a guide refresh, the channels appear in Jellyfin's Live TV section with full program information.
+
+## 💾 Backing Up ErsatzTV Config
+
+ErsatzTV stores all its configuration — channels, schedules, FFmpeg profiles, and media mappings — in an SQLite database inside the `/config` directory. Losing this means reconfiguring everything from scratch. Since the channel setup and FFmpeg tuning took some effort to get right, I set up an automated backup.
+
+Following the same pattern I used for my photo backups, I created a backup script that runs daily via cron:
+
+- **Source**: ErsatzTV's config directory
+- **Destination**: `/mnt/backups/ersatztv/`
+- **Schedule**: Daily at 2:00 AM (between the photo backup at 1 AM and the server restart at 3 AM)
+- **Retention**: Last 3 backups, with automatic rotation
+
+The script uses `rsync` to copy the entire config directory into a timestamped folder, then removes any backups beyond the most recent three. This is managed through Ansible, consistent with how I handle all other backup tasks on the server.
+
+## 🤖 Automating with Ansible
+
+As with everything else in my home lab, the entire setup is automated with Ansible. Instead of cloning a separate repository for the docker-compose file, I generate it directly from a Jinja2 template. All paths and configuration values live in a variables file that's excluded from version control, keeping sensitive information out of the repository.
+
+The playbook handles the full lifecycle:
+
+1. Creates the media server directory
+2. Renders the docker-compose file from the template
+3. Starts the containers with `docker compose up -d`
+4. Sets up the backup destination directory
+5. Deploys the backup script
+6. Creates the cron job for daily backups
+
+Running the playbook on a fresh server gets the entire media stack up and running in a single command.
+
+## 🎉 Outcome
+
+With ErsatzTV and Jellyfin deployed, I now have:
+
+1. **On-demand streaming** — Jellyfin provides a Netflix-like interface for browsing and watching my movie collection from any device on the network.
+2. **Live TV channels** — ErsatzTV generates custom IPTV channels that play continuously, giving me the experience of flipping through channels with my own content.
+3. **Hardware-accelerated transcoding** — GPU pass-through ensures smooth real-time transcoding for the IPTV streams without taxing the CPU.
+4. **Automated config backups** — ErsatzTV's channel definitions and FFmpeg profiles are backed up daily with rotation, so I never have to redo the configuration from scratch.
+5. **Fully automated deployment** — one Ansible playbook sets up everything, from containers to backups.
+
+Noice! 🎉

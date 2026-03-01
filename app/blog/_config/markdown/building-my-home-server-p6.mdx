@@ -1,0 +1,258 @@
+# 🏗️ Building my home server: Part 6
+
+_Centralized logging with Loki_
+
+📅 2026-03-04
+
+In my previous blog post, I covered setting up Pi-hole for network-wide ad blocking and centralized local DNS. In this post, I'm adding centralized log management to my home lab using [Grafana Loki](https://grafana.com/oss/loki/). Up until now, if I wanted to check the logs of a specific container, I had to SSH into the server and run `docker logs <container>`. For system-level logs, I had to dig through `journalctl`. This was fine when things were working, but when something went wrong, jumping between terminals and grepping through logs was tedious. My goal was simple: have a single interface where I can see the logs of every container and the Ubuntu server system, all in one place.
+
+## 🤔 Why Loki?
+
+When it comes to log aggregation, the two main contenders are the **ELK stack** (Elasticsearch + Logstash + Kibana) and **Grafana Loki** (with Promtail). I went with Loki for a few reasons:
+
+- **Resource footprint**: ELK is notoriously memory-hungry. Elasticsearch alone wants 2-4 GB of heap memory, and you'd need three containers (Elasticsearch, Logstash, Kibana) on top of everything else. Loki + Promtail together use around 256-512 MB. On a single-node home lab that's already running Jellyfin, Prometheus, cAdvisor, Grafana, Pi-hole, and several other containers, that difference matters a lot.
+
+- **Grafana integration**: I already have Grafana as my monitoring dashboard. Loki is a native Grafana datasource — I can query logs in the same UI where I view my Prometheus metrics. With ELK, I'd need Kibana as a separate UI, which means yet another container, another port, and another Nginx proxy entry.
+
+- **Log volume**: ELK shines when you're doing complex full-text search across terabytes of logs per day. My home lab generates maybe a few MB of logs per day across ~13 containers and systemd. Loki's label-based filtering (`{container="jellyfin"}`, `{unit="ssh.service"}`) is more than sufficient for this scale.
+
+In short, Loki is lightweight, integrates with my existing stack, and is perfectly suited for a home lab environment.
+
+## 🏗️ Architecture
+
+The logging pipeline consists of two components:
+
+- **Promtail** is the log collector. It runs as a container, discovers other containers via the Docker socket, reads their log files, and also reads the systemd journal for system-level logs. It ships everything to Loki.
+- **Loki** is the log aggregation backend. It receives logs from Promtail, indexes them by labels (not by full-text content, which is why it's so lightweight), and exposes them via an API that Grafana can query.
+
+The data flow is: `Containers / systemd → Promtail → Loki → Grafana`
+
+## 🔧 Loki Configuration
+
+Loki needs a configuration file that defines how it stores and manages logs. Here's the configuration I'm using:
+
+```yaml
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9096
+
+common:
+  instance_addr: 127.0.0.1
+  path_prefix: /loki
+  storage:
+    filesystem:
+      chunks_directory: /loki/chunks
+      rules_directory: /loki/rules
+  replication_factor: 1
+  ring:
+    kvstore:
+      store: inmemory
+
+schema_config:
+  configs:
+    - from: 2020-10-24
+      store: tsdb
+      object_store: filesystem
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+
+limits_config:
+  reject_old_samples: false
+  ingestion_rate_mb: 16
+  ingestion_burst_size_mb: 32
+  retention_period: 360h
+
+compactor:
+  working_directory: /loki/compactor
+  compaction_interval: 10m
+  retention_enabled: true
+  retention_delete_delay: 2h
+  delete_request_cancel_period: 24h
+  delete_request_store: filesystem
+
+ruler:
+  alertmanager_url: http://localhost:9093
+```
+
+A few things worth noting:
+
+- **`auth_enabled: false`**: Since this is a home lab behind a firewall, I don't need multi-tenancy or authentication at the Loki level. Grafana handles access control.
+- **`store: tsdb` with `schema: v13`**: This is the current recommended storage engine. Older guides might reference `boltdb-shipper` with `v11`, but those are deprecated in recent Loki versions.
+- **`retention_period: 360h`**: This keeps logs for 15 days, matching my Prometheus retention. Logs older than 15 days are automatically cleaned up by the compactor.
+- **`delete_request_store: filesystem`**: This is required when retention is enabled — without it, Loki will refuse to start with a validation error.
+
+## 🔧 Promtail Configuration
+
+Promtail needs to know where to find logs and where to ship them. Here's the configuration:
+
+```yaml
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  - job_name: docker_logs
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 5s
+    relabel_configs:
+      - source_labels: ['__meta_docker_container_name']
+        target_label: 'container'
+      - source_labels: ['__meta_docker_container_image']
+        target_label: 'image'
+      - source_labels: ['__meta_docker_container_id']
+        target_label: '__path__'
+        replacement: '/var/lib/docker/containers/$1/*-json.log'
+
+  - job_name: system_logs
+    journal:
+      path: /run/log/journal
+      max_age: 12h
+      labels:
+        job: system
+    relabel_configs:
+      - source_labels: ['__journal__systemd_unit']
+        target_label: 'unit'
+      - source_labels: ['__journal__hostname']
+        target_label: 'host'
+```
+
+There are two scrape jobs here:
+
+- **`docker_logs`**: Uses Docker service discovery (`docker_sd_configs`) to automatically find all running containers via the Docker socket. It reads each container's JSON log file from `/var/lib/docker/containers/` and labels the logs with the container name and image. This means every container is picked up automatically — no manual configuration needed when I add new services.
+
+- **`system_logs`**: Reads the systemd journal to capture system-level logs. This covers everything that goes through systemd: SSH, Nginx, Samba, cron jobs, and any other system services. Each log entry is labeled with the systemd unit name and hostname.
+
+## 🐳 Docker Compose
+
+With the configuration files in place, I added both services to my existing monitoring `docker-compose.yml`:
+
+```yaml
+promtail:
+  image: grafana/promtail:3.4.2-amd64
+  container_name: promtail
+  hostname: promtail
+  user: root
+  volumes:
+    - /var/log:/var/log:ro
+    - ./promtail:/etc/promtail:ro
+    - /var/log/journal:/run/log/journal:ro
+    - /etc/machine-id:/etc/machine-id:ro
+    - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    - /var/run/docker.sock:/var/run/docker.sock:ro
+  command:
+    - -config.file=/etc/promtail/config.yml
+  depends_on:
+    - loki
+  networks:
+    - monitoring
+  restart: unless-stopped
+
+loki:
+  image: grafana/loki:latest
+  container_name: loki
+  hostname: loki
+  volumes:
+    - loki_data:/loki
+    - ./loki-config.yml:/etc/loki/local-config.yaml
+  command:
+    - -config.file=/etc/loki/local-config.yaml
+    - -config.expand-env=true
+  ports:
+    - "127.0.0.1:3100:3100"
+  networks:
+    - monitoring
+  restart: unless-stopped
+```
+
+There were a few gotchas I ran into during setup that are worth mentioning:
+
+### Promtail Image
+
+The default `grafana/promtail:latest` image does **not** include systemd journal support. If you use it, Promtail will log a warning saying journal support is not compiled in, and your system logs simply won't appear. The platform-specific images (e.g., `grafana/promtail:3.4.2-amd64` for x86_64 or the `-arm64` variant for ARM) include journal support.
+
+### Journal Path
+
+On Ubuntu, the systemd journal is stored at `/var/log/journal` by default (persistent storage), not `/run/log/journal` (which is volatile/in-memory). The volume mount maps the host's `/var/log/journal` to `/run/log/journal` inside the container, which is where Promtail's config expects to find it.
+
+### Permissions
+
+The Promtail container needs to run as `root` to read the journal files, which are owned by `root:systemd-journal`. Additionally, the `/etc/machine-id` file must be mounted — the journal reader uses it to identify and open the correct journal directory.
+
+### Loki Port Binding
+
+Following the same pattern as all my other services, Loki's port is bound to `127.0.0.1:3100` so it's only accessible from localhost and proxied through Nginx if needed.
+
+## 📊 Grafana Datasource
+
+To make Loki available in Grafana without manual configuration, I added it to my existing datasource provisioning file:
+
+```yaml
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+  - name: Loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+```
+
+After restarting Grafana, Loki shows up as a datasource automatically.
+
+## 🔍 Querying Logs
+
+With everything deployed, I can now query logs in Grafana's **Explore** view by selecting the Loki datasource. Loki uses [LogQL](https://grafana.com/docs/loki/latest/query/log_queries/) as its query language. Here are some examples:
+
+```
+# All logs from a specific container
+{container="/jellyfin"}
+
+# All system logs
+{job="system"}
+
+# SSH service logs
+{job="system", unit="ssh.service"}
+
+# Nginx logs
+{job="system", unit="nginx.service"}
+
+# Search for errors across all containers
+{container=~".+"} |= "error"
+
+# Samba logs
+{job="system", unit="smbd.service"}
+```
+
+One thing to keep in mind: Grafana's label dropdown in the Explore view only shows label values that exist within the selected time range. If a container hasn't produced any logs in the time window you're looking at, it won't appear in the list. This doesn't mean anything is broken — just widen the time range.
+
+## 🔒 Security
+
+A quick note on security, since we're now aggregating system logs in a centralized location. The logs may contain usernames, IP addresses, service names, and error details. They do not contain passwords or secrets — systemd journal doesn't log those unless a service explicitly prints them to stdout.
+
+The setup is secured by the same layers as the rest of the monitoring stack: Loki is bound to `127.0.0.1` (not exposed to the network), Grafana requires authentication, and UFW blocks all inbound traffic except SSH, SMB, and Nginx. For a home lab behind a firewall, this is a reasonable setup.
+
+## 🎉 Outcome
+
+With Loki and Promtail added to the stack, I now have:
+
+1. **Container logs** — every Docker container's stdout/stderr is automatically collected and queryable in Grafana, with no per-container configuration needed.
+2. **System logs** — SSH, Nginx, Samba, cron, and all other systemd services are captured from the journal.
+3. **15-day retention** — matching my Prometheus metrics retention, with automatic cleanup.
+4. **A single interface** — everything is accessible in Grafana, right next to my existing metrics dashboards.
+
+No more SSH-ing into the server to run `docker logs` or `journalctl`. Noice! 🎉
