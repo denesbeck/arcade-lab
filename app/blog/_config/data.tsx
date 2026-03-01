@@ -32,6 +32,35 @@ import { BlogEntry } from '../_interfaces/blog'
 
 const BLOG_ENTRIES: BlogEntry[] = [
   {
+    id: 15,
+    title: 'Building my home server: Part 5',
+    description: 'Network-wide ad blocking with Pi-hole',
+    date: '2026-03-01',
+    hidden: false,
+    tags: [
+      'linux',
+      'ubuntu',
+      'docker',
+      'ufw',
+      'nginx',
+      'containers',
+      'home-server',
+      'pi-hole',
+      'dns',
+      'ad-blocking',
+      'ansible',
+    ],
+    content: 'building-my-home-server-p5',
+    cover: {
+      image: buildHomeServerSm,
+      original: buildHomeServer,
+      xImage: buildHomeServerX,
+      alt: 'build_home_server',
+      ogImage: '/blog/covers/building_home_server.png',
+      ogImageX: '/blog/covers/building_home_server_x.png',
+    },
+  },
+  {
     id: 14,
     title: 'From JSON Files to SQLite',
     description:

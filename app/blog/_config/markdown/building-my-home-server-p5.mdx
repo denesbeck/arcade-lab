@@ -1,0 +1,158 @@
+# 🏗️ Building my home server: Part 5
+
+_Network-wide ad blocking with Pi-hole_
+
+📅 2026-03-01
+
+In my previous blog post, I covered deploying containers, configuring UFW, and setting up Nginx as a reverse proxy for my services. In this post, I'm taking things a step further by adding network-wide ad blocking to my home lab using [Pi-hole](https://pi-hole.net/). Pi-hole is a DNS sinkhole that blocks ads and trackers at the network level, meaning every device on my local network benefits from it without needing any client-side software. It also comes with a slick web interface for monitoring DNS queries and managing blocklists. On top of that, I configured Pi-hole to handle local DNS resolution for all my home lab services, so I can access them by their subdomain names instead of remembering IP addresses and port numbers.
+
+## 🤔 Why Pi-hole?
+
+Up until this point, I had been relying on the `/etc/hosts` file on each client device to resolve my `*.arcade-lab.io` subdomains to the server's local IP. This worked, but it was tedious to maintain across multiple devices. Every time I added a new service, I had to update the hosts file on every laptop, phone, and tablet on my network.
+
+With Pi-hole acting as the DNS server for my local network, I can define all my local DNS records in one place. Point your device's DNS to the server, and it just works. The ad blocking is a nice bonus on top of that.
+
+## 🐧 Fixing the systemd-resolved Conflict
+
+On Ubuntu, the `systemd-resolved` service runs a DNS stub listener on port 53 by default. Since Pi-hole needs to bind to port 53 for DNS resolution, these two services conflict with each other. The fix is straightforward: disable the stub listener.
+
+1. Edit the resolved configuration file:
+
+```bash
+sudo vi /etc/systemd/resolved.conf
+```
+
+2. Find the line `#DNSStubListener=yes` and change it to:
+
+```
+DNSStubListener=no
+```
+
+3. Replace `/etc/resolv.conf` with a symlink to the runtime version that uses your Netplan DNS settings:
+
+```bash
+sudo rm /etc/resolv.conf
+sudo ln -s /run/systemd/resolve/resolv.conf /etc/resolv.conf
+```
+
+4. Restart the service:
+
+```bash
+sudo systemctl restart systemd-resolved
+```
+
+After this, port 53 is free for Pi-hole to use.
+
+## 🐳 Running Pi-hole in Docker
+
+Since all my other services run in Docker containers, Pi-hole was no exception. I followed the [official Docker Pi-hole documentation](https://github.com/pi-hole/docker-pi-hole) to set things up. Here's what the container deployment looks like:
+
+```bash
+docker run -d \
+  --name pihole \
+  -p 192.168.64.15:53:53/tcp \
+  -p 192.168.64.15:53:53/udp \
+  -p 127.0.0.1:800:80/tcp \
+  -e TZ=Europe/Budapest \
+  -e FTLCONF_webserver_api_password=<your_password> \
+  -e FTLCONF_dns_listeningMode=ALL \
+  -e FTLCONF_dns_upstreams="8.8.8.8;8.8.4.4" \
+  -v /home/pihole/etc-pihole:/etc/pihole \
+  --cap-add NET_BIND_SERVICE \
+  --restart unless-stopped \
+  pihole/pihole:latest
+```
+
+### Port Bindings
+
+There are three port mappings here, and each one was a deliberate choice:
+
+- **`192.168.64.15:53:53/tcp` and `192.168.64.15:53:53/udp`**: DNS ports bound to the server's LAN IP. This is the key part — devices on the local network can point their DNS to `192.168.64.15` and Pi-hole will handle their queries. I deliberately did not bind to `0.0.0.0` to keep it as targeted as possible.
+
+- **`127.0.0.1:800:80/tcp`**: The Pi-hole web admin interface, bound to localhost only. This follows the same pattern I established in Part 4 — all web UIs are bound to `127.0.0.1` and proxied through Nginx with SSL. Port 800 is used because port 80 is already taken by Nginx itself.
+
+### Why Not `0.0.0.0` for DNS?
+
+As I discovered in Part 4, Docker bypasses UFW entirely by manipulating `iptables` directly. When you bind a port to `0.0.0.0`, it&apos;s accessible from everywhere regardless of your firewall rules. For HTTP services, I solved this by binding to `127.0.0.1` and proxying through Nginx. But DNS traffic (port 53, UDP/TCP) can&apos;t be proxied through Nginx — it&apos;s not HTTP traffic, it operates at a completely different protocol layer. So binding to the specific LAN IP (`192.168.64.15`) is the next best thing: it's reachable from the local network but not from every interface.
+
+### Environment Variables
+
+Pi-hole v6 introduced a new configuration system based on `pihole.toml` and the `FTLCONF_` environment variable prefix:
+
+- **`FTLCONF_webserver_api_password`**: Sets the web admin password. Note that in v6, settings configured via environment variables become read-only — you can't change them from the web UI afterward.
+- **`FTLCONF_dns_listeningMode: ALL`**: Required when running in Docker&apos;s default bridge network mode. Without this, Pi-hole would only listen for queries from the container's internal network.
+- **`FTLCONF_dns_upstreams`**: The upstream DNS servers Pi-hole forwards queries to. I&apos;m using Google's `8.8.8.8` and `8.8.4.4`.
+
+### Volume and Capabilities
+
+- The `/etc/pihole` volume persists Pi-hole's databases and configuration across container recreations. This is important because Pi-hole stores its blocklists, query logs, and settings here.
+- `NET_BIND_SERVICE` is the only capability needed — it allows the process to bind to port 53. Other capabilities like `NET_ADMIN` are only required if you're using Pi-hole as a DHCP server, which I'm not.
+
+## 🌐 Local DNS Records
+
+This was the part I was most excited about. Instead of maintaining `/etc/hosts` files on every device, I can now define all my local DNS records in Pi-hole.
+
+### Pi-hole v6 and `dns.hosts`
+
+If you've used Pi-hole v5 before, you might remember the `custom.list` file for local DNS records. In v6, this was replaced entirely. Local DNS records are now stored in Pi-hole's embedded database and managed via the `pihole-FTL --config` CLI or the API.
+
+The `dns.hosts` configuration key accepts a JSON array of `"IP DOMAIN"` strings:
+
+```bash
+docker exec pihole pihole-FTL --config dns.hosts \
+  '["192.168.64.15 home.arcade-lab.io", "192.168.64.15 portainer.arcade-lab.io", "192.168.64.15 grafana.arcade-lab.io", "192.168.64.15 prometheus.arcade-lab.io", "192.168.64.15 transmission.arcade-lab.io", "192.168.64.15 filebrowser.arcade-lab.io", "192.168.64.15 jellyfin.arcade-lab.io", "192.168.64.15 ersatz.arcade-lab.io", "192.168.64.15 pi-hole.arcade-lab.io"]'
+```
+
+After running this command, all my `*.arcade-lab.io` subdomains resolve to the server's IP. Any device on my network that uses Pi-hole as its DNS server can now access:
+
+- `https://portainer.arcade-lab.io` — Container management
+- `https://grafana.arcade-lab.io` — Monitoring dashboards
+- `https://prometheus.arcade-lab.io` — Metrics
+- `https://transmission.arcade-lab.io` — BitTorrent client
+- `https://filebrowser.arcade-lab.io` — File browser
+- `https://jellyfin.arcade-lab.io` — Media streaming
+- `https://ersatz.arcade-lab.io` — IPTV
+- `https://pi-hole.arcade-lab.io` — Pi-hole admin itself
+
+No more editing hosts files on every device. Add a new service, update the DNS records in one place, and every device on the network picks it up automatically.
+
+## 🤖 Automating with Ansible
+
+As with everything else in my home lab, I automated the entire Pi-hole setup with Ansible. The playbook handles all the steps described above: disabling the systemd-resolved stub listener, deploying the container, and configuring local DNS records via the Pi-hole CLI. I also externalized all the configuration into a separate variables file, keeping things consistent with how I manage my other services.
+
+The local DNS records are defined as a simple list in the variables file:
+
+```yaml
+pihole_local_dns_records:
+  - domain: home.arcade-lab.io
+  - domain: portainer.arcade-lab.io
+  - domain: grafana.arcade-lab.io
+  - domain: prometheus.arcade-lab.io
+  - domain: transmission.arcade-lab.io
+  - domain: filebrowser.arcade-lab.io
+  - domain: jellyfin.arcade-lab.io
+  - domain: ersatz.arcade-lab.io
+  - domain: pi-hole.arcade-lab.io
+```
+
+The playbook builds this list into a JSON array at runtime and compares it against the existing records in Pi-hole. Records are only updated when they differ from the desired state, making the playbook fully idempotent — I can run it as many times as I want without side effects.
+
+## 🔧 Connecting Devices
+
+The last step is telling devices on the network to use Pi-hole for DNS. The easiest way is to configure your router's DHCP settings to hand out `192.168.64.15` as the primary DNS server. That way, every device that connects to the network automatically uses Pi-hole.
+
+Alternatively, you can configure DNS on individual devices:
+- **macOS**: System Settings → Wi-Fi → Details → DNS → set `192.168.64.15`
+- **iOS**: Settings → Wi-Fi → (i) → Configure DNS → Manual → `192.168.64.15`
+- **Linux**: Edit your Netplan or `/etc/resolv.conf` to set `nameserver 192.168.64.15`
+- **Windows**: Network adapter settings → IPv4 → Preferred DNS server → `192.168.64.15`
+
+## 🎉 Outcome
+
+With Pi-hole running, I now have:
+
+1. **Network-wide ad blocking** — every device on my network benefits from blocked ads and trackers without installing anything.
+2. **Centralized local DNS** — all my `*.arcade-lab.io` subdomains resolve correctly from any device, managed in one place.
+3. **A nice dashboard** — the Pi-hole web interface at `https://pi-hole.arcade-lab.io` shows me exactly what's happening on my network: how many queries are being made, what's being blocked, and which domains are the most popular.
+
+Noice! 🎉
