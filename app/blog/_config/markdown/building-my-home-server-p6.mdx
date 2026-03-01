@@ -2,7 +2,7 @@
 
 _Centralized logging with Loki_
 
-📅 2026-03-04
+📅 2026-03-07
 
 In my previous blog post, I covered setting up Pi-hole for network-wide ad blocking and centralized local DNS. In this post, I'm adding centralized log management to my home lab using [Grafana Loki](https://grafana.com/oss/loki/). Up until now, if I wanted to check the logs of a specific container, I had to SSH into the server and run `docker logs <container>`. For system-level logs, I had to dig through `journalctl`. This was fine when things were working, but when something went wrong, jumping between terminals and grepping through logs was tedious. My goal was simple: have a single interface where I can see the logs of every container and the Ubuntu server system, all in one place.
 
