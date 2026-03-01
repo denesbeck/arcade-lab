@@ -1,0 +1,166 @@
+# 🏗️ Building my home server: Part 8
+
+_Remote access with Tailscale_
+
+📅 2026-03-13
+
+In my previous blog post, I covered setting up a media server stack with ErsatzTV and Jellyfin. In this post, I'm solving a problem that's been bugging me since the beginning: accessing my home lab from outside my local network. Until now, all my services — Jellyfin, Grafana, Pi-hole, Filebrowser, and everything else — were only accessible when I was home on my LAN. If I wanted to stream a movie on my phone while commuting or check my Grafana dashboards from a coffee shop, I was out of luck. Time to fix that.
+
+## 🤔 Why Tailscale?
+
+When it comes to remote access for a home lab, there are three main contenders: **OpenVPN**, **WireGuard**, and **Tailscale**. I also considered **Cloudflare Tunnel**, which takes a different approach entirely. Here's how I evaluated them:
+
+**OpenVPN** is the veteran. It's battle-tested and extremely configurable, but that configurability comes at a cost. You need to set up a PKI (Public Key Infrastructure), manage certificates, configure NAT and port forwarding on your router, and maintain `iptables` rules. For a single-server home lab, that's a lot of overhead for what should be a simple "let me reach my server from my phone" problem.
+
+**WireGuard** is the modern alternative — fast, lightweight, and built into the Linux kernel. It's a massive improvement over OpenVPN in terms of performance and simplicity. But you still need to open a port on your router, manage key pairs for every device, and handle DNS configuration yourself.
+
+**Cloudflare Tunnel** was tempting since I'm already using Cloudflare for my DNS (certbot DNS-01 challenge for the wildcard SSL certificate). It lets you expose services without opening any inbound ports. However, it only works for HTTP/HTTPS traffic. I also want to access my Samba shares and SSH into the server remotely, which Cloudflare Tunnel can't do. Plus, all traffic routes through Cloudflare's servers, adding latency and a privacy consideration.
+
+**Tailscale** is built on top of WireGuard but removes all the operational pain. No port forwarding, no PKI, no key management, no router configuration. It uses NAT traversal to establish direct peer-to-peer WireGuard tunnels between your devices, even behind CGNAT. You install it, authenticate, and it just works. It's free for personal use (up to 100 devices, 3 users), and has excellent mobile apps for iOS and Android.
+
+For a single-server home lab where I want full network-level access (HTTP, SSH, SMB) with minimal maintenance, Tailscale was the clear winner.
+
+## 📦 Installing Tailscale
+
+Tailscale provides an official apt repository for Ubuntu. The installation follows the same pattern I used for Docker in Part 4 — download the GPG key, add the repository, and install the package:
+
+```bash
+# Add the GPG key
+curl -fsSL https://pkgs.tailscale.com/stable/ubuntu/$(. /etc/os-release && echo $UBUNTU_CODENAME).noarmor.gpg \
+  | sudo tee /etc/apt/keyrings/tailscale-archive-keyring.gpg > /dev/null
+
+# Add the apt repository
+echo "deb [signed-by=/etc/apt/keyrings/tailscale-archive-keyring.gpg] https://pkgs.tailscale.com/stable/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" \
+  | sudo tee /etc/apt/sources.list.d/tailscale.list
+
+# Install
+sudo apt update && sudo apt install tailscale
+```
+
+After installation, enable and start the Tailscale daemon:
+
+```bash
+sudo systemctl enable --now tailscaled
+```
+
+Then authenticate the server to your Tailscale network (called a "tailnet"):
+
+```bash
+sudo tailscale up --auth-key=tskey-auth-xxxxx --accept-dns=false
+```
+
+A couple of things to note here:
+
+- **`--auth-key`**: Instead of opening a browser on the server to authenticate (which isn't practical on a headless Ubuntu Server), you generate a one-time auth key in the [Tailscale admin console](https://login.tailscale.com/admin/settings/keys) and pass it directly. The key is single-use — once the server is authenticated, the key can't be reused.
+
+- **`--accept-dns=false`**: This is important. By default, Tailscale wants to override the machine's DNS settings with its own MagicDNS. But my server runs Pi-hole, which manages DNS for the entire network. I don't want Tailscale messing with that. Setting `--accept-dns=false` tells Tailscale to leave the server's DNS configuration alone.
+
+After authentication, the server gets a Tailscale IP in the `100.x.y.z` range:
+
+```bash
+tailscale ip -4
+# 100.104.44.113
+```
+
+This IP is how other devices on my tailnet will reach the server.
+
+## 🔥 Firewall Configuration
+
+Tailscale creates a virtual network interface called `tailscale0`. Traffic from my remote devices arrives on this interface, so UFW needs to allow it. I added a single rule:
+
+```bash
+sudo ufw allow in on tailscale0
+```
+
+This allows all incoming traffic on the Tailscale interface. It might seem broad, but the security model here is layered: only devices authenticated to my tailnet can send traffic through `tailscale0` in the first place. Tailscale handles the authentication and encryption — UFW just needs to let the traffic through once it arrives.
+
+## 🐳 Making Pi-hole Listen on Tailscale
+
+This is where I hit my first snag. After setting everything up, I configured the Tailscale admin console to use my server as a global DNS nameserver (so my phone would use Pi-hole for DNS even when remote). The result? My phone completely lost DNS resolution — I couldn't reach anything, not even public websites.
+
+The problem was straightforward: Pi-hole's DNS port (53) was bound to `192.168.64.15` — the server's LAN IP. When my phone sent DNS queries to the Tailscale IP (`100.104.44.113`), Pi-hole wasn't listening there. Connection refused.
+
+The fix was to publish Pi-hole's DNS port on both IPs:
+
+```bash
+docker run -d \
+  --name pihole \
+  -p 192.168.64.15:53:53/tcp \
+  -p 192.168.64.15:53:53/udp \
+  -p 100.104.44.113:53:53/tcp \
+  -p 100.104.44.113:53:53/udp \
+  -p 127.0.0.1:800:80/tcp \
+  # ... rest of the Pi-hole configuration
+```
+
+Now Pi-hole listens on both the LAN and Tailscale interfaces. Devices on the local network send DNS queries to `192.168.64.15`, and devices on my tailnet send them to `100.104.44.113`. Both get the same Pi-hole experience: ad blocking, tracker blocking, and local DNS resolution.
+
+### Local DNS Records
+
+The local DNS records in Pi-hole also needed updating. Previously, all `*.arcade-lab.io` subdomains resolved to `192.168.64.15`. That works on the LAN, but Tailscale clients need them to resolve to `100.104.44.113`. The solution was to add records for both IPs:
+
+```bash
+docker exec pihole pihole-FTL --config dns.hosts \
+  '["192.168.64.15 jellyfin.arcade-lab.io", "100.104.44.113 jellyfin.arcade-lab.io", ...]'
+```
+
+Pi-hole now returns the appropriate IP depending on which interface the query arrives on. A device on the LAN gets `192.168.64.15`, and a device on the tailnet gets `100.104.44.113`. The subdomains work from both networks.
+
+### Global vs Restricted DNS
+
+When configuring Tailscale to use Pi-hole as a DNS server, there are two options in the admin console:
+
+- **Global nameserver**: All DNS queries from all Tailscale devices go through Pi-hole. You get ad blocking everywhere, but if the server is down (mine reboots daily at 3 AM), your devices lose all DNS resolution.
+
+- **Restricted nameserver**: Only queries for specific domains (e.g., `arcade-lab.io`) go through Pi-hole. Everything else uses the device's default DNS. Safer, but no ad blocking when remote.
+
+I went with the global nameserver because I wanted ad blocking on my phone when I'm out. The tradeoff is that during the daily 3 AM reboot window, DNS briefly breaks on connected Tailscale devices — but I'm usually asleep at that point, so it's an acceptable compromise.
+
+## 📁 Making Samba Work Over Tailscale
+
+With Tailscale and Pi-hole sorted, I could access all my web services remotely through their `*.arcade-lab.io` subdomains. But my Samba shares were still unreachable. Two things were blocking it:
+
+### 1. Interface Binding
+
+Samba's configuration had `bind interfaces only = yes` with interfaces limited to `lo`, `wlo1`, and `192.168.64.0/24`. The `tailscale0` interface wasn't included, so Samba was ignoring traffic from it entirely.
+
+Fix:
+
+```ini
+interfaces = lo wlo1 192.168.64.0/24 tailscale0
+```
+
+### 2. Host Allow Restrictions
+
+Each share had `hosts allow = 192.168.64.0/24`, which only permits connections from the LAN subnet. Tailscale IPs live in the `100.64.0.0/10` CGNAT range, which was being rejected.
+
+Fix:
+
+```ini
+hosts allow = 192.168.64.0/24 100.64.0.0/10
+```
+
+The `100.64.0.0/10` range covers all possible Tailscale IPs (`100.64.0.0` through `100.127.255.255`). This is safe because only authenticated devices on my tailnet can reach the Samba port through the `tailscale0` interface.
+
+After restarting Samba, I could mount my shares from my laptop over Tailscale just like I was on the LAN.
+
+## 🤖 Automating with Ansible
+
+As with everything else in this series, the entire Tailscale setup is automated with Ansible. The playbook follows the same pattern as my Docker installation: download the GPG key, add the apt repository, install the package, enable the service, and authenticate.
+
+The auth key is stored in a variables file that's excluded from version control (like all my other secrets), and the playbook is idempotent — it checks if Tailscale is already authenticated before attempting to re-auth, so running it multiple times doesn't cause issues.
+
+The Pi-hole playbook was updated to publish DNS on both IPs and register local DNS records for both the LAN and Tailscale addresses. The Samba template was updated to include `tailscale0` in the interface list and `100.64.0.0/10` in the host allow rules. The UFW playbook got a single new rule allowing traffic on the Tailscale interface.
+
+## 🎉 Outcome
+
+With Tailscale deployed, I now have:
+
+1. **Full remote access** — all my web services are accessible from anywhere via their `*.arcade-lab.io` subdomains, exactly as they are on the LAN.
+2. **Remote ad blocking** — Pi-hole filters DNS queries from my Tailscale devices, so I get network-wide ad blocking even when I'm away from home.
+3. **Remote file access** — Samba shares work over Tailscale, so I can access my movies, photos, and files from anywhere.
+4. **SSH from anywhere** — I can SSH into the server over Tailscale without exposing the SSH port to the public internet.
+5. **Zero router configuration** — no port forwarding, no dynamic DNS, no exposed ports. Tailscale handles NAT traversal automatically.
+6. **End-to-end encryption** — all traffic between my devices is encrypted with WireGuard, even on untrusted networks.
+
+The best part: installing Tailscale on a new device and joining my tailnet takes about 30 seconds. No VPN profiles to configure, no certificates to install, no client configuration files to manage. Noice! 🎉

@@ -32,6 +32,34 @@ import { BlogEntry } from '../_interfaces/blog'
 
 const BLOG_ENTRIES: BlogEntry[] = [
   {
+    id: 18,
+    title: 'Building my home server: Part 8',
+    description: 'Remote access with Tailscale',
+    date: '2026-03-13',
+    hidden: true,
+    tags: [
+      'linux',
+      'home-server',
+      'tailscale',
+      'wireguard',
+      'vpn',
+      'pi-hole',
+      'dns',
+      'samba',
+      'ufw',
+      'ansible',
+    ],
+    content: 'building-my-home-server-p8',
+    cover: {
+      image: buildHomeServerSm,
+      original: buildHomeServer,
+      xImage: buildHomeServerX,
+      alt: 'build_home_server',
+      ogImage: '/blog/covers/building_home_server.png',
+      ogImageX: '/blog/covers/building_home_server_x.png',
+    },
+  },
+  {
     id: 17,
     title: 'Building my home server: Part 7',
     description: 'Media server with ErsatzTV and Jellyfin',
