@@ -33,10 +33,10 @@ import { BlogEntry } from '../_interfaces/blog'
 const BLOG_ENTRIES: BlogEntry[] = [
   {
     id: 18,
-    title: 'Building my home server: Part 8',
+    title: 'Building my home server P8',
     description: 'Remote access with Tailscale',
     date: '2026-03-13',
-    hidden: true,
+    hidden: false,
     tags: [
       'linux',
       'home-server',
@@ -61,10 +61,10 @@ const BLOG_ENTRIES: BlogEntry[] = [
   },
   {
     id: 17,
-    title: 'Building my home server: Part 7',
+    title: 'Building my home server P7',
     description: 'Media server with ErsatzTV and Jellyfin',
     date: '2026-03-07',
-    hidden: true,
+    hidden: false,
     tags: [
       'linux',
       'docker',
@@ -89,10 +89,10 @@ const BLOG_ENTRIES: BlogEntry[] = [
   },
   {
     id: 16,
-    title: 'Building my home server: Part 6',
+    title: 'Building my home server P6',
     description: 'Centralized logging with Loki',
     date: '2026-03-04',
-    hidden: true,
+    hidden: false,
     tags: [
       'linux',
       'docker',
@@ -117,7 +117,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
   },
   {
     id: 15,
-    title: 'Building my home server: Part 5',
+    title: 'Building my home server P5',
     description: 'Network-wide ad blocking with Pi-hole',
     date: '2026-03-01',
     hidden: false,
