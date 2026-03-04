@@ -92,7 +92,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
     title: 'Building my home server P6',
     description: 'Centralized logging with Loki',
     date: '2026-03-07',
-    hidden: true,
+    hidden: false,
     tags: [
       'linux',
       'docker',
