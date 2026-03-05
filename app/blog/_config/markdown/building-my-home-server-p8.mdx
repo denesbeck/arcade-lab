@@ -97,14 +97,16 @@ Now Pi-hole listens on both the LAN and Tailscale interfaces. Devices on the loc
 
 ### Local DNS Records
 
-The local DNS records in Pi-hole also needed updating. Previously, all `*.arcade-lab.io` subdomains resolved to `192.168.64.15`. That works on the LAN, but Tailscale clients need them to resolve to `100.104.44.113`. The solution was to add records for both IPs:
+The local DNS records in Pi-hole only need to map to the server's LAN IP:
 
 ```bash
 docker exec pihole pihole-FTL --config dns.hosts \
-  '["192.168.64.15 jellyfin.arcade-lab.io", "100.104.44.113 jellyfin.arcade-lab.io", ...]'
+  '["192.168.64.15 jellyfin.arcade-lab.io", "192.168.64.15 grafana.arcade-lab.io", ...]'
 ```
 
-Pi-hole now returns the appropriate IP depending on which interface the query arrives on. A device on the LAN gets `192.168.64.15`, and a device on the tailnet gets `100.104.44.113`. The subdomains work from both networks.
+You might wonder: how does this work for remote Tailscale clients? If Pi-hole resolves `jellyfin.arcade-lab.io` to `192.168.64.15` (a LAN IP), how can a remote device reach it? The answer is **subnet routing**, which I'll cover in the next section.
+
+An important note: I initially tried adding DNS records for both the LAN IP and the Tailscale IP (`100.104.44.113`) for each domain. This doesn't work. Pi-hole's `dns.hosts` is essentially a hosts file — one IP per domain. When you add two entries for the same domain, the last one wins. I ended up with all domains resolving to the Tailscale IP, which meant local access broke when Tailscale was off. The fix was to keep only the LAN IP in Pi-hole and solve the remote access problem at the network layer instead.
 
 ### Global vs Restricted DNS
 
@@ -115,6 +117,51 @@ When configuring Tailscale to use Pi-hole as a DNS server, there are two options
 - **Restricted nameserver**: Only queries for specific domains (e.g., `arcade-lab.io`) go through Pi-hole. Everything else uses the device's default DNS. Safer, but no ad blocking when remote.
 
 I went with the global nameserver because I wanted ad blocking on my phone when I'm out. The tradeoff is that during the daily 3 AM reboot window, DNS briefly breaks on connected Tailscale devices — but I'm usually asleep at that point, so it's an acceptable compromise.
+
+## 🌐 Subnet Routing
+
+With Pi-hole resolving all `*.arcade-lab.io` subdomains to `192.168.64.15` (the LAN IP), remote Tailscale clients need a way to actually reach that IP. By default, Tailscale only routes traffic between devices using their Tailscale IPs (`100.x.y.z`). A remote device has no route to `192.168.64.15` — it's a private IP on my home network.
+
+Tailscale solves this with **subnet routing**. You designate one node on your tailnet as a subnet router, and it advertises local network routes to the rest of the tailnet. Remote devices send traffic destined for the LAN to the subnet router, which then forwards it to the local network.
+
+### Enabling IP Forwarding
+
+First, the server needs IP forwarding enabled — without it, the kernel won't forward packets between the Tailscale and LAN interfaces:
+
+```bash
+sudo sysctl -w net.ipv4.ip_forward=1
+sudo sysctl -w net.ipv6.conf.all.forwarding=1
+```
+
+To make it persistent across reboots, add both to `/etc/sysctl.conf` (or a file in `/etc/sysctl.d/`).
+
+### Advertising the Route
+
+Then, tell Tailscale to advertise the server's IP as a routable destination:
+
+```bash
+sudo tailscale set --advertise-routes=192.168.64.15/32
+```
+
+I'm using `/32` instead of `/24` here — there's no reason to expose my entire LAN subnet when all services run on a single host. Principle of least privilege.
+
+### Approving the Route
+
+Advertising a route isn't enough — Tailscale requires explicit approval in the admin console as a safety measure:
+
+1. Go to [Tailscale Machines](https://login.tailscale.com/admin/machines)
+2. Find the server node and click **"..."** → **"Edit route settings"**
+3. Enable the `192.168.64.15/32` route
+
+Once approved, remote Tailscale clients can reach `192.168.64.15` as if they were on the LAN. The full flow looks like this:
+
+1. Phone queries Pi-hole at `100.104.44.113` → gets back `192.168.64.15`
+2. Phone sends HTTPS request to `192.168.64.15`
+3. Tailscale routes the traffic to the subnet router (the server)
+4. Server forwards the packet to `192.168.64.15` — which is itself
+5. The service responds, and the reply follows the same path back
+
+The beauty of this approach is that it keeps the DNS setup simple (one IP per domain), works transparently for both local and remote clients, and doesn't interfere with the public `arcade-lab.io` domain hosted on Vercel — Pi-hole has no record for the root domain, so those queries pass through to upstream DNS.
 
 ## 📁 Making Samba Work Over Tailscale
 
@@ -150,7 +197,9 @@ As with everything else in this series, the entire Tailscale setup is automated 
 
 The auth key is stored in a variables file that's excluded from version control (like all my other secrets), and the playbook is idempotent — it checks if Tailscale is already authenticated before attempting to re-auth, so running it multiple times doesn't cause issues.
 
-The Pi-hole playbook was updated to publish DNS on both IPs and register local DNS records for both the LAN and Tailscale addresses. The Samba template was updated to include `tailscale0` in the interface list and `100.64.0.0/10` in the host allow rules. The UFW playbook got a single new rule allowing traffic on the Tailscale interface.
+The Tailscale playbook also handles subnet routing — it enables IP forwarding via `sysctl` and passes `--advertise-routes` during authentication. For already-authenticated nodes, it runs `tailscale set` to update the advertised routes without re-authenticating.
+
+The Pi-hole playbook was updated to publish DNS on both IPs (so it accepts queries from LAN and Tailscale clients) but registers local DNS records using only the LAN IP. Subnet routing takes care of making that IP reachable from remote Tailscale devices. The Samba template was updated to include `tailscale0` in the interface list and `100.64.0.0/10` in the host allow rules. The UFW playbook got a single new rule allowing traffic on the Tailscale interface.
 
 ## 🎉 Outcome
 
