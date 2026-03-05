@@ -46,7 +46,7 @@ sudo systemctl enable --now tailscaled
 Then authenticate the server to your Tailscale network (called a "tailnet"):
 
 ```bash
-sudo tailscale up --auth-key=tskey-auth-xxxxx --accept-dns=false
+sudo tailscale up --auth-key=tskey-auth-xxxxx --accept-dns=false --advertise-routes=192.168.64.15/32
 ```
 
 A couple of things to note here:
@@ -54,6 +54,8 @@ A couple of things to note here:
 - **`--auth-key`**: Instead of opening a browser on the server to authenticate (which isn't practical on a headless Ubuntu Server), you generate a one-time auth key in the [Tailscale admin console](https://login.tailscale.com/admin/settings/keys) and pass it directly. The key is single-use — once the server is authenticated, the key can't be reused.
 
 - **`--accept-dns=false`**: This is important. By default, Tailscale wants to override the machine's DNS settings with its own MagicDNS. But my server runs Pi-hole, which manages DNS for the entire network. I don't want Tailscale messing with that. Setting `--accept-dns=false` tells Tailscale to leave the server's DNS configuration alone.
+
+- **`--advertise-routes=192.168.64.15/32`**: This makes the server a subnet router, advertising its LAN IP to the tailnet. I'll explain why this is needed in the [Subnet Routing](#-subnet-routing) section below.
 
 After authentication, the server gets a Tailscale IP in the `100.x.y.z` range:
 
@@ -72,7 +74,7 @@ Tailscale creates a virtual network interface called `tailscale0`. Traffic from 
 sudo ufw allow in on tailscale0
 ```
 
-This allows all incoming traffic on the Tailscale interface. It might seem broad, but the security model here is layered: only devices authenticated to my tailnet can send traffic through `tailscale0` in the first place. Tailscale handles the authentication and encryption — UFW just needs to let the traffic through once it arrives.
+This allows all incoming traffic on the Tailscale interface. It might seem broad, but the security model here is layered: only devices authenticated to my tailnet can send traffic through `tailscale0` in the first place. Tailscale handles the authentication and encryption, and ACLs (covered later in this post) restrict which devices can reach the server. UFW just needs to let the traffic through once it arrives.
 
 ## 🐳 Making Pi-hole Listen on Tailscale
 
@@ -162,6 +164,55 @@ Once approved, remote Tailscale clients can reach `192.168.64.15` as if they wer
 5. The service responds, and the reply follows the same path back
 
 The beauty of this approach is that it keeps the DNS setup simple (one IP per domain), works transparently for both local and remote clients, and doesn't interfere with the public `arcade-lab.io` domain hosted on Vercel — Pi-hole has no record for the root domain, so those queries pass through to upstream DNS.
+
+## 🔒 Access Controls
+
+By default, Tailscale allows all devices on a tailnet to communicate with each other. That's fine when it's just your own devices, but it's good practice to lock things down — especially with subnet routing enabled. Tailscale provides tag-based ACLs (Access Control Lists) that you configure in the [admin console](https://login.tailscale.com/admin/acls).
+
+### Tagging Devices
+
+I created two tags:
+
+- **`tag:server`** — the Ubuntu server running all services
+- **`tag:trusted`** — my personal devices (laptop, phone) that should have full access
+
+Tags are assigned to devices in the [Machines](https://login.tailscale.com/admin/machines) page.
+
+### ACL Policy
+
+The entire policy boils down to a single rule:
+
+```json
+{
+  "acls": [
+    {
+      "action": "accept",
+      "src": ["tag:trusted"],
+      "dst": ["tag:server:*", "192.168.64.15/32:*"]
+    }
+  ]
+}
+```
+
+This allows trusted devices to reach the server via both its Tailscale IP (`100.104.44.113`) and the subnet route (`192.168.64.15`), on all ports. Everything else is denied by default — untagged devices or devices without the `tag:trusted` tag can't reach anything on the tailnet.
+
+The `192.168.64.15/32:*` part is important. Without it, ACLs would block traffic to the subnet route even though the route itself is approved. Tailscale evaluates ACLs against the actual destination IP, and traffic routed via the subnet uses the LAN IP (`192.168.64.15`), not the server's Tailscale IP.
+
+### Auto-Approving Routes
+
+Remember the manual route approval step from the subnet routing section? You can automate that with `autoApprovers`:
+
+```json
+{
+  "autoApprovers": {
+    "routes": {
+      "192.168.64.15/32": ["tag:server"]
+    }
+  }
+}
+```
+
+This tells Tailscale to automatically approve the `192.168.64.15/32` route whenever a `tag:server` node advertises it. One less manual step after running the Ansible playbook.
 
 ## 📁 Making Samba Work Over Tailscale
 
