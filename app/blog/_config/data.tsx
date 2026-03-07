@@ -35,7 +35,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
     id: 19,
     title: 'Building my home server P8',
     description: 'Remote access with Tailscale',
-    date: '2026-03-20',
+    date: '2026-03-16',
     hidden: true,
     tags: [
       'linux',
@@ -62,7 +62,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
   {
     id: 18,
     title: 'Building my home server P7',
-    description: 'Media server with ErsatzTV and Jellyfin',
+    description: 'Streaming movies with Jellyfin',
     date: '2026-03-13',
     hidden: true,
     tags: [
@@ -71,8 +71,6 @@ const BLOG_ENTRIES: BlogEntry[] = [
       'containers',
       'home-server',
       'jellyfin',
-      'ersatztv',
-      'iptv',
       'media-server',
       'nginx',
       'ansible',
