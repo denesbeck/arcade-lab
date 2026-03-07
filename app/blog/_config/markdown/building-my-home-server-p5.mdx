@@ -100,7 +100,7 @@ The `dns.hosts` configuration key accepts a JSON array of `"IP DOMAIN"` strings:
 
 ```bash
 docker exec pihole pihole-FTL --config dns.hosts \
-  '["192.168.64.15 home.arcade-lab.io", "192.168.64.15 portainer.arcade-lab.io", "192.168.64.15 grafana.arcade-lab.io", "192.168.64.15 prometheus.arcade-lab.io", "192.168.64.15 transmission.arcade-lab.io", "192.168.64.15 filebrowser.arcade-lab.io", "192.168.64.15 jellyfin.arcade-lab.io", "192.168.64.15 ersatz.arcade-lab.io", "192.168.64.15 pi-hole.arcade-lab.io"]'
+  '["192.168.64.15 home.arcade-lab.io", "192.168.64.15 portainer.arcade-lab.io", "192.168.64.15 grafana.arcade-lab.io", "192.168.64.15 prometheus.arcade-lab.io", "192.168.64.15 transmission.arcade-lab.io", "192.168.64.15 filebrowser.arcade-lab.io", "192.168.64.15 jellyfin.arcade-lab.io", "192.168.64.15 pi-hole.arcade-lab.io"]'
 ```
 
 After running this command, all my `*.arcade-lab.io` subdomains resolve to the server's IP. Any device on my network that uses Pi-hole as its DNS server can now access:
@@ -111,7 +111,6 @@ After running this command, all my `*.arcade-lab.io` subdomains resolve to the s
 - `https://transmission.arcade-lab.io` — BitTorrent client
 - `https://filebrowser.arcade-lab.io` — File browser
 - `https://jellyfin.arcade-lab.io` — Media streaming
-- `https://ersatz.arcade-lab.io` — IPTV
 - `https://pi-hole.arcade-lab.io` — Pi-hole admin itself
 
 No more editing hosts files on every device. Add a new service, update the DNS records in one place, and every device on the network picks it up automatically.
@@ -131,7 +130,6 @@ pihole_local_dns_records:
   - domain: transmission.arcade-lab.io
   - domain: filebrowser.arcade-lab.io
   - domain: jellyfin.arcade-lab.io
-  - domain: ersatz.arcade-lab.io
   - domain: pi-hole.arcade-lab.io
 ```
 
