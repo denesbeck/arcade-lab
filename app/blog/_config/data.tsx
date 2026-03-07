@@ -22,6 +22,9 @@ import fromJsonToSqliteX from '@/../public/blog/covers/from_json_to_sqlite_x.png
 import lambdaDeploy from '@/../public/blog/covers/lambda_deploy.png'
 import lambdaDeploySm from '@/../public/blog/covers/lambda_deploy_sm.png'
 import lambdaDeployX from '@/../public/blog/covers/lambda_deploy_x.png'
+import remoteStateManagement from '@/../public/blog/covers/remote_state_management.png'
+import remoteStateManagementSm from '@/../public/blog/covers/remote_state_management_sm.png'
+import remoteStateManagementX from '@/../public/blog/covers/remote_state_management_x.png'
 import techConference from '@/../public/blog/covers/tech_conference.png'
 import techConferenceSm from '@/../public/blog/covers/tech_conference_sm.png'
 import techConferenceX from '@/../public/blog/covers/tech_conference_x.png'
@@ -94,12 +97,12 @@ const BLOG_ENTRIES: BlogEntry[] = [
     tags: ['golang', 'vcs', 'nexio', 'aws', 's3', 'sqlite', 'remote', 'sync'],
     content: 'remote-state-management',
     cover: {
-      image: blobStorageOptimizationSm,
-      original: blobStorageOptimization,
-      xImage: blobStorageOptimizationX,
-      alt: 'blob_storage_optimization',
-      ogImage: '/blog/covers/blob_storage_optimization.png',
-      ogImageX: '/blog/covers/blob_storage_optimization_x.png',
+      image: remoteStateManagementSm,
+      original: remoteStateManagement,
+      xImage: remoteStateManagementX,
+      alt: 'remote_state_management',
+      ogImage: '/blog/covers/remote_state_management.png',
+      ogImageX: '/blog/covers/remote_state_management_x.png',
     },
   },
   {
