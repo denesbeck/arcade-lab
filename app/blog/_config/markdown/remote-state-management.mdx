@@ -1,0 +1,275 @@
+# 🌐 Remote State Management with S3
+
+_Taking Nexio from Local-Only to Collaborative_
+
+📅 2026-03-07
+
+## 🧭 Introduction
+
+In my previous posts, I covered how I built Nexio from scratch as a [local VCS](/blog/developing-my-own-vcs), then [optimized storage with content-addressable blobs](/blog/blob-storage-optimization), and most recently [migrated metadata from JSON to SQLite](/blog/from-json-to-sqlite). Through all of that, Nexio had one glaring limitation printed right in the README: **"No remote repository support."**
+
+A version control system that can't sync between machines isn't very useful beyond a personal backup tool. In this post, I'll walk through how I added remote state management to Nexio using AWS S3, enabling push, pull, and clone operations — the three pillars of collaborative version control.
+
+## 🎯 The Goal
+
+Three new commands, each addressing a core workflow:
+
+| Command | Purpose |
+|---------|---------|
+| `nexio push` | Upload local commits and blobs to S3 |
+| `nexio pull` | Download remote commits and blobs, merge into local |
+| `nexio clone` | Create a full local copy from a remote S3 source |
+
+The non-goals were equally important: no merge conflict resolution (push fails if remote is ahead), no multi-backend abstraction (S3 only for now), and no credential management (rely on the standard AWS credential chain).
+
+## 🏗️ Architecture Decisions
+
+### Why S3?
+
+S3 is ubiquitous, cheap, and durable. Most developers already have AWS credentials configured, and S3's eventual consistency model is fine for our use case since we use locking to serialize push/pull operations. There's no need for a custom server — S3 acts as a dumb object store and Nexio handles all the logic client-side.
+
+### Remote Storage Layout
+
+The remote mirrors the local `.nexio/` structure inside an S3 prefix:
+
+```
+s3://my-bucket/nexio-repo/
+├── index.db              # Full SQLite database
+├── objects/              # Content-addressable blob store
+│   ├── ab/
+│   │   └── 3f7c9e2d...  # Compressed blob (identical to local)
+│   └── ...
+├── config.json           # Repository config
+└── nexio.lock            # Lock file for push/pull serialization
+```
+
+### Why Upload the Full Database?
+
+This was the biggest design decision. I had two options:
+
+1. **Row-level sync**: Track which commits/files/branches changed and sync individual rows
+2. **Full database upload**: Upload the entire `index.db` on push, download and merge on pull
+
+I chose option 2. The SQLite database is small — typically under 1MB even for repositories with thousands of commits. Uploading the whole thing avoids the complexity of tracking deltas, handling schema versions across remotes, and resolving partial sync failures. The trade-off is a bit more bandwidth, but for a file that's rarely more than a few hundred KB, this is negligible.
+
+### URL Format
+
+Remotes use the S3 URL scheme:
+
+```
+s3://bucket/prefix
+```
+
+For example: `s3://my-bucket/team/project-alpha`. The prefix acts as the repository root — all objects are stored under this prefix, which means you can host multiple Nexio repositories in a single bucket.
+
+## 🔐 Remote Locking
+
+Concurrent push/pull operations could corrupt the remote state. I needed a locking mechanism, and I had two realistic options:
+
+| Option | Pros | Cons |
+|--------|------|------|
+| **DynamoDB** | Strongly consistent, atomic | Extra AWS service, more config |
+| **S3 object lock** | Simple, no extra dependencies | Not truly atomic (race condition window) |
+
+I went with the S3 approach — a `nexio.lock` file stored at the remote prefix. For a tool used by small teams, the tiny race condition window is acceptable, and it avoids requiring DynamoDB setup.
+
+The lock file contains:
+
+```json
+{
+  "holder": "John Doe <john@example.com>",
+  "timestamp": "2026-03-06T12:00:00Z",
+  "operation": "push"
+}
+```
+
+Three rules govern the lock:
+
+1. **Fresh lock exists** → abort with a message showing who holds it
+2. **Stale lock** (older than 5 minutes) → overwrite it, assume the holder crashed
+3. **`--force` flag** → overwrite regardless
+
+The lock is always released in a `defer`, so even panics or errors trigger cleanup.
+
+## 📤 Push
+
+The push algorithm is designed to minimize data transfer by leveraging the existing content-addressable blob store:
+
+```
+1. Validate      → No uncommitted staged changes
+2. Lock          → Acquire remote lock
+3. Download      → Fetch remote index.db (if exists)
+4. Diff          → Compare local vs remote commit IDs
+5. Fast-forward  → Verify remote HEAD is ancestor of local HEAD
+6. Upload blobs  → Only blobs that don't exist remotely (HeadObject check)
+7. Upload DB     → Replace remote index.db with local
+8. Clean         → Remove orphaned blobs locally
+9. Release lock
+```
+
+The fast-forward check is critical. If the remote has commits that don't exist locally, someone else pushed changes that you haven't pulled yet. Rather than silently overwriting their work, push aborts with: _"Remote has commits not present locally. Run nexio pull first."_
+
+The blob deduplication on transfer is where Nexio's content-addressable architecture really pays off. Before uploading each blob, a `HeadObject` call checks if it already exists remotely. Same content, same hash — no need to upload it again. This means pushing a commit that modifies one file in a repository with thousands of tracked files only uploads that one changed blob.
+
+## 📥 Pull
+
+Pull is conceptually the inverse of push, but the merge step is more involved:
+
+```
+1. Validate      → No uncommitted staged changes
+2. Lock          → Acquire remote lock
+3. Download      → Fetch remote index.db to temp file
+4. Diff          → Compare remote vs local commit IDs
+5. Fast-forward  → Verify local HEAD is ancestor of remote HEAD
+6. Download blobs → Only blobs that don't exist locally
+7. Merge DB      → Integrate remote data into local database
+8. Sync workdir  → Restore new/changed files, remove deleted files
+9. Clean         → Remove orphaned blobs locally
+10. Release lock
+```
+
+### Database Merge via ATTACH
+
+The most interesting part of pull is the database merge. SQLite has a built-in `ATTACH DATABASE` command that lets you open a second database and query across both in a single transaction:
+
+```sql
+ATTACH DATABASE '/tmp/remote_index.db' AS remote;
+
+-- Insert new commits (ignore if already exist)
+INSERT OR IGNORE INTO commits
+SELECT * FROM remote.commits;
+
+-- Insert new files
+INSERT OR IGNORE INTO files
+SELECT * FROM remote.files;
+
+-- Update branch heads to match remote
+UPDATE branches SET head_commit = (
+    SELECT head_commit FROM remote.branches
+    WHERE remote.branches.name = branches.name
+) WHERE name IN (SELECT name FROM remote.branches);
+
+DETACH DATABASE remote;
+```
+
+This is elegant because it handles the merge atomically — either everything succeeds or nothing changes. No custom diff logic, no conflict resolution code. The `INSERT OR IGNORE` pattern works because commit IDs and file record IDs are unique hashes; if they already exist locally, they're identical to what's on the remote.
+
+### Working Directory Sync
+
+There was a subtle bug in my first implementation: pull downloaded the blobs and merged the database correctly, but never actually updated the files on disk. Running `nexio workdir` would show the new files (database was updated), but they were invisible in the actual working directory.
+
+The fix was adding a working directory sync step after the merge. It:
+
+1. Captures the old HEAD commit before merging
+2. Compares old vs new HEAD file lists by blob hash
+3. Restores new or changed files via `RestoreBlob()`
+4. Removes files that were tracked in the old HEAD but no longer exist in the new HEAD
+
+This is essentially a lightweight checkout operation that only touches files that actually changed.
+
+## 📋 Clone
+
+Clone is the simplest of the three commands — it's basically "create directory, download everything, restore working directory":
+
+```
+1. Parse args     → Remote URL + optional local directory name
+2. Verify remote  → Check that index.db exists at the remote
+3. Create dirs    → .nexio/ and .nexio/objects/
+4. Download DB    → Fetch index.db
+5. Download blobs → Fetch all objects
+6. Write config   → Set remote URL in config.json
+7. Restore        → Check out HEAD commit to working directory
+```
+
+One detail worth noting: clone automatically writes the remote URL into the cloned repository's `config.json`, so `nexio push` and `nexio pull` work immediately without additional configuration. This mirrors the Git experience where `git clone` sets up the `origin` remote for you.
+
+## ⚙️ Configuration
+
+The remote URL is stored in the existing `config.json`:
+
+```json
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "remote": "s3://my-bucket/nexio-repo"
+}
+```
+
+I added `set remote` and `get remote` subcommands to `nexio config`:
+
+```bash
+nexio config set remote s3://my-bucket/nexio-repo
+nexio config get remote
+```
+
+All three commands also accept a `--remote` flag to override the configured remote for a single operation, which is useful for pushing to a different location without changing your default config.
+
+## 🧩 The Implementation
+
+The implementation added five new files and modified four existing ones:
+
+| New File | Purpose |
+|----------|---------|
+| `remote.go` | S3 client init, URL parsing, upload/download/list helpers |
+| `remote_lock.go` | Lock acquire/release with staleness detection |
+| `push.go` | Push command and blob diff logic |
+| `pull.go` | Pull command, DB merge via ATTACH, working directory sync |
+| `clone.go` | Clone command, full download, working directory restore |
+
+The AWS SDK dependency (`aws-sdk-go-v2`) is the only new external dependency. Credentials are resolved through the standard AWS chain: environment variables, `~/.aws/credentials`, IAM roles — Nexio doesn't manage credentials itself.
+
+## 🧪 A Complete Workflow
+
+Here's what a typical multi-machine workflow looks like:
+
+```bash
+# Machine A: Initialize and push
+nexio init
+nexio config set name "Alice"
+nexio config set email "alice@example.com"
+nexio config set remote s3://team-bucket/project
+nexio stage .
+nexio commit -m "Initial commit"
+nexio push
+
+# Machine B: Clone and make changes
+nexio clone s3://team-bucket/project
+cd project
+echo "new file" > feature.txt
+nexio stage feature.txt
+nexio commit -m "Add feature"
+nexio push
+
+# Machine A: Pull the changes
+nexio pull
+# feature.txt now appears in the working directory
+```
+
+## 💡 Lessons Learned
+
+1. **Content-addressable storage makes sync easy.** The blob deduplication from the [previous optimization](/blog/blob-storage-optimization) wasn't just about saving disk space — it made remote sync almost trivial. Same hash means same content, so a `HeadObject` check is all you need to know whether to transfer a blob.
+
+2. **SQLite's ATTACH is powerful.** The ability to open two databases and merge them in a single transaction eliminated an entire class of merge complexity. No custom diff algorithms, no conflict tracking — just `INSERT OR IGNORE`.
+
+3. **Don't forget the working directory.** The database and blob store are the "truth," but users interact with files on disk. My initial pull implementation updated the database perfectly but left the working directory stale. Always sync the user-visible state.
+
+4. **Simple locking is good enough to start.** A DynamoDB-based lock would be more correct, but the S3 object approach works well for small teams and avoids extra infrastructure. You can always upgrade later.
+
+5. **The first push initializes the remote.** There's no explicit "init remote" command — pushing to an empty S3 prefix creates the entire remote structure. This keeps the UX simple and avoids a separate setup step.
+
+## 🔮 Future
+
+With remote sync working, several improvements become natural next steps:
+
+- **Parallel blob uploads/downloads**: Currently sequential; parallelizing with goroutines would significantly speed up large transfers
+- **Progress bars**: Nice UX improvement for long-running push/pull operations
+- **DynamoDB locking**: For teams that need stronger concurrency guarantees
+- **Conflict detection and resolution**: Currently, diverged histories are rejected; supporting merges would be a significant feature
+
+## 🔗 Resources
+
+- [AWS SDK for Go v2](https://aws.github.io/aws-sdk-go-v2/docs/) - The AWS SDK used for S3 operations
+- [SQLite ATTACH DATABASE](https://www.sqlite.org/lang_attach.html) - How SQLite handles cross-database queries
+- [S3 Consistency Model](https://aws.amazon.com/s3/consistency/) - Strong read-after-write consistency since 2020
+
+💻 Check out Nexio at [GitHub](https://github.com/denesbeck/nexio).
