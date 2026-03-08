@@ -10,7 +10,7 @@ const domain = process.env.NEXT_PUBLIC_DOMAIN || 'arcade-lab.vercel.app'
 export const metadata: Metadata = {
   title: 'Blog',
   description:
-    'Technical blog posts about software engineering, DevOps, cloud infrastructure, AWS, Kubernetes, CI/CD, and home server management by Denes Beck.',
+    'In-depth technical articles about software engineering, DevOps, cloud infrastructure, ethical hacking and system administration.',
   keywords: [
     'Software Engineering Blog',
     'DevOps Blog',
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Technical Blog - Arcade Lab',
     description:
-      'In-depth technical articles about software engineering, DevOps, cloud infrastructure, and system administration.',
+      'In-depth technical articles about software engineering, DevOps, cloud infrastructure, ethical hacking and system administration.',
     url: `https://${domain}/blog`,
     type: 'website',
     images: [
@@ -74,9 +74,8 @@ const Blog = async ({
     <div className="flex overflow-auto flex-col">
       <FilterTags />
       <PageHeader
-        title="Blog"
-        description="In-depth technical articles about software engineering, DevOps, cloud
-          infrastructure, ethical hacking and system administration."
+        title={metadata.title as string}
+        description={metadata.description as string}
       />
       <div className="flex justify-center py-4">
         {entries.length === 0 ? (
