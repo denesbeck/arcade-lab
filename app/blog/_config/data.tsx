@@ -39,7 +39,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
     title: 'Building my home server P8',
     description: 'Remote access with Tailscale',
     date: '2026-03-16',
-    hidden: false,
+    hidden: true,
     tags: [
       'linux',
       'home-server',
@@ -67,7 +67,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
     title: 'Building my home server P7',
     description: 'Streaming movies with Jellyfin',
     date: '2026-03-13',
-    hidden: false,
+    hidden: true,
     tags: [
       'linux',
       'docker',
