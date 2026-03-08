@@ -13,6 +13,7 @@ import Input from './Input'
 import Kbd from './Kbd'
 import MacOSBar from './MacOSBar'
 import Navbar from './Navbar'
+import PageHeader from './PageHeader'
 import ScrollToTop from './ScrollToTop'
 import Spinner from './Spinner'
 import TextArea from './TextArea'
@@ -34,6 +35,7 @@ export {
   Kbd,
   MacOSBar,
   Navbar,
+  PageHeader,
   ScrollToTop,
   Spinner,
   TextArea,

@@ -1,4 +1,5 @@
 import { Metadata } from 'next'
+import { Heading1, Info, PageHeader } from '@/_components'
 import { BlogCard, FilterTags, NoRecords } from './_components'
 import blogEntries from './_config/data'
 
@@ -44,7 +45,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Technical Blog - Arcade Lab',
     description:
-      'In-depth technical articles about software engineering, DevOps, cloud infrastructure, and system administration.',
+      'In-depth technical articles about software engineering, DevOps, cloud infrastructure, ethical hacking and system administration.',
     creator: '@DenesBeck',
   },
 }
@@ -72,6 +73,11 @@ const Blog = async ({
   return (
     <div className="flex overflow-auto flex-col">
       <FilterTags />
+      <PageHeader
+        title="Blog"
+        description="In-depth technical articles about software engineering, DevOps, cloud
+          infrastructure, ethical hacking and system administration."
+      />
       <div className="flex justify-center py-4">
         {entries.length === 0 ? (
           <NoRecords message="No results based on your tag selection." />
