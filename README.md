@@ -1,36 +1,100 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Arcade Lab
+
+Personal portfolio and technical blog of **Denes Beck** -- Software Engineer based in Budapest, Hungary.
+
+Live at [arcade-lab.io](https://arcade-lab.io)
+
+## Overview
+
+Arcade Lab is a portfolio site featuring a retro/arcade-inspired dark theme with a custom monospace font (DepartureMono), animated UI elements, and a full-featured MDX-powered blog. The site showcases personal projects, technical writing, professional background, and provides a contact form backed by AWS Lambda.
+
+## Pages
+
+- **Home** -- Minimalist greeting with a contact CTA
+- **About** -- Bio, skills (15 technologies), certificates (AWS, Terraform), and social links
+- **Blog** -- 19 MDX-based technical posts covering topics like building a home server, developing a custom VCS in Go, CloudGoat ethical hacking write-ups, CI/CD pipelines, and AWS Lambda deployments. Supports tag-based filtering.
+- **Contact** -- Form protected by Cloudflare Turnstile CAPTCHA, submitted via AWS Lambda
+
+## Tech Stack
+
+| Category | Technologies |
+|---|---|
+| Framework | Next.js 16, React 19, TypeScript |
+| Styling | Tailwind CSS v4, MUI Material |
+| Content | MDX with rehype-highlight (Nord theme) and remark-gfm |
+| Backend | AWS Lambda via `@aws-sdk/client-lambda`, Cloudflare Turnstile |
+| Build | Turbopack |
+| Code Quality | Biome (lint + format), Husky, lint-staged |
+| CI/CD | GitHub Actions (Biome, npm audit, GitGuardian, SonarCloud) |
+| Analytics | Vercel Analytics, Vercel Speed Insights |
+| SEO | JSON-LD structured data, dynamic sitemap, OpenGraph/Twitter cards |
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- Node.js
+- npm
+
+### Environment Variables
+
+Create a `.env.local` file with the following variables:
+
+```
+AWS_REGION=
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+NEXT_PUBLIC_DOMAIN=
+NEXT_PUBLIC_TS_SITE_KEY=
+CONTACT_LAMBDA=
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Development
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm install
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Open [http://localhost:3000](http://localhost:3000) to view the site.
 
-## Learn More
+### Build
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run build
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Lint & Format
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npx @biomejs/biome check --write .
+```
 
-## Deploy on Vercel
+This also runs automatically on staged files via the pre-commit hook.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Project Structure
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+app/
+├── (home)/              # Home page (route group)
+├── about/               # About page with bio, skills, certificates
+├── blog/                # Blog listing + dynamic [id] pages
+│   └── _config/
+│       ├── data.tsx     # Blog entry metadata
+│       └── markdown/    # MDX blog posts
+├── contact/             # Contact form with Turnstile + Lambda
+├── _components/         # Shared UI components
+├── _config/             # Navigation config
+└── _hooks/              # Shared hooks
+public/
+├── avatars/             # Profile image
+├── blog/                # Blog cover images (sm, x, full)
+├── fonts/               # DepartureMono-Regular.woff2
+└── logo/                # Site logos
+```
+
+Underscore-prefixed directories (`_components`, `_config`, `_hooks`, `_utils`) are co-located with their routes but excluded from Next.js routing.
+
+## Deployment
+
+Deployed on [Vercel](https://vercel.com). Pushes and PRs to `main` trigger the CI pipeline (GitHub Actions) which runs linting, security scanning, and code analysis before deployment.
