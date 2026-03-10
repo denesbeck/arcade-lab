@@ -35,10 +35,37 @@ import { BlogEntry } from '../_interfaces/blog'
 
 const BLOG_ENTRIES: BlogEntry[] = [
   {
+    id: 20,
+    title: 'Building my home server P9',
+    description: 'UPS failover with automated shutdown',
+    date: '2026-04-04',
+    hidden: true,
+    tags: [
+      'linux',
+      'home-server',
+      'ups',
+      'bash',
+      'prometheus',
+      'grafana',
+      'monitoring',
+      'ansible',
+      'cron',
+    ],
+    content: 'building-my-home-server-p9',
+    cover: {
+      image: buildHomeServerSm,
+      original: buildHomeServer,
+      xImage: buildHomeServerX,
+      alt: 'build_home_server',
+      ogImage: '/blog/covers/building_home_server.png',
+      ogImageX: '/blog/covers/building_home_server_x.png',
+    },
+  },
+  {
     id: 19,
     title: 'Building my home server P8',
     description: 'Remote access with Tailscale',
-    date: '2026-03-16',
+    date: '2026-03-28',
     hidden: true,
     tags: [
       'linux',
@@ -66,7 +93,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
     id: 18,
     title: 'Building my home server P7',
     description: 'Streaming movies with Jellyfin',
-    date: '2026-03-13',
+    date: '2026-03-20',
     hidden: true,
     tags: [
       'linux',

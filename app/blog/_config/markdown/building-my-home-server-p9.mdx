@@ -1,0 +1,150 @@
+# 🏗️ Building my home server: Part 9
+
+_UPS failover with automated shutdown_
+
+📅 2026-04-04
+
+In my previous blog post, I covered setting up Tailscale for remote access to my home lab. In this post, I'm tackling something completely different: what happens when the power goes out. My server has been running 24/7 for a while now, and while that's great, it also means it's vulnerable to sudden power loss. An unexpected shutdown can corrupt filesystems, interrupt Docker containers mid-write, and generally make a mess. Time to do something about it.
+
+## 🔋 The Problem
+
+My home lab runs on a single machine. If the electricity goes out, the server dies instantly — no graceful shutdown, no flushing writes to disk, no stopping Docker containers properly. I've been lucky so far, but it's only a matter of time before a power outage corrupts something important.
+
+The obvious solution is a UPS (Uninterruptible Power Supply). I picked up an [APC Easy-UPS BVX 1200VA](https://www.apc.com/us/en/product/BVX1200LI-GR/apc-easyups-bvx-1200va-650w-avr-universal-outlet-230v/) — a 1200VA/650W unit. My server is a [QOOBE II](https://www.zotac.com/product/mini_pcs/qoobe-ii-i5-12450h-8-512g) mini PC with an i5-12450H, 8GB RAM, and two external HDDs. It's not a power-hungry build, so the UPS should comfortably keep things running for around 30 minutes or more on battery. But a UPS alone only delays the problem — if the power doesn't come back before the battery drains, the server still dies ungracefully. What I actually need is a way for the server to **detect** that it's running on battery and **shut itself down gracefully** before the UPS runs out.
+
+## 🤔 Why Ping the Router?
+
+The standard approach is to use software like `apcupsd` or `NUT` (Network UPS Tools) that communicates with the UPS over USB or serial. The UPS tells the software "I'm on battery" and the software initiates a shutdown. Clean, simple, purpose-built.
+
+The problem: the APC Easy-UPS BVX 1200VA doesn't have a USB or serial interface. It's a consumer-grade unit — it provides battery backup and surge protection, but there's no data port for the server to talk to it. So the standard UPS daemon approach was off the table from the start.
+
+**Network-based detection** was my workaround. Instead of asking the UPS "are we on battery?", I ask the network "is the router still alive?". The router doesn't have a UPS — when the power goes out, the router goes down immediately. The server, protected by the UPS, stays up. So if the server can't reach the router, it's a strong signal that there's a power outage.
+
+This approach has a nice property: it's infrastructure-agnostic. I don't care what brand of UPS I'm using, whether it has a data interface, or how it communicates. All I need is a router that loses power when the electricity goes out — which is the default behavior for virtually every consumer router.
+
+The tradeoff is that it can't distinguish between "power outage" and "router crashed." If my router reboots for a firmware update, the server would interpret that as a power outage. In practice, router reboots take 1-2 minutes, and my detection threshold is 5 minutes (10 failed pings at 30-second intervals), so a normal reboot wouldn't trigger it. An extended router failure would, but that's a scenario where I'd probably want to know about it anyway.
+
+## 🔧 The Power Monitor Script
+
+The solution is a simple bash script that runs in an infinite loop:
+
+1. Ping the router every 30 seconds
+2. If the ping succeeds, reset the failure counter
+3. If the ping fails, increment the failure counter
+4. After 10 consecutive failures (5 minutes), shut down the server
+
+```bash
+#!/bin/bash
+
+set -euo pipefail
+
+ROUTER_IP="192.***.***.***"
+PING_INTERVAL=30
+MAX_FAILURES=10
+LOG_FILE="/var/log/power-monitor.log"
+
+fail_count=0
+
+while true; do
+    if ping -c 1 -W 5 "$ROUTER_IP" > /dev/null 2>&1; then
+        if [ "$fail_count" -gt 0 ]; then
+            log_message "Router reachable again. Resetting fail counter (was $fail_count)."
+            fail_count=0
+        fi
+    else
+        fail_count=$((fail_count + 1))
+        log_message "Ping to $ROUTER_IP failed ($fail_count/$MAX_FAILURES)."
+
+        if [ "$fail_count" -ge "$MAX_FAILURES" ]; then
+            log_message "CRITICAL: $MAX_FAILURES consecutive ping failures. Initiating shutdown."
+            /sbin/shutdown -h now "Power monitor: router unreachable, assuming power outage."
+            exit 0
+        fi
+    fi
+
+    sleep "$PING_INTERVAL"
+done
+```
+
+A few things worth noting:
+
+- **`ping -c 1 -W 5`** sends a single ping with a 5-second timeout. I don't want to wait the default timeout — if the router is down, I want to know quickly and move on to the next sleep cycle.
+- **The failure counter resets on success.** A single successful ping means the network (and therefore the power) is back. This prevents the counter from creeping up due to occasional packet loss.
+- **`/sbin/shutdown -h now`** triggers a clean system shutdown — stopping services, flushing buffers, unmounting filesystems. This is exactly what I want to protect against.
+
+The script is deployed to `/usr/local/bin/power-monitor.sh` and runs via a `@reboot` cron job, so it starts automatically after every boot. No systemd service file needed — cron handles it.
+
+## 📊 Exposing Metrics to Prometheus
+
+A shutdown script is useful, but I also want to see what's happening on my Grafana dashboards. Is the router reachable? What's the current ping latency? Have there been any near-misses where the failure counter climbed but recovered?
+
+[My monitoring stack](https://github.com/denesbeck/home-lab-monitoring) already runs Prometheus with node-exporter. Node-exporter has a **textfile collector** that reads `.prom` files from a directory and exposes their contents as standard Prometheus metrics. No new exporters, no new services, no new scrape targets — just drop a file and node-exporter picks it up.
+
+The power monitor script writes four metrics to `/var/lib/node-exporter/textfile/power_monitor.prom` on every ping cycle:
+
+```
+# HELP power_monitor_router_reachable Whether the router is reachable (1 = yes, 0 = no).
+# TYPE power_monitor_router_reachable gauge
+power_monitor_router_reachable 1
+# HELP power_monitor_consecutive_failures Current number of consecutive ping failures.
+# TYPE power_monitor_consecutive_failures gauge
+power_monitor_consecutive_failures 0
+# HELP power_monitor_max_failures Failure threshold before shutdown is triggered.
+# TYPE power_monitor_max_failures gauge
+power_monitor_max_failures 10
+# HELP power_monitor_ping_latency_ms Round-trip ping latency in milliseconds (0 if unreachable).
+# TYPE power_monitor_ping_latency_ms gauge
+power_monitor_ping_latency_ms 0.547
+```
+
+The write is atomic — the script writes to a `.tmp` file first, then `mv`s it into place. This prevents node-exporter from reading a half-written file.
+
+To make node-exporter pick up the textfile, I added two things to its Docker Compose configuration:
+
+```yaml
+node-exporter:
+  volumes:
+    - /var/lib/node-exporter/textfile:/host/textfile:ro
+  command:
+    - "--collector.textfile.directory=/host/textfile"
+```
+
+The host directory `/var/lib/node-exporter/textfile` is mounted read-only into the container, and the `--collector.textfile.directory` flag tells node-exporter where to look. After a `docker compose up -d` to recreate the container, the `power_monitor_*` metrics show up in Prometheus immediately.
+
+## 📈 Grafana Dashboard
+
+With the metrics flowing into Prometheus, I built a [Grafana dashboard](https://github.com/denesbeck/home-lab-monitoring/blob/main/grafana/dashboards/ups-power-monitor.json) to visualize the power monitor state. The dashboard has seven panels:
+
+**Top row** — four stat panels showing current values at a glance:
+- **Router Status** — a big green "REACHABLE" or red "UNREACHABLE" indicator
+- **Consecutive Failures** — color-coded from green (0) through yellow, orange, to red as it approaches the threshold
+- **Ping Latency** — current round-trip time in milliseconds
+- **Shutdown Threshold** — the configured maximum failures (10), as a reference
+
+**Middle row** — a full-width time series graph of ping latency over time. This is useful for spotting network degradation — if latency starts creeping up, it might indicate a problem before pings start failing entirely.
+
+**Bottom row** — two time series panels side by side:
+- **Consecutive Failures Over Time** — a step graph with colored threshold bands (yellow at 1, orange at 5, red at 8) so you can see how close the server came to shutting down
+- **Router Reachability Over Time** — a binary UP/DOWN graph showing the router's availability history
+
+The dashboard auto-refreshes every 30 seconds, matching the ping interval. It's provisioned as a JSON file in the Grafana dashboards directory, so it's automatically loaded — no manual import needed.
+
+## 🤖 Automating with Ansible
+
+The entire setup is captured in an [Ansible playbook](https://github.com/denesbeck/home-lab-ansible/blob/main/playbooks/ups-monitor.yml). It creates the textfile collector directory, deploys the power monitor script with all variables templated (the router IP lives in a separate vars file, excluded from version control), sets up the log file, and registers the `@reboot` cron job.
+
+The router IP is the only sensitive variable — it reveals LAN topology. Everything else (ping interval, failure threshold, file paths) is generic and lives directly in the playbook. Running the playbook is the only step needed to set up power monitoring on the server.
+
+The monitoring side (node-exporter textfile collector config and the Grafana dashboard) lives in the separate monitoring repository and gets deployed when the monitoring stack is brought up with Docker Compose.
+
+## 🎉 Outcome
+
+With the UPS and power monitor in place, I now have:
+
+1. **Graceful shutdown on power loss** — the server detects the outage within 5 minutes and shuts down cleanly, protecting filesystems and Docker volumes from corruption.
+2. **Automatic recovery** — when power returns and the server boots, the `@reboot` cron job starts the monitor again. No manual intervention needed.
+3. **Full observability** — ping latency, failure count, and router reachability are all visible in Grafana, with historical data for spotting patterns.
+4. **Zero additional services** — no UPS daemon, no custom exporter, no new Prometheus scrape target. Just a bash script and node-exporter's built-in textfile collector.
+5. **Infrastructure-agnostic** — works with any UPS brand, no USB cable required. Swap the UPS, change the router, move the server — the monitor doesn't care.
+
+Noice! 🎉
