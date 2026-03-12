@@ -2,31 +2,41 @@
 import Link from 'next/link'
 import { useCallback, useState } from 'react'
 import { TbArticle, TbChevronDown } from 'react-icons/tb'
-import type { BlogRef } from '../_config/data'
+import BLOG_ENTRIES from '@/blog/_config/data'
+import { BlogPostReference } from '../_config/data'
 
 const MAX_VISIBLE = 3
 
-const BlogPosts = ({ blogPosts }: { blogPosts: BlogRef[] }) => {
+interface IBlogPosts {
+  blogPostReferences: BlogPostReference[]
+}
+
+const BlogPosts = ({ blogPostReferences }: IBlogPosts) => {
   const [expanded, setExpanded] = useState(false)
-  const hasOverflow = blogPosts.length > MAX_VISIBLE
-  const visiblePosts = expanded ? blogPosts : blogPosts.slice(0, MAX_VISIBLE)
+  const hasOverflow = blogPostReferences.length > MAX_VISIBLE
+
+  const visiblePosts = (
+    expanded ? blogPostReferences : blogPostReferences.slice(0, MAX_VISIBLE)
+  ).filter(
+    (reference) => !BLOG_ENTRIES.find(({ id }) => id === reference)?.hidden
+  )
 
   const toggle = useCallback(() => setExpanded((prev) => !prev), [])
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col flex-1 gap-2">
       <div className="flex gap-2 items-center text-xs tracking-widest uppercase text-dark-300">
         <TbArticle className="w-3.5 h-3.5" />
         <span>Related posts</span>
       </div>
       <div className="flex flex-wrap gap-2">
-        {visiblePosts.map(({ id, title }) => (
+        {visiblePosts.map((postId) => (
           <Link
-            key={id}
-            href={`/blog/${id}`}
+            key={postId}
+            href={`/blog/${postId}`}
             className="py-1 px-2 max-w-full text-xs ring-1 transition-all duration-200 ring-dark-500 text-dark-200 truncate hover:ring-primary hover:text-primary"
           >
-            {title}
+            {BLOG_ENTRIES.find(({ id }) => id === postId)?.title}
           </Link>
         ))}
       </div>
@@ -42,7 +52,7 @@ const BlogPosts = ({ blogPosts }: { blogPosts: BlogRef[] }) => {
           <span>
             {expanded
               ? 'Show less'
-              : `Show ${blogPosts.length - MAX_VISIBLE} more`}
+              : `Show ${blogPostReferences.length - MAX_VISIBLE} more`}
           </span>
         </button>
       )}

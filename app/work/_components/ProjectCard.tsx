@@ -63,7 +63,7 @@ const ProjectCard = ({
       </div>
 
       {/* blog post references */}
-      {blogPosts.length > 0 && <BlogPosts blogPosts={blogPosts} />}
+      {blogPosts.length > 0 && <BlogPosts blogPostReferences={blogPosts} />}
 
       {/* tech stack */}
       <div className="flex flex-wrap gap-3">

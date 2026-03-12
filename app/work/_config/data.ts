@@ -8,11 +8,9 @@ import {
   SiTerraform,
   SiTypescript,
 } from 'react-icons/si'
+import BLOG_ENTRIES from '@/blog/_config/data'
 
-export type BlogRef = {
-  id: number
-  title: string
-}
+export type BlogPostReference = (typeof BLOG_ENTRIES)[number]['id']
 
 export type Project = {
   title: string
@@ -21,7 +19,7 @@ export type Project = {
   tech: { name: string; icon: IconType }[]
   url: string
   status: 'active' | 'archived'
-  blogPosts: BlogRef[]
+  blogPosts: BlogPostReference[]
 }
 
 const PROJECTS: Project[] = [
@@ -35,12 +33,7 @@ const PROJECTS: Project[] = [
     tech: [{ name: 'Go', icon: FaGolang }],
     url: 'https://github.com/denesbeck/nexio',
     status: 'active',
-    blogPosts: [
-      { id: 8, title: 'Developing my own VCS' },
-      { id: 9, title: 'Storage optimization' },
-      { id: 14, title: 'From JSON Files to SQLite' },
-      { id: 17, title: 'Remote State Management with S3' },
-    ],
+    blogPosts: [8, 9, 14, 17],
   },
   {
     title: 'Home Lab',
@@ -55,16 +48,7 @@ const PROJECTS: Project[] = [
     ],
     url: 'https://github.com/denesbeck/home-lab-ansible',
     status: 'active',
-    blogPosts: [
-      { id: 4, title: 'Building my home server P1' },
-      { id: 5, title: 'Building my home server P2' },
-      { id: 6, title: 'Building my home server P3' },
-      { id: 7, title: 'Building my home server P4' },
-      { id: 15, title: 'Building my home server P5' },
-      { id: 16, title: 'Building my home server P6' },
-      { id: 18, title: 'Building my home server P7' },
-      { id: 19, title: 'Building my home server P8' },
-    ],
+    blogPosts: [4, 5, 6, 7, 15, 16, 18, 19, 20],
   },
   {
     title: 'Serverless Deploy',
@@ -81,7 +65,7 @@ const PROJECTS: Project[] = [
     ],
     url: 'https://github.com/denesbeck/lambda-functions',
     status: 'active',
-    blogPosts: [{ id: 3, title: 'Lambda Deployments' }],
+    blogPosts: [3],
   },
   {
     title: 'Arcade Lab',
