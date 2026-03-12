@@ -144,7 +144,7 @@ export const SKILLS = [
 export const BIO = (
   <p className="text-text-dark">
     <p className="mb-8">
-      🚀 I&apos;m a self-taught full-stack software engineer with{' '}
+      🚀 I&apos;m a full-stack software engineer with{' '}
       <Emphasize>{new Date().getFullYear() - 2019} years</Emphasize> of
       experience.
     </p>
