@@ -12,16 +12,16 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "@aws-sdk/client-lambda": "^3.1001.0",
+    "@aws-sdk/client-lambda": "^3.1007.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@mdx-js/loader": "^3.1.1",
     "@mdx-js/react": "^3.1.1",
-    "@mui/material": "^7.3.8",
+    "@mui/material": "^7.3.9",
     "@next/mdx": "^16.1.6",
     "@types/mdx": "^2.0.13",
-    "@vercel/analytics": "^1.6.1",
-    "@vercel/speed-insights": "^1.3.1",
+    "@vercel/analytics": "^2.0.0",
+    "@vercel/speed-insights": "^2.0.0",
     "highlight.js": "^11.11.1",
     "next": "16.1.6",
     "react": "19.2.4",
@@ -32,7 +32,7 @@
     "validator": "^13.15.26"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.5",
+    "@biomejs/biome": "^2.4.6",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^25",
     "@types/react": "^19",
@@ -40,7 +40,7 @@
     "@types/validator": "^13.15.10",
     "baseline-browser-mapping": "^2.10.0",
     "husky": "^9.1.7",
-    "lint-staged": "^16.3.2",
+    "lint-staged": "^16.3.3",
     "tailwindcss": "^4",
     "typescript": "^5"
   },
