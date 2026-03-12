@@ -17,6 +17,7 @@ import {
   SiCredly,
   SiDocker,
   SiGithubactions,
+  SiGnubash,
   SiKubernetes,
   SiLua,
   SiTekton,
@@ -89,7 +90,6 @@ export const SKILLS = [
     name: 'Tailwind CSS',
     icon: RiTailwindCssFill,
   },
-
   {
     name: 'Node.js',
     icon: FaNodeJs,
@@ -118,6 +118,7 @@ export const SKILLS = [
     name: 'Linux',
     icon: FaLinux,
   },
+  { name: 'Bash', icon: SiGnubash },
   {
     name: 'Docker',
     icon: SiDocker,

@@ -4,6 +4,10 @@ export const navItems = [
     path: '/',
   },
   {
+    label: 'Works',
+    path: '/works',
+  },
+  {
     label: 'Blog',
     path: '/blog',
   },
