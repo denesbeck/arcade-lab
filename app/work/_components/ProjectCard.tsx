@@ -15,9 +15,7 @@ const ProjectCard = ({
   const isLink = url.length > 0
 
   return (
-    <div
-      className={`group relative flex flex-col justify-between gap-6 p-6 sm:p-8 ring-2 ring-secondary backdrop-blur-md transition-all duration-300 ease-in-out animate-text-focus sm:hover:ring-primary sm:hover:ring-offset-4 sm:hover:ring-offset-root sm:hover:shadow-[10px_10px_0px_0px_black]`}
-    >
+    <div className="flex relative flex-col gap-6 justify-between p-6 border-b-2 transition-all duration-300 ease-in-out sm:p-8 sm:border-b-0 sm:ring-2 last:border-b-0 border-secondary group ring-secondary backdrop-blur-md animate-text-focus ring-offset-root sm:hover:ring-primary sm:hover:ring-offset-4">
       {/* status indicator */}
       <div className="flex absolute top-4 right-4 gap-2 items-center">
         <div

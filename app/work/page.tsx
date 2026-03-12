@@ -42,13 +42,11 @@ const Work = () => {
         title="Work"
         description="A collection of tools and services I&apos;ve built and maintain."
       />
-      <div className="flex flex-col items-center pb-8 min-h-[calc(100dvh-100px)] w-dvw lg:pb-[100px]">
-        <div className="flex flex-col gap-8 py-8 px-4 my-auto w-full max-w-4xl animate-slide-in-from-bottom">
-          <div className="grid grid-cols-1 gap-10 md:grid-cols-2">
-            {PROJECTS.map((project) => (
-              <ProjectCard key={project.title} {...project} />
-            ))}
-          </div>
+      <div className="flex justify-center py-4">
+        <div className="grid justify-center mr-6 sm:gap-6 sm:px-10 sm:w-dvw sm:[grid-template-columns:repeat(auto-fit,minmax(415px,0))]">
+          {PROJECTS.map((project) => (
+            <ProjectCard key={project.title} {...project} />
+          ))}
         </div>
       </div>
     </div>
