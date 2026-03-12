@@ -1,5 +1,5 @@
 import { Metadata } from 'next'
-import { Heading1, Info, PageHeader } from '@/_components'
+import { PageHeader } from '@/_components'
 import { ProjectCard } from './_components'
 import PROJECTS from './_config/data'
 
@@ -8,38 +8,38 @@ export const dynamic = 'force-static'
 const domain = process.env.NEXT_PUBLIC_DOMAIN || 'arcade-lab.vercel.app'
 
 export const metadata: Metadata = {
-  title: 'Works',
+  title: 'Work',
   description:
     'A showcase of my projects — from version control systems to home lab infrastructure.',
   openGraph: {
-    title: 'Works - Denes Beck',
+    title: 'Work - Denes Beck',
     description:
       'A showcase of my projects — from version control systems to home lab infrastructure.',
-    url: `https://${domain}/works`,
+    url: `https://${domain}/work`,
     type: 'website',
     images: [
       {
         url: `/logo/arcade_lab_logo.png`,
         width: 1200,
         height: 630,
-        alt: 'Denes Beck - Works',
+        alt: 'Denes Beck - Work',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Works - Denes Beck',
+    title: 'Work - Denes Beck',
     description:
       'A showcase of my projects — from version control systems to home lab infrastructure.',
     creator: '@DenesBeck',
   },
 }
 
-const Works = () => {
+const Work = () => {
   return (
     <div className="flex flex-col">
       <PageHeader
-        title="Works"
+        title="Work"
         description="A collection of tools and services I&apos;ve built and maintain."
       />
       <div className="flex flex-col items-center pb-8 min-h-[calc(100dvh-100px)] w-dvw lg:pb-[100px]">
@@ -55,4 +55,4 @@ const Works = () => {
   )
 }
 
-export default Works
+export default Work
