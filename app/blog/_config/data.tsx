@@ -93,8 +93,8 @@ const BLOG_ENTRIES: BlogEntry[] = [
     id: 18,
     title: 'Building my home server P7',
     description: 'Streaming movies with Jellyfin',
-    date: '2026-03-20',
-    hidden: true,
+    date: '2026-03-13',
+    hidden: false,
     tags: [
       'linux',
       'docker',
