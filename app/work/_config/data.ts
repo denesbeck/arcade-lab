@@ -5,8 +5,13 @@ import {
   SiAnsible,
   SiGithubactions,
   SiGnubash,
+  SiLua,
+  SiMui,
+  SiNeovim,
   SiTerraform,
+  SiTmux,
   SiTypescript,
+  SiVite,
 } from 'react-icons/si'
 import BLOG_ENTRIES from '@/blog/_config/data'
 
@@ -89,6 +94,43 @@ const PROJECTS: Project[] = [
     ],
     url: 'https://github.com/denesbeck/arcade-lab',
     status: 'active',
+    blogPosts: [],
+  },
+  {
+    title: 'Dotfiles',
+    subtitle: 'Dev Environment Config',
+    highlights: [
+      'Configured and maintained NeoVim and Tmux dotfiles with a custom Lua-based NeoVim setup',
+      'Automated environment provisioning with an Ansible playbook for reproducible development setups',
+    ],
+    tech: [
+      { name: 'Lua', icon: SiLua },
+      { name: 'NeoVim', icon: SiNeovim },
+      { name: 'Tmux', icon: SiTmux },
+    ],
+    url: 'https://github.com/denesbeck/dotfiles',
+    status: 'active',
+    blogPosts: [],
+  },
+  {
+    title: 'Lost in Dusk',
+    subtitle: 'Developer Portfolio',
+    highlights: [
+      'Built a previous portfolio application using React, Vite, and Tailwind CSS with a fully serverless AWS backend',
+      'Provisioned cloud infrastructure with Terraform and automated deployments via GitHub Actions with CI quality gates',
+    ],
+    tech: [
+      { name: 'React', icon: FaReact },
+      { name: 'Vite', icon: SiVite },
+      { name: 'Tailwind CSS', icon: RiTailwindCssFill },
+      { name: 'TypeScript', icon: SiTypescript },
+      { name: 'AWS', icon: FaAws },
+      { name: 'Terraform', icon: SiTerraform },
+      { name: 'GitHub Actions', icon: SiGithubactions },
+      { name: 'Material UI', icon: SiMui },
+    ],
+    url: 'https://github.com/denesbeck/lost-in-dusk',
+    status: 'archived',
     blogPosts: [],
   },
 ]
