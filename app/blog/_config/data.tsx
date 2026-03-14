@@ -36,10 +36,36 @@ import { BlogEntry } from '../_interfaces/blog'
 
 const BLOG_ENTRIES: BlogEntry[] = [
   {
+    id: 22,
+    title: 'Building my home server P10',
+    description: 'Network visibility with NetAlertX',
+    date: '2026-04-02',
+    hidden: true,
+    tags: [
+      'linux',
+      'home-server',
+      'netalertx',
+      'docker',
+      'networking',
+      'arp',
+      'nginx',
+      'ansible',
+    ],
+    content: 'building-my-home-server-p10',
+    cover: {
+      image: buildHomeServerSm,
+      original: buildHomeServer,
+      xImage: buildHomeServerX,
+      alt: 'build_home_server',
+      ogImage: '/blog/covers/building_home_server.png',
+      ogImageX: '/blog/covers/building_home_server_x.png',
+    },
+  },
+  {
     id: 21,
     title: 'Building my home server P9',
     description: 'UPS failover with automated shutdown',
-    date: '2026-04-04',
+    date: '2026-03-28',
     hidden: true,
     tags: [
       'linux',
@@ -66,7 +92,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
     id: 20,
     title: 'Building my home server P8',
     description: 'Remote access with Tailscale',
-    date: '2026-03-28',
+    date: '2026-03-23',
     hidden: true,
     tags: [
       'linux',

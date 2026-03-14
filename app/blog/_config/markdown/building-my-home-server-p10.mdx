@@ -1,0 +1,83 @@
+# 🏗️ Building my home server: Part 10
+
+_Network visibility with NetAlertX_
+
+📅 2026-04-02
+
+In my previous blog post, I covered setting up a UPS with automated shutdown to protect my server from power outages. In this post, I'm adding something I've wanted for a while: full visibility into what's connected to my network. Until now, I had no easy way to see which devices were on my LAN, when they joined, when they left, or whether something unexpected showed up. I knew my own devices, of course, but there was no centralized view — no dashboard I could glance at and say "yes, everything looks normal." Time to fix that.
+
+## 🔍 What is NetAlertX?
+
+[NetAlertX](https://github.com/netalertx/NetAlertX) is an open-source network visibility and asset intelligence framework. It continuously scans your local network using methods like ARP scanning, nmap, and Pi-hole integration to build and maintain a real-time inventory of every connected device. Think of it as a lightweight alternative to enterprise tools like Zabbix or Nagios, focused specifically on discovery and awareness rather than full infrastructure monitoring.
+
+Here's what it gives you out of the box:
+
+- **Device discovery** — automatically detects every device on your network by MAC address, IP, hostname, and vendor.
+- **Presence tracking** — knows when devices come online, go offline, or change IP addresses. It maintains a full history of connection events.
+- **Change notifications** — sends alerts when a new (unknown) device appears on the network. Supports 80+ notification channels via [Apprise](https://hub.docker.com/r/caronc/apprise), plus native support for Pushover, Pushsafer, NTFY, and others.
+- **Network topology** — visualizes how devices are connected and organized across your network, including VLAN awareness.
+- **Workflow automation** — lets you define rules for auto-categorizing devices, archiving stale entries, or cleaning up duplicates.
+- **Plugin system** — extensible with plugins for importing data from Pi-hole, DHCP servers, UNIFI controllers, SNMP-enabled routers, and more. You can even [build your own scanner plugin](https://docs.netalertx.com/PLUGINS_DEV) in about 15 minutes.
+- **API and integrations** — exposes a GraphQL API and REST endpoints for feeding data into Home Assistant, n8n workflows, or custom tooling.
+
+For a home lab, the killer feature is the combination of passive monitoring and active alerting. I don't need to remember to check what's on my network — NetAlertX tells me when something changes.
+
+## 🤔 Why NetAlertX?
+
+I considered a few alternatives. [Fing](https://www.fing.com/) is the popular consumer option, but it's a phone app tied to proprietary hardware for advanced features. [NetBox](https://netboxlabs.com/) is the gold standard for network source of truth in enterprise environments, but it's overkill for a single-server home lab — it's designed for documenting infrastructure, not discovering it. [Zabbix](https://www.zabbix.com/) and [Nagios](https://www.nagios.org/) are powerful monitoring platforms, but they're focused on uptime and performance metrics, not asset discovery.
+
+NetAlertX sits in a sweet spot: it's self-hosted, lightweight, Docker-native, and purpose-built for answering the question "what's on my network right now?" It also integrates directly with Pi-hole (which I set up in [Part 5](/blog/building-my-home-server-p5)), so it can import device data from DNS queries without any additional scanning.
+
+## 🐳 Running NetAlertX in Docker
+
+NetAlertX has one hard requirement that makes it different from every other container in my home lab: it needs `network_mode: host`. ARP scanning operates at Layer 2 of the network stack — it sends raw Ethernet frames to discover devices on the local subnet. In Docker's default bridge mode, the container is isolated in its own network namespace and can't see the host's physical network interfaces. Host networking removes that isolation, giving the container direct access to the same network stack as the host.
+
+The tradeoff is that `network_mode: host` disables Docker's port mapping entirely. You can't use `-p 127.0.0.1:20211:20211` to bind the web UI to localhost — Docker ignores `published_ports` in host mode because there's no network boundary to map across. Instead, the container's processes bind directly to the host's interfaces, just like native services.
+
+To keep the web UI accessible only through my Nginx reverse proxy (the same pattern I use for all other services), I used the `LISTEN_ADDR` environment variable:
+
+```yaml
+env:
+  PORT: "20211"
+  LISTEN_ADDR: "127.0.0.1"
+```
+
+This tells NetAlertX's internal Nginx to listen on `127.0.0.1:20211` only. Same end result as binding a port to `127.0.0.1` in Docker — the web UI is only reachable from the host itself — just achieved through application-level configuration instead of Docker networking.
+
+### Container Security
+
+The [official Docker Compose baseline](https://docs.netalertx.com/DOCKER_COMPOSE) is more security-conscious than most container setups I've seen. It runs the container with a read-only filesystem, drops all Linux capabilities, and adds back only the six that are actually needed:
+
+- **NET_ADMIN, NET_RAW, NET_BIND_SERVICE** — for ARP scanning, raw socket operations, and binding to privileged ports.
+- **CHOWN, SETUID, SETGID** — for the entrypoint script to set file ownership on `/data` and `/tmp` before dropping to a non-root user.
+
+The container also uses a `tmpfs` mount on `/tmp` for writable state, with specific UID/GID ownership so the non-root service user can write to it. I configured resource limits (2GB memory, 512 CPU shares, 512 PID limit) and log rotation to keep things predictable.
+
+### ARP Flux Mitigation
+
+NetAlertX recommends setting two kernel sysctls to improve ARP detection accuracy:
+
+```
+net.ipv4.conf.all.arp_ignore=1
+net.ipv4.conf.all.arp_announce=2
+```
+
+These prevent the kernel from responding to ARP requests on the wrong interface (a problem called "ARP flux"), which can cause duplicate or ambiguous device detections. With `network_mode: host`, you can't set these via Docker's `--sysctl` flag — the container shares the host's network namespace, and Docker doesn't have permission to modify host-level sysctls from within it. So I set them directly on the host using Ansible's `sysctl` module, which also persists them across reboots.
+
+## 🤖 Automating with Ansible
+
+The full deployment is captured in a single [Ansible playbook](https://github.com/denesbeck/home-lab-ansible/blob/main/playbooks/netalertx.yml). It creates the data directories (`/home/netalertx/data/config` and `/home/netalertx/data/db`), gathers the runtime user's PUID/PGID, sets the ARP flux sysctls on the host, and deploys the container with all the security hardening described above. All configuration — container name, image, data path, port, timezone — lives in a separate variables file, consistent with how every other service in the home lab is managed.
+
+The Nginx reverse proxy entry was added to the existing Nginx configuration template, so `https://netalertx.arcade-lab.io` routes to `127.0.0.1:20211`. A corresponding DNS record in Pi-hole makes the subdomain resolve on the local network.
+
+## 🎉 Outcome
+
+With NetAlertX running, I now have:
+
+1. **Full network inventory** — every device on my LAN is cataloged with its MAC address, IP, hostname, vendor, and connection history. No more guessing what's connected.
+2. **Real-time change detection** — new devices trigger alerts the moment they appear. If something unexpected joins the network, I know about it immediately.
+3. **Historical presence data** — I can see when devices come and go, track IP changes over time, and spot patterns like a device that keeps dropping off the network.
+4. **Pi-hole integration** — NetAlertX pulls device data directly from my existing Pi-hole instance, enriching its inventory with DNS query information without any extra scanning overhead.
+5. **Zero exposure** — despite requiring host networking for Layer 2 scanning, the web UI is locked to localhost via `LISTEN_ADDR` and only accessible through the Nginx reverse proxy with SSL, matching the security model of every other service in the lab.
+
+Noice! 🎉
