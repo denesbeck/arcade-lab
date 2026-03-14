@@ -223,7 +223,7 @@ const ChatWidget = () => {
       {/* Chat window */}
       {isOpen && (
         <div
-          className="fixed right-6 bottom-24 z-50 flex flex-col rounded-lg border-2 shadow-2xl border-dark-600 bg-dark-900"
+          className="fixed right-6 bottom-24 z-50 flex max-w-[90dvw] flex-col rounded-lg border-2 shadow-2xl border-dark-600 bg-dark-900"
           style={{ width: size.width, height: size.height }}
         >
           {/* Resize handle — top-left corner */}
