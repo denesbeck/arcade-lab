@@ -8,6 +8,25 @@ import type { BlogPost, BlogPostMeta } from '../types'
  */
 const BLOG_ENTRIES: BlogPostMeta[] = [
   {
+    id: 21,
+    title: 'Building an AI Chat Widget with MCP',
+    description: 'Adding an AI-powered assistant to my portfolio',
+    date: '2026-03-18',
+    hidden: false,
+    tags: [
+      'mcp',
+      'ai',
+      'claude',
+      'typescript',
+      'nextjs',
+      'react',
+      'streaming',
+      'chat',
+      'sse',
+    ],
+    slug: 'mcp-server-and-chat-widget',
+  },
+  {
     id: 20,
     title: 'Building my home server P9',
     description: 'UPS failover with automated shutdown',

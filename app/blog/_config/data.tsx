@@ -31,9 +31,37 @@ import techConferenceX from '@/../public/blog/covers/tech_conference_x.png'
 import tektonCicd from '@/../public/blog/covers/tekton_cicd.png'
 import tektonCicdSm from '@/../public/blog/covers/tekton_cicd_sm.png'
 import tektonCicdX from '@/../public/blog/covers/tekton_cicd_x.png'
+import arcadeLab from '@/../public/logo/arcade_lab_logo.png'
 import { BlogEntry } from '../_interfaces/blog'
 
 const BLOG_ENTRIES: BlogEntry[] = [
+  {
+    id: 21,
+    title: 'Building an AI Chat Widget with MCP',
+    description: 'Adding an AI-powered assistant to my portfolio',
+    date: '2026-03-18',
+    hidden: false,
+    tags: [
+      'mcp',
+      'ai',
+      'claude',
+      'typescript',
+      'nextjs',
+      'react',
+      'streaming',
+      'chat',
+      'sse',
+    ],
+    content: 'mcp-server-and-chat-widget',
+    cover: {
+      image: arcadeLab,
+      original: arcadeLab,
+      xImage: arcadeLab,
+      alt: 'arcade_lab',
+      ogImage: '/logo/arcade_lab_logo.png',
+      ogImageX: '/logo/arcade_lab_logo.png',
+    },
+  },
   {
     id: 20,
     title: 'Building my home server P9',

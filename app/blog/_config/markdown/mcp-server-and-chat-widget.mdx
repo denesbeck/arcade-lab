@@ -1,0 +1,191 @@
+# 🤖 Building an AI Chat Widget with MCP
+
+_Adding an AI-powered assistant to my portfolio_
+
+📅 2026-03-18
+
+I've been exploring the [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) — Anthropic's open standard for connecting AI models to external data sources. The idea is simple: instead of pasting context into a chat window, you give the AI structured access to your data through tools. I thought it would be a good fit for my portfolio — I have 20 blog posts, several projects, and an about page. Why not let visitors ask an AI assistant about any of it?
+
+This post covers how I built two things: an **MCP server** for Claude Code (local development) and a **streaming chat widget** for the website (production).
+
+## 🧩 What is MCP?
+
+MCP (Model Context Protocol) is a JSON-RPC-based protocol that lets AI models call "tools" — functions that retrieve or manipulate data. Think of it like giving the AI a set of APIs it can call when it needs information.
+
+For example, if someone asks "How do I set up a Jellyfin server?", the AI can:
+
+1. Call a `search_blog_posts` tool with the query "jellyfin server"
+2. Get back a list of matching blog posts (ranked by relevance)
+3. Call `get_blog_post` to retrieve the full content
+4. Synthesize an answer based on the actual blog post
+
+The AI decides which tools to call and when — it's an agentic loop.
+
+## 🏗️ Architecture
+
+The implementation has two consumers of the same tool logic:
+
+```
+┌──────────────────────────────────┐
+│  Shared: mcp-server/src/         │
+│  (Tool definitions + handlers)   │
+└──────────┬──────────┬────────────┘
+           │          │
+   ┌───────▼──┐  ┌────▼─────────────┐
+   │  stdio   │  │  Next.js API     │
+   │  server  │  │  /api/chat       │
+   │          │  │                  │
+   │  Claude  │  │  Claude API +    │
+   │  Code    │  │  SSE streaming   │
+   └──────────┘  └──────────────────┘
+```
+
+- **MCP server** (`mcp-server/`): A standalone Node.js process that communicates via stdin/stdout. Used locally with Claude Code.
+- **API route** (`/api/chat`): A Next.js route handler that calls the Claude API with the same tool definitions, executes tools server-side, and streams the response back to the browser.
+
+Both import from the same `mcp-server/src/` source — the tool definitions, data loaders, and search logic are shared.
+
+## 🔧 The MCP Server
+
+The server uses the official `@modelcontextprotocol/sdk` and registers six tools:
+
+| Tool | Description |
+|------|-------------|
+| `search_blog_posts` | Keyword search across titles, descriptions, and tags |
+| `get_blog_post` | Full content of a blog post by ID |
+| `list_blog_posts` | All published posts with metadata |
+| `get_about_info` | Personal info, skills, certs, social links |
+| `list_projects` | Portfolio projects with tech stacks |
+| `list_tags` | All unique blog tags |
+
+Each tool is registered with a [Zod](https://zod.dev/) schema for input validation:
+
+```typescript
+server.tool(
+  'search_blog_posts',
+  'Search blog posts by keyword.',
+  {
+    query: z.string().describe('Search keywords'),
+    tag: z.string().optional().describe('Filter by tag'),
+  },
+  async (args) => {
+    return executeTool('search_blog_posts', args)
+  },
+)
+```
+
+The `executeTool` function is where the actual logic lives — it's a plain TypeScript function with no MCP dependencies, which is why the Next.js API route can import it directly.
+
+## 🔍 Blog Search
+
+The search is a simple keyword matching algorithm — no vector database, no embeddings. With 20 blog posts, it doesn't need to be fancy:
+
+1. Tokenize the query into lowercase words
+2. For each blog post, score it based on matches in the title (3 points), description (2 points), and tags (2 points for exact, 1 for partial)
+3. Sort by score descending, return top 5
+
+This works surprisingly well. Searching "jellyfin server" returns the Jellyfin blog post with a score of 9 (title match + tag match + description match).
+
+## 📡 Streaming Responses
+
+The chat widget doesn't wait for the full response — it streams tokens as they arrive, giving the "typing" effect you see in ChatGPT. Here's how it works:
+
+**Server side** (`/api/chat`):
+
+1. Run tool-use rounds (non-streaming) until Claude produces a final text response
+2. For the final response, use Claude's streaming API
+3. Send each text delta as a Server-Sent Event (SSE)
+
+```typescript
+const stream = client.messages.stream({
+  model: 'claude-sonnet-4-20250514',
+  max_tokens: 1024,
+  system: SYSTEM_PROMPT,
+  tools,
+  messages: currentMessages,
+})
+
+const readable = new ReadableStream({
+  async start(controller) {
+    for await (const event of stream) {
+      if (event.type === 'content_block_delta'
+        && event.delta.type === 'text_delta') {
+        controller.enqueue(
+          encoder.encode(`data: ${JSON.stringify({
+            text: event.delta.text
+          })}\n\n`)
+        )
+      }
+    }
+    controller.enqueue(encoder.encode('data: [DONE]\n\n'))
+    controller.close()
+  },
+})
+```
+
+**Client side** (React):
+
+The chat widget reads the SSE stream and appends text to a `streamingContent` state variable. The markdown is rendered incrementally as tokens arrive:
+
+```typescript
+const reader = response.body?.getReader()
+const decoder = new TextDecoder()
+let accumulated = ''
+
+while (true) {
+  const { done, value } = await reader.read()
+  if (done) break
+
+  const chunk = decoder.decode(value, { stream: true })
+  const lines = chunk.split('\n')
+
+  for (const line of lines) {
+    if (line.startsWith('data: ')) {
+      const data = line.slice(6)
+      if (data === '[DONE]') break
+      const parsed = JSON.parse(data)
+      accumulated += parsed.text
+      setStreamingContent(accumulated)
+    }
+  }
+}
+```
+
+## 🎨 The Chat Widget
+
+The widget is a floating React component in the bottom-right corner of every page. A few features worth mentioning:
+
+- **Resizable**: Drag the top-left handle to resize the window
+- **Markdown rendering**: Assistant responses are rendered with the same styling as blog posts (headings, code blocks, lists, links, tables)
+- **Rate limiting**: Server-side per-IP (20/hour) and global (200/hour) caps, plus a client-side 15-message session limit
+- **Scroll behavior**: Auto-scrolls to bottom on new messages and during streaming
+
+The markdown components mirror the blog's `mdx-components.tsx` patterns — same color tokens, same link styles, same code block appearance — but scaled down for the compact chat bubble.
+
+## 🛡️ Rate Limiting
+
+Since the Claude API costs money per request, rate limiting is essential. The implementation uses a simple in-memory approach:
+
+```typescript
+const RATE_LIMIT_PER_IP = 20
+const RATE_LIMIT_GLOBAL = 200
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000 // 1 hour
+
+const ipRequests = new Map<string, {
+  count: number
+  resetAt: number
+}>()
+```
+
+On Vercel, this resets whenever the serverless function cold-starts, but it's a good enough deterrent for a portfolio site. For absolute cost control, the Anthropic dashboard lets you set a monthly spend limit.
+
+## 🎉 Outcome
+
+With the MCP server and chat widget in place, I now have:
+
+1. **Claude Code integration** — I can use Claude Code with full context of my blog posts, projects, and personal info by adding the MCP server to my config.
+2. **Visitor-facing AI assistant** — Anyone visiting the site can ask questions and get answers grounded in actual blog content.
+3. **Streaming UX** — Responses appear token by token, making the interaction feel natural.
+4. **Shared tool logic** — The same search and data-loading code powers both the local MCP server and the web chat, with zero duplication.
+
+The whole implementation sits cleanly in the existing Next.js project — the MCP server is a subdirectory that never gets deployed, and the chat widget is just another component in the layout.
