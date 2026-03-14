@@ -1,0 +1,166 @@
+# 🚀 Lambda Deployments v2
+
+_Taking the Lambda deployment pipeline from MVP to production-ready_
+
+📅 2026-03-14
+
+## 🧭 Introduction
+
+Back in October 2025, I wrote about [automating Lambda deployments with GitHub Actions](/blog/3). That workflow was functional — it deployed Lambda functions and layers across multiple regions using hash-based change detection and OIDC authentication. But as I started relying on it more heavily, cracks began to show.
+
+There were bugs hiding in plain sight, the workflow was a single monolithic job, there were no tests, and the shell scripts had no guardrails. It worked, but it wasn't production-ready. So I decided to fix that — systematically.
+
+## 🐛 Phase 1: Fixing What Was Broken
+
+The first step was finding and fixing bugs that were already there but hadn't surfaced yet.
+
+### Compatible Runtimes Bug
+
+The `--compatible-runtimes` flag in the AWS CLI expects space-separated values like `nodejs18.x nodejs20.x nodejs22.x`. My workflow was passing a raw JSON array from `jq -c .runtimes`, which produced `["nodejs18.x","nodejs20.x","nodejs22.x"]`. This was silently accepted by the CLI in some cases, but it wasn't correct.
+
+The fix was straightforward:
+
+```bash
+# Before
+COMPATIBLE_RUNTIMES=$(jq -c .runtimes "$CONFIG_FILE")
+
+# After
+COMPATIBLE_RUNTIMES=$(jq -r '.runtimes | join(" ")' "$CONFIG_FILE")
+```
+
+### Hardcoded Region
+
+The contact form Lambda was hardcoding `eu-central-1` for both SSMClient and SESClient. Since the function gets deployed to both `us-east-1` and `eu-central-1`, the US deployment was making cross-region API calls. Fixed it by using `process.env.AWS_REGION`, which Lambda sets automatically.
+
+### Missing Error Handling
+
+Two shell scripts (`get-alias.sh` and `install-packages.sh`) were missing `set -euo pipefail`. Without it, a failing command in the middle of the script would be silently ignored, potentially deploying broken artifacts. I also added a catch-all case to `install-packages.sh` so unrecognized package types fail loudly.
+
+### Pagination in Layer Cleanup
+
+The `lambda-layer-cleanup` function was only processing the first page of results from `list_layers()` and `list_layer_versions()`. These APIs return at most 50 items per page. If you had more than 50 layers, the rest would be silently skipped. I added a `NextMarker`-based pagination loop to handle this correctly.
+
+## 🔧 Phase 2: Hardening the Pipeline
+
+With the bugs fixed, the next step was making the pipeline more robust.
+
+### ShellCheck Linting
+
+I added [ShellCheck](https://www.shellcheck.net/) to the CI pipeline. It catches common shell scripting mistakes like unquoted variables, unused variables, and POSIX compliance issues. It runs on every push against all scripts in the `scripts/` directory.
+
+### Input Validation
+
+The `expand-config.sh` script now validates that all required fields (`function_name`, `runtime`, `handler`, `role`) exist in `config.json` before proceeding. Previously, a missing field would silently produce an empty string, and you'd only find out when the AWS API call failed with a cryptic error.
+
+### Concurrency Control
+
+Before this change, two pushes in quick succession to the same branch could trigger simultaneous deploys, potentially racing on hash file uploads and Lambda updates. I added a concurrency group scoped to the branch name:
+
+```yaml
+concurrency:
+  group: deploy-${{ github.ref_name }}
+  cancel-in-progress: false
+```
+
+### Splitting the Monolith
+
+The original workflow was a single ~300-line job that handled everything. I split it into three distinct jobs:
+
+```
+validate  →  deploy-layers  →  deploy-functions
+```
+
+Each job only declares the environment variables it needs. The `deploy-functions` job depends on `deploy-layers` completing first (since new layer versions may affect function configuration). This also means if layers don't need deploying, that job finishes quickly and functions can proceed.
+
+### Removing the Unnecessary
+
+I discovered that `jq` is pre-installed on GitHub's `ubuntu-latest` runners. The workflow was running `sudo apt-get update && sudo apt-get install -y jq` on every single run — unnecessarily adding ~10 seconds to every deploy. Removed it.
+
+I also found that the hash generation script wasn't excluding its own output files (`.code.hash`, `.config.hash`) from the hash computation. This meant that on a second run without code changes, the hash would still differ because the hash files from the first run were included. Fixed it by excluding `*.hash` files from the `find` command.
+
+## 🧪 Phase 3: Adding Tests
+
+This was the most impactful phase. Before this, any push to `main` went straight to production with zero validation.
+
+### Node.js Tests (Vitest)
+
+I wrote 14 unit tests for the contact form handler covering:
+
+- **Input validation** — missing token, invalid email, name/message boundary conditions
+- **Cloudflare Turnstile** — failed verification, network errors
+- **SES email sending** — failure path
+- **Successful flow** — verifying SSM calls, Turnstile payload, SES parameters
+- **Unhandled exceptions** — SSM crash fallback
+
+The tests use `aws-sdk-client-mock` to mock SSM and SES clients, and `vi.mock` for axios. Each test reimports the module to get a fresh state.
+
+### Python Tests (pytest)
+
+I wrote 10 unit tests for the layer cleanup function covering:
+
+- **Pagination** — single page, multiple pages, empty responses for both `list_layers` and `list_layer_versions`
+- **Deletion logic** — keeps latest 10 versions, deletes the rest
+- **Multiple layers** — processes each independently
+- **Error handling** — exceptions are logged and re-raised
+
+One interesting challenge: the production code calls `boto3.client('lambda')` at module level. In CI, there's no AWS region configured, so this throws `NoRegionError` before any test code runs. The fix was to mock `boto3.client` itself before importing the module:
+
+```python
+mock_lambda_client = MagicMock()
+
+with patch("boto3.client", return_value=mock_lambda_client):
+    import lambda_function
+```
+
+### Validation Gate
+
+All tests (ShellCheck + Vitest + pytest) now run in a `validate` job that must pass before any deploy job starts. The pipeline flow is:
+
+```
+validate (lint + tests)
+    |
+    ├──> deploy-layers (us-east-1, eu-central-1)
+    |         |
+    └─────────┴──> deploy-functions (us-east-1, eu-central-1)
+```
+
+## ✨ Phase 4: Production Polish
+
+### Structured JSON Logging
+
+Both Lambda functions now output structured JSON logs instead of plain text. This makes them queryable with CloudWatch Insights:
+
+```javascript
+const log = (level, message, extra = {}) => {
+  const entry = { timestamp: new Date().toISOString(), level, message, ...extra };
+  console.log(JSON.stringify(entry));
+};
+```
+
+Instead of `console.log("Email sent with SES:", messageId)`, it now outputs:
+
+```json
+{"timestamp":"2026-03-14T10:30:00.000Z","level":"info","message":"Email sent with SES","messageId":"abc123"}
+```
+
+### SSM Parameter Caching
+
+The contact handler was calling SSM on every single invocation to fetch secrets. SSM parameters don't change often, so I moved the fetch to a module-level cached variable. The first invocation (cold start) fetches from SSM, and subsequent invocations on the same warm container reuse the cached values. This eliminates an API call per request and reduces latency.
+
+## 📊 Summary of Changes
+
+| Phase | Changes | Impact |
+|-------|---------|--------|
+| Bug fixes | 5 fixes (runtimes, region, error handling, pagination, hashes) | Correctness |
+| Hardening | ShellCheck, input validation, concurrency, job splitting | Reliability |
+| Testing | 24 tests (14 JS + 10 Python), validation gate | Safety |
+| Polish | JSON logging, SSM caching, README rewrite | Operability |
+
+## 💡 Final Thoughts
+
+The original workflow was a solid MVP. These changes turned it into something I'm confident deploying production workloads on. The biggest lesson: **tests aren't optional for CI/CD pipelines**. A deployment pipeline without tests is just a script that happens to run in the cloud.
+
+The full changelog is 16 commits across 5 phases — all in the same repos:
+
+🔗 [https://github.com/denesbeck/lambda-functions](https://github.com/denesbeck/lambda-functions) \
+🔗 [https://github.com/denesbeck/lambda-functions-tf](https://github.com/denesbeck/lambda-functions-tf)

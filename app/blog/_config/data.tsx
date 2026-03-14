@@ -36,6 +36,33 @@ import { BlogEntry } from '../_interfaces/blog'
 
 const BLOG_ENTRIES: BlogEntry[] = [
   {
+    id: 23,
+    title: 'Lambda Deployments v2',
+    description:
+      'Taking the Lambda deployment pipeline from MVP to production-ready',
+    date: '2026-03-14',
+    hidden: false,
+    tags: [
+      'aws',
+      'lambda',
+      'cicd',
+      'github-actions',
+      'testing',
+      'vitest',
+      'pytest',
+      'shellcheck',
+    ],
+    content: 'lambda-deployments-v2',
+    cover: {
+      image: lambdaDeploySm,
+      original: lambdaDeploy,
+      xImage: lambdaDeployX,
+      alt: 'lambda_deploy',
+      ogImage: '/blog/covers/lambda_deploy.png',
+      ogImageX: '/blog/covers/lambda_deploy_x.png',
+    },
+  },
+  {
     id: 22,
     title: 'Building my home server P10',
     description: 'Network visibility with NetAlertX',
