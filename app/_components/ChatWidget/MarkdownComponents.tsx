@@ -52,7 +52,7 @@ const chatMarkdownComponents: Components = {
     </ul>
   ),
   ol: ({ children }) => (
-    <ol className="pl-4 my-1.5 list-decimal break-words text-dark-200">
+    <ol className="pl-6 my-1.5 list-decimal break-words text-dark-200">
       {children}
     </ol>
   ),
@@ -60,17 +60,21 @@ const chatMarkdownComponents: Components = {
     <li className="my-0.5 text-sm break-words text-dark-200">{children}</li>
   ),
 
-  // Links — same style as blog
-  a: ({ children, href }) => (
-    <a
-      href={href}
-      className="break-words hover:underline text-active"
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      {children}
-    </a>
-  ),
+  // Links — internal links (e.g., /blog/18) stay in-app, external links open in new tab
+  a: ({ children, href }) => {
+    const isInternal = href?.startsWith('/')
+    return (
+      <a
+        href={href}
+        className="break-words underline underline-offset-2 text-active hover:brightness-125"
+        {...(isInternal
+          ? {}
+          : { target: '_blank', rel: 'noopener noreferrer' })}
+      >
+        {children}
+      </a>
+    )
+  },
 
   // Inline code — same style as blog
   code: ({ children }) => (

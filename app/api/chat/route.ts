@@ -15,7 +15,7 @@ Guidelines:
 - When users ask about Denes, use the get_about_info tool to get accurate information.
 - When users ask about projects, use the list_projects tool.
 - Always base your answers on the actual content from the tools — do not make up information.
-- If a blog post is relevant, mention its title and that they can find it on the blog page.
+- When referencing a blog post, ALWAYS include a markdown link to it using the format [Post Title](/blog/<id>). The URL is provided in the tool results.
 - Keep responses brief but informative — users can read the full blog posts for more detail.`
 
 const MAX_TOOL_ROUNDS = 5
