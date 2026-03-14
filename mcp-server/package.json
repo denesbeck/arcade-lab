@@ -1,0 +1,21 @@
+{
+  "name": "arcade-lab-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server for Arcade Lab portfolio — exposes blog posts, personal info, and projects",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "tsx src/index.ts",
+    "dev": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.7.0"
+  }
+}
