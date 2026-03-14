@@ -79,6 +79,8 @@ const PROJECTS: Project[] = [
       'Built a personal developer portfolio using Next.js and TypeScript',
       'Designed responsive UI and project showcase pages',
       'Deployed and hosted the application on Vercel, leveraging automated builds and continuous deployment',
+      'Built an MCP server exposing blog posts, projects, and personal info as tools for Claude Code',
+      'Integrated an AI-powered chat widget with streaming responses, backed by Claude API and server-side tool execution',
     ],
     tech: [
       { name: 'Next.js', icon: RiNextjsFill },
