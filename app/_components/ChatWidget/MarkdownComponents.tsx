@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import type { Components } from 'react-markdown'
 
 /**
@@ -60,16 +61,26 @@ const chatMarkdownComponents: Components = {
     <li className="my-0.5 text-sm break-words text-dark-200">{children}</li>
   ),
 
-  // Links — internal links (e.g., /blog/18) stay in-app, external links open in new tab
+  // Links — internal links (e.g., /blog/18) use Next.js Link for client-side navigation
+  // (preserves chat state), external links open in a new tab
   a: ({ children, href }) => {
     const isInternal = href?.startsWith('/')
+    if (isInternal && href) {
+      return (
+        <Link
+          href={href}
+          className="break-words underline underline-offset-2 text-active hover:brightness-125"
+        >
+          {children}
+        </Link>
+      )
+    }
     return (
       <a
         href={href}
         className="break-words underline underline-offset-2 text-active hover:brightness-125"
-        {...(isInternal
-          ? {}
-          : { target: '_blank', rel: 'noopener noreferrer' })}
+        target="_blank"
+        rel="noopener noreferrer"
       >
         {children}
       </a>

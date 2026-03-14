@@ -1,5 +1,6 @@
 'use client'
 import { useCallback, useEffect, useState } from 'react'
+import { IoArrowUp } from 'react-icons/io5'
 
 const ScrollToTop = () => {
   const [visible, setVisible] = useState(false)
@@ -29,10 +30,11 @@ const ScrollToTop = () => {
     <>
       {visible && (
         <button
-          className="fixed right-6 bottom-6 z-20 p-2 rounded-md border transition-colors duration-200 ease-in-out cursor-pointer text-dark-50 border-dark-500 bg-secondary animate-text-focus hover:bg-dark-900"
+          className="fixed right-6 bottom-24 z-50 flex justify-center items-center w-14 h-14 rounded-full shadow-lg transition-all duration-200 cursor-pointer bg-primary text-root hover:brightness-110 hover:scale-105 active:scale-95"
           onClick={scrollToTop}
+          aria-label="Scroll to top"
         >
-          Scroll to top
+          <IoArrowUp className="w-6 h-6" />
         </button>
       )}
     </>
