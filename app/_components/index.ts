@@ -1,5 +1,6 @@
 import AnimatedBorder from './AnimatedBorder'
 import Button from './Button'
+import ChatWidget from './ChatWidget'
 import CopyButton from './CopyButton'
 import DarkLayout from './DarkLayout'
 import Emphasize from './Emphasize'
@@ -22,6 +23,7 @@ import Tooltip from './Tooltip'
 export {
   AnimatedBorder,
   Button,
+  ChatWidget,
   CopyButton,
   DarkLayout,
   Emphasize,

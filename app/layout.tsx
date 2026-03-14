@@ -3,6 +3,7 @@ import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import { Metadata } from 'next'
 import AlertBox from './_components/AlertBox'
+import ChatWidget from './_components/ChatWidget'
 import Navbar from './_components/Navbar'
 
 const domain = process.env.NEXT_PUBLIC_DOMAIN || 'arcade-lab.vercel.app'
@@ -149,6 +150,7 @@ export default function RootLayout({
             <AlertBox context="global" />
             <div className="flex flex-1 mt-[100px]">{children}</div>
           </div>
+          <ChatWidget />
         </div>
       </body>
     </html>
