@@ -2,8 +2,6 @@
 
 _SMB with Samba_
 
-📅 2025-10-03
-
 As mentioned earlier, my original goal was to set up a file server within my local Wi-Fi network. After researching various solutions and libraries, I decided to use the Samba library, an open-source tool for implementing the SMB protocol on Linux. Initially, I explored SFTP, as it is widely regarded as one of the most secure options for file sharing. However, I ultimately didn’t feel the need to use SFTP because I didn’t want to make my system public; it was intended to be accessible only within my local network. Another factor in my decision was that SFTP requires a separate client, while SMB, on the other hand, seemed easier to set up and offered better performance. It doesn’t require any client software and is seamlessly integrated into Linux, Windows, and macOS. The final reason I chose SMB was that since version 3, SMB supports encryption in transit, adding a layer of security that aligned with my needs.
 
 ### 🛠️ Install & Configure

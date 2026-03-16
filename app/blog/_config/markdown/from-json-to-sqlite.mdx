@@ -2,8 +2,6 @@
 
 _How a Simple Benchmark Convinced Me to Rewrite Nexio's Storage Layer_
 
-📅 2026-02-28
-
 ## 🧭 Introduction
 
 In my [previous posts](/blog/8), I shared how I built Nexio from scratch, and then [optimized its blob storage](/blog/9) with content-addressable deduplication and compression. But there was still a major bottleneck hiding in plain sight: the metadata layer. Every staging operation, commit lookup, and branch query was reading and writing JSON files. For small repositories, this was fine. For anything beyond a few hundred files, it was painfully slow.
