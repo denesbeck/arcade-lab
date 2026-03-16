@@ -53,7 +53,7 @@ const PROJECTS: Project[] = [
     ],
     url: 'https://github.com/denesbeck/home-lab-ansible',
     status: 'active',
-    blogPosts: [4, 5, 6, 7, 15, 16, 18, 20, 21],
+    blogPosts: [4, 5, 6, 7, 15, 16, 18, 21, 22, 23],
   },
   {
     title: 'Serverless Deploy',
@@ -70,7 +70,7 @@ const PROJECTS: Project[] = [
     ],
     url: 'https://github.com/denesbeck/lambda-functions',
     status: 'active',
-    blogPosts: [3],
+    blogPosts: [3, 19],
   },
   {
     title: 'Arcade Lab',
@@ -96,7 +96,7 @@ const PROJECTS: Project[] = [
     ],
     url: 'https://github.com/denesbeck/arcade-lab',
     status: 'active',
-    blogPosts: [19],
+    blogPosts: [20],
   },
   {
     title: 'Dotfiles',

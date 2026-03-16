@@ -25,6 +25,8 @@ const BlogPosts = ({ blogPostReferences }: IBlogPosts) => {
 
   const toggle = useCallback(() => setExpanded((prev) => !prev), [])
 
+  if (visiblePosts.length === 0) return null
+
   return (
     <div className="flex flex-col flex-1 gap-2">
       <div className="flex gap-2 items-center text-xs tracking-widest uppercase text-dark-300">
