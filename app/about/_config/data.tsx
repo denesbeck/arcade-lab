@@ -2,6 +2,7 @@ import {
   FaAws,
   FaBriefcase,
   FaBuilding,
+  FaDev,
   FaGithub,
   FaLinkedin,
   FaLinux,
@@ -9,7 +10,7 @@ import {
   FaNodeJs,
   FaReact,
 } from 'react-icons/fa'
-import { FaGolang } from 'react-icons/fa6'
+import { FaGolang, FaXTwitter } from 'react-icons/fa6'
 import { HiIdentification } from 'react-icons/hi2'
 import { RiNextjsFill, RiTailwindCssFill } from 'react-icons/ri'
 import {
@@ -53,6 +54,8 @@ export const CONNECTIONS = [
     url: 'https://www.credly.com/users/denesbeck',
     icon: SiCredly,
   },
+  { url: 'https://x.com/denesbeck', icon: FaXTwitter },
+  { url: 'https://dev.to/denesbeck', icon: FaDev },
 ]
 
 export type Certificate = {
