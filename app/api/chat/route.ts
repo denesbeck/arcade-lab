@@ -6,6 +6,7 @@ import type {
   ToolUseBlock,
 } from '@anthropic-ai/sdk/resources/messages'
 import { executeTool, TOOL_DEFINITIONS } from '@mcp/tools'
+import { checkRateLimit } from './rate-limit'
 
 const SYSTEM_PROMPT = `You are a helpful assistant for Denes Beck's portfolio website (Arcade Lab). You have access to tools that let you search and retrieve blog posts, personal information, and project details.
 
@@ -19,41 +20,6 @@ Guidelines:
 - Keep responses brief but informative — users can read the full blog posts for more detail.`
 
 const MAX_TOOL_ROUNDS = 5
-
-// --- Rate limiting ---
-const RATE_LIMIT_PER_IP = 20 // max requests per IP per window
-const RATE_LIMIT_GLOBAL = 200 // max total requests per window
-const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000 // 1 hour
-
-const ipRequests = new Map<string, { count: number; resetAt: number }>()
-let globalRequests = { count: 0, resetAt: Date.now() + RATE_LIMIT_WINDOW_MS }
-
-function checkRateLimit(ip: string): string | null {
-  const now = Date.now()
-
-  // Reset global counter if window expired
-  if (now > globalRequests.resetAt) {
-    globalRequests = { count: 0, resetAt: now + RATE_LIMIT_WINDOW_MS }
-  }
-
-  if (globalRequests.count >= RATE_LIMIT_GLOBAL) {
-    return 'Service is temporarily at capacity. Please try again later.'
-  }
-
-  // Check per-IP limit
-  const entry = ipRequests.get(ip)
-  if (entry && now < entry.resetAt) {
-    if (entry.count >= RATE_LIMIT_PER_IP) {
-      return 'Too many requests. Please try again later.'
-    }
-    entry.count++
-  } else {
-    ipRequests.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS })
-  }
-
-  globalRequests.count++
-  return null
-}
 
 export async function POST(request: Request) {
   try {
