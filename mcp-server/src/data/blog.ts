@@ -419,11 +419,22 @@ function resolveMarkdownDir(): string {
 }
 
 /**
- * Get all published (non-hidden) blog post metadata.
+ * A post is published if it is not explicitly hidden
+ * and its date is today or in the past (YYYY-MM-DD comparison).
  */
-export function getBlogEntries(includeHidden = false): BlogPostMeta[] {
-  if (includeHidden) return BLOG_ENTRIES
-  return BLOG_ENTRIES.filter((entry) => !entry.hidden)
+export function isPublished(entry: BlogPostMeta): boolean {
+  if (entry.hidden) return false
+  const today = new Date().toISOString().split('T')[0]
+  return entry.date <= today
+}
+
+/**
+ * Get all published blog post metadata.
+ * A post is published when not hidden and its date is today or in the past.
+ */
+export function getBlogEntries(includeAll = false): BlogPostMeta[] {
+  if (includeAll) return BLOG_ENTRIES
+  return BLOG_ENTRIES.filter(isPublished)
 }
 
 /**

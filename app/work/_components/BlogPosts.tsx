@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { useCallback, useState } from 'react'
 import { TbArticle, TbChevronDown } from 'react-icons/tb'
 import BLOG_ENTRIES from '@/blog/_config/data'
+import { isPublished } from '@/blog/_utils/isPublished'
 import { BlogPostReference } from '../_config/data'
 
 const MAX_VISIBLE = 3
@@ -17,9 +18,10 @@ const BlogPosts = ({ blogPostReferences }: IBlogPosts) => {
 
   const visiblePosts = (
     expanded ? blogPostReferences : blogPostReferences.slice(0, MAX_VISIBLE)
-  ).filter(
-    (reference) => !BLOG_ENTRIES.find(({ id }) => id === reference)?.hidden
-  )
+  ).filter((reference) => {
+    const entry = BLOG_ENTRIES.find(({ id }) => id === reference)
+    return entry ? isPublished(entry) : false
+  })
 
   const toggle = useCallback(() => setExpanded((prev) => !prev), [])
 

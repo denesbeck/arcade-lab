@@ -4,6 +4,7 @@ import { Metadata } from 'next/types'
 import { GoBack, ScrollToTop } from '@/_components'
 import { Share, Tag } from '../_components'
 import blogEntries from '../_config/data'
+import { isPublished } from '../_utils/isPublished'
 
 interface IPost {
   params: Promise<{ id: string }>
@@ -59,7 +60,7 @@ const Post = async ({ params }: IPost) => {
   const { id } = await params
   const post = blogEntries.find((entry) => entry.id.toString() === id)
 
-  if (post?.hidden) redirect('/blog')
+  if (post && !isPublished(post)) redirect('/blog')
 
   const { default: Post } = await import(
     `../_config/markdown/${post?.content}.mdx`

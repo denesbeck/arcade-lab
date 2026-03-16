@@ -1,5 +1,10 @@
 import { getPersonalInfo } from './data/about'
-import { getAllTags, getBlogEntries, getBlogPost } from './data/blog'
+import {
+  getAllTags,
+  getBlogEntries,
+  getBlogPost,
+  isPublished,
+} from './data/blog'
 import { getProjects } from './data/projects'
 import { searchBlogPosts } from './search'
 import type { ToolResult } from './types'
@@ -149,7 +154,7 @@ export function executeTool(
         }
       }
 
-      if (post.hidden) {
+      if (!isPublished(post)) {
         return {
           content: [
             {

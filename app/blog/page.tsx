@@ -2,6 +2,7 @@ import { Metadata } from 'next'
 import { Heading1, Info, PageHeader } from '@/_components'
 import { BlogCard, FilterTags, NoRecords } from './_components'
 import blogEntries from './_config/data'
+import { isPublished } from './_utils/isPublished'
 
 export const revalidate = 3600 // Revalidate every 1h
 
@@ -82,20 +83,18 @@ const Blog = async ({
           <NoRecords message="No results based on your tag selection." />
         ) : (
           <div className="grid justify-center mr-6 sm:gap-6 sm:px-10 sm:w-dvw sm:[grid-template-columns:repeat(auto-fit,minmax(33rem,0))]">
-            {entries
-              .filter((el) => !el.hidden)
-              .map((entry) => (
-                <BlogCard
-                  key={entry.id}
-                  id={entry.id}
-                  title={entry.title}
-                  description={entry.description}
-                  date={entry.date}
-                  tags={entry.tags}
-                  content={entry.content}
-                  cover={entry.cover}
-                />
-              ))}
+            {entries.filter(isPublished).map((entry) => (
+              <BlogCard
+                key={entry.id}
+                id={entry.id}
+                title={entry.title}
+                description={entry.description}
+                date={entry.date}
+                tags={entry.tags}
+                content={entry.content}
+                cover={entry.cover}
+              />
+            ))}
           </div>
         )}
       </div>
