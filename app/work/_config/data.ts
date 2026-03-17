@@ -8,6 +8,8 @@ import {
   SiLua,
   SiMui,
   SiNeovim,
+  SiPostgresql,
+  SiRedis,
   SiTerraform,
   SiTmux,
   SiTypescript,
@@ -114,6 +116,23 @@ const PROJECTS: Project[] = [
     status: 'active',
     blogPosts: [],
   },
+  {
+    title: 'Auth Service',
+    subtitle: 'OAuth 2.1 Authorization Server',
+    highlights: [
+      'Built an OAuth 2.1 compliant authorization server for MCP servers with authorization code grant, PKCE, dynamic client registration, and refresh token rotation',
+      'Implemented security hardening including bcrypt password hashing, rate limiting, account lockout, and JWT-based bearer token authentication',
+    ],
+    tech: [
+      { name: 'TypeScript', icon: SiTypescript },
+      { name: 'PostgreSQL', icon: SiPostgresql },
+      { name: 'Redis', icon: SiRedis },
+    ],
+    url: 'https://github.com/denesbeck/auth-svc',
+    status: 'active',
+    blogPosts: [],
+  },
+
   {
     title: 'Lost in Dusk',
     subtitle: 'Developer Portfolio',
