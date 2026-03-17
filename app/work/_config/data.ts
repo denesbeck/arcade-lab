@@ -128,7 +128,7 @@ const PROJECTS: Project[] = [
       { name: 'PostgreSQL', icon: SiPostgresql },
       { name: 'Redis', icon: SiRedis },
     ],
-    url: 'https://github.com/denesbeck/auth-svc',
+    url: 'https://github.com/denesbeck/auth-service',
     status: 'active',
     blogPosts: [],
   },
