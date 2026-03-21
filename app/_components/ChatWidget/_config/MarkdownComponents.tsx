@@ -69,7 +69,7 @@ const chatMarkdownComponents: Components = {
       return (
         <Link
           href={href}
-          className="break-words underline underline-offset-2 text-active hover:brightness-125"
+          className="underline break-words underline-offset-2 text-active hover:brightness-125"
         >
           {children}
         </Link>
@@ -78,7 +78,7 @@ const chatMarkdownComponents: Components = {
     return (
       <a
         href={href}
-        className="break-words underline underline-offset-2 text-active hover:brightness-125"
+        className="underline break-words underline-offset-2 text-active hover:brightness-125"
         target="_blank"
         rel="noopener noreferrer"
       >

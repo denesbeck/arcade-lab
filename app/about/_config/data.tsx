@@ -31,7 +31,7 @@ export const INFO = {
   Name: 'Denes Beck',
   Location: 'Budapest, Hungary',
   Company: 'SEON',
-  Role: 'Software Engineer',
+  Role: 'Senior Full-Stack & Platform Engineer',
 }
 
 export const INFO_ICONS = {
