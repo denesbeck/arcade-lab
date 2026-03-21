@@ -7,9 +7,11 @@ interface IPageHeader {
 
 const PageHeader = ({ title, description }: IPageHeader) => {
   return (
-    <div className="flex flex-col gap-2 py-4 px-2 sm:px-6 animate-text-focus">
-      <Heading1>{title}</Heading1>
-      <Info>{description}</Info>
+    <div className="flex w-full">
+      <div className="flex flex-col gap-2 py-4 px-2 sm:px-6 max-w-[1400px] animate-text-focus">
+        <Heading1>{title}</Heading1>
+        <Info>{description}</Info>
+      </div>
     </div>
   )
 }

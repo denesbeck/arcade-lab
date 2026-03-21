@@ -72,7 +72,7 @@ const Blog = async ({
         )
 
   return (
-    <div className="flex overflow-auto flex-col">
+    <div className="flex overflow-auto flex-col w-full">
       <FilterTags />
       <PageHeader
         title={metadata.title as string}
@@ -82,7 +82,7 @@ const Blog = async ({
         {entries.length === 0 ? (
           <NoRecords message="No results based on your tag selection." />
         ) : (
-          <div className="grid justify-center mr-6 sm:gap-6 sm:px-10 sm:w-dvw sm:[grid-template-columns:repeat(auto-fit,minmax(33rem,0))]">
+          <div className="grid justify-center mr-6 w-full sm:gap-6 sm:px-10 sm:[grid-template-columns:repeat(auto-fit,minmax(33rem,0))]">
             {entries.filter(isPublished).map((entry) => (
               <BlogCard
                 key={entry.id}

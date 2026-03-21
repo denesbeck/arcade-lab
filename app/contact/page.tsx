@@ -76,9 +76,9 @@ const Contact = () => {
   }, [alert])
 
   return (
-    <div className="flex flex-col min-h-[calc(100dvh-100px)]">
+    <div className="flex flex-col w-full min-h-[calc(100dvh-100px)]">
       <GoBack fallbackUrl="/" />
-      <div className="flex flex-col items-center pt-6 my-auto w-dvw animate-slide-in-from-bottom pb-[60px] lg:pb-[100px]">
+      <div className="flex flex-col items-center pt-6 my-auto animate-slide-in-from-bottom pb-[60px] lg:pb-[100px]">
         <AnimatedBorder>
           <div className="flex relative flex-col p-6 min-w-max ring-2 transition-all duration-200 ease-in-out hover:ring-gray-500 hover:ring-offset-2 ring-secondary ring-offset-root h-max max-w-[90dvw] gap-[1rem] backdrop-blur-md">
             <Heading2>Contact </Heading2>

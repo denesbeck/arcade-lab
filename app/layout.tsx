@@ -148,7 +148,11 @@ export default function RootLayout({
           <div className="flex z-10 flex-col min-h-dvh">
             <Navbar />
             <AlertBox context="global" />
-            <div className="flex flex-1 mt-[100px]">{children}</div>
+            <div className="flex justify-center w-full">
+              <div className="flex flex-1 max-w-[1400px] mt-[100px]">
+                {children}
+              </div>
+            </div>
           </div>
           <ChatWidget />
         </div>
