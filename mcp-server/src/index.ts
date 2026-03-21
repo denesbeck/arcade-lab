@@ -9,21 +9,25 @@ const server = new McpServer({
 })
 
 // search_blog_posts
-server.tool(
+server.registerTool(
   'search_blog_posts',
-  'Search blog posts by keyword. Matches against titles, descriptions, and tags. Use this when the user asks about a topic that might be covered in a blog post.',
   {
-    query: z
-      .string()
-      .describe(
-        'Search query — keywords describing what the user is looking for'
-      ),
-    tag: z
-      .string()
-      .optional()
-      .describe(
-        'Optional: filter results to a specific tag (e.g., "docker", "aws", "home-server")'
-      ),
+    description:
+      'Search blog posts by keyword. Matches against titles, descriptions, and tags. Use this when the user asks about a topic that might be covered in a blog post.',
+    annotations: { readOnlyHint: true },
+    inputSchema: {
+      query: z
+        .string()
+        .describe(
+          'Search query — keywords describing what the user is looking for'
+        ),
+      tag: z
+        .string()
+        .optional()
+        .describe(
+          'Optional: filter results to a specific tag (e.g., "docker", "aws", "home-server")'
+        ),
+    },
   },
   async (args) => {
     return executeTool('search_blog_posts', args)
@@ -31,11 +35,15 @@ server.tool(
 )
 
 // get_blog_post
-server.tool(
+server.registerTool(
   'get_blog_post',
-  'Get the full content of a specific blog post by its ID. Use this after search_blog_posts to retrieve the full article.',
   {
-    id: z.number().describe('The blog post ID'),
+    description:
+      'Get the full content of a specific blog post by its ID. Use this after search_blog_posts to retrieve the full article.',
+    annotations: { readOnlyHint: true },
+    inputSchema: {
+      id: z.number().describe('The blog post ID'),
+    },
   },
   async (args) => {
     return executeTool('get_blog_post', args)
@@ -43,11 +51,15 @@ server.tool(
 )
 
 // list_blog_posts
-server.tool(
+server.registerTool(
   'list_blog_posts',
-  'List all published blog posts with their titles, descriptions, dates, and tags.',
   {
-    tag: z.string().optional().describe('Optional: filter by tag'),
+    description:
+      'List all published blog posts with their titles, descriptions, dates, and tags.',
+    annotations: { readOnlyHint: true },
+    inputSchema: {
+      tag: z.string().optional().describe('Optional: filter by tag'),
+    },
   },
   async (args) => {
     return executeTool('list_blog_posts', args)
@@ -55,23 +67,31 @@ server.tool(
 )
 
 // get_about_info
-server.tool(
+server.registerTool(
   'get_about_info',
-  'Get personal information about Denes Beck — name, role, company, location, bio, skills, certifications, and social links.',
+  {
+    description:
+      'Get personal information about Denes Beck — name, role, company, location, bio, skills, certifications, and social links.',
+    annotations: { readOnlyHint: true },
+  },
   async () => {
     return executeTool('get_about_info', {})
   }
 )
 
 // list_projects
-server.tool(
+server.registerTool(
   'list_projects',
-  'List portfolio projects with details including title, description, tech stack, highlights, and GitHub URLs.',
   {
-    status: z
-      .enum(['active', 'archived'])
-      .optional()
-      .describe('Optional: filter by project status'),
+    description:
+      'List portfolio projects with details including title, description, tech stack, highlights, and GitHub URLs.',
+    annotations: { readOnlyHint: true },
+    inputSchema: {
+      status: z
+        .enum(['active', 'archived'])
+        .optional()
+        .describe('Optional: filter by project status'),
+    },
   },
   async (args) => {
     return executeTool('list_projects', args)
@@ -79,9 +99,13 @@ server.tool(
 )
 
 // list_tags
-server.tool(
+server.registerTool(
   'list_tags',
-  'List all unique tags used across blog posts. Use this when the user wants to know what topics are covered.',
+  {
+    description:
+      'List all unique tags used across blog posts. Use this when the user wants to know what topics are covered.',
+    annotations: { readOnlyHint: true },
+  },
   async () => {
     return executeTool('list_tags', {})
   }
