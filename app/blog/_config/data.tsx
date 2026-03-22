@@ -36,10 +36,10 @@ import { BlogEntry } from '../_interfaces/blog'
 
 const BLOG_ENTRIES: BlogEntry[] = [
   {
-    id: 23,
+    id: 24,
     title: 'Building my home server P10',
     description: 'Network visibility with NetAlertX',
-    date: '2026-03-30',
+    date: '2026-04-17',
     hidden: false,
     tags: [
       'linux',
@@ -62,10 +62,10 @@ const BLOG_ENTRIES: BlogEntry[] = [
     },
   },
   {
-    id: 22,
+    id: 23,
     title: 'Building my home server P9',
     description: 'UPS failover with automated shutdown',
-    date: '2026-03-26',
+    date: '2026-04-10',
     hidden: false,
     tags: [
       'linux',
@@ -89,10 +89,10 @@ const BLOG_ENTRIES: BlogEntry[] = [
     },
   },
   {
-    id: 21,
+    id: 22,
     title: 'Building my home server P8',
     description: 'Remote access with Tailscale',
-    date: '2026-03-23',
+    date: '2026-04-03',
     hidden: false,
     tags: [
       'linux',
@@ -114,6 +114,33 @@ const BLOG_ENTRIES: BlogEntry[] = [
       alt: 'build_home_server',
       ogImage: '/blog/covers/building_home_server.png',
       ogImageX: '/blog/covers/building_home_server_x.png',
+    },
+  },
+  {
+    id: 21,
+    title: 'tmux-worktree',
+    description: 'A tmux plugin for managing git worktrees in the age of AI',
+    date: '2026-03-27',
+    hidden: false,
+    tags: [
+      'tmux',
+      'git',
+      'worktrees',
+      'neovim',
+      'bash',
+      'cli',
+      'ai',
+      'productivity',
+      'fzf',
+    ],
+    content: 'tmux-worktree',
+    cover: {
+      image: arcadeLab,
+      original: arcadeLab,
+      xImage: arcadeLab,
+      alt: 'arcade_lab',
+      ogImage: '/logo/arcade_lab_logo.png',
+      ogImageX: '/logo/arcade_lab_logo.png',
     },
   },
   {

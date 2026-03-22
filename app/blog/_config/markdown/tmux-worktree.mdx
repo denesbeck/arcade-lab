@@ -1,0 +1,115 @@
+# 🌳 tmux-worktree: A Tmux Plugin for Git Worktrees
+
+_Why I built a tmux plugin to manage git worktrees in the age of AI coding tools_
+
+I've been using Neovim and tmux for about 4-5 years now. My config has been virtually the same for 3 years. New editors come and go — I've watched the hype cycles play out — but I keep coming back to the same terminal setup. It's mine. My dotfiles, my keybindings, my workflow. A controlled environment that I own completely.
+
+And honestly? In 2026, living in the terminal is more relevant than ever.
+
+## 🤖 The AI era made the terminal even better
+
+The rise of AI-powered CLI tools has made the terminal a first-class development environment in a way it never was before. Tools like Claude Code, Gemini CLI, Aider, Codex CLI, and OpenCode all run in the terminal. They don't need an IDE. They don't need a GUI. They just need a shell.
+
+Claude Code in particular has transformed how I work. It makes me significantly faster and more productive. But it also introduced a new bottleneck.
+
+## 🚧 The single-branch bottleneck
+
+Here's the problem: when you're using an AI coding tool, you want to give it a clean workspace — one branch, one feature, one context. But real work isn't like that. You're juggling multiple features, bug fixes, and experiments on the same repo. With a traditional git workflow (one branch checked out at a time), you're constantly stashing, switching, and losing context.
+
+This is especially painful with Claude Code. I want to run multiple Claude sessions on the same repo, each working on a different feature. But they can't all share the same working directory.
+
+## 💡 The solution: git worktrees
+
+Git worktrees let you check out multiple branches of the same repo simultaneously, each in its own directory. They share the same `.git` history but have independent working trees. This means:
+
+- Multiple branches checked out at once
+- Multiple Claude Code sessions, each in its own worktree
+- No stashing, no context switching, no conflicts
+- Token usage maxed out across parallel 4-hour sessions
+
+The bottleneck is gone. Instead of working on one feature at a time, I can have Claude working on three different things in parallel — each in its own worktree, each in its own tmux window.
+
+## 🔧 What tmux-worktree does
+
+Managing worktrees manually with `git worktree add`, `git worktree remove`, and keeping tmux windows in sync is tedious. So I built a tmux plugin to handle it all from a floating popup.
+
+Three keybindings, three workflows:
+
+| Keybinding | Action | What happens |
+|---|---|---|
+| `prefix + W` | Create | Pick a base branch, name your new branch, select an AI tool, get a new tmux window |
+| `prefix + w` | Switch | Pick from existing worktrees, jump to or open the tmux window |
+| `prefix + X` | Remove | Select one or many worktrees to clean up (directory + branch + window) |
+
+### AI tool picker
+
+When you create or switch to a worktree, the plugin asks which tool you want to open it with. It detects what's installed on your system and shows a picker:
+
+- Claude Code
+- Gemini CLI
+- Aider
+- Codex CLI
+- OpenCode
+- Plain shell
+
+Only installed tools appear as selectable — the rest are dimmed. If only one tool is available, the picker is skipped entirely.
+
+### Safe removal
+
+Removing worktrees is where things get dangerous — you don't want to accidentally delete uncommitted work or unmerged branches. The plugin handles this carefully:
+
+1. **Dirty state indicators** — worktrees with uncommitted changes are marked with `*` in the picker
+2. **Force-remove prompt** — if a selected worktree has uncommitted changes, you get an explicit confirmation
+3. **Safe branch deletion** — branches are deleted with `git branch -d` first. If unmerged, you're prompted per branch to force-delete or keep it
+4. **Main worktree protection** — the main worktree and default branch cannot be removed
+5. **Multiselect** — use Tab to select multiple worktrees for batch removal
+
+## ⚙️ Configuration
+
+Everything is configurable in `tmux.conf`:
+
+```bash
+# Keybindings
+set -g @worktree_create_key 'W'
+set -g @worktree_switch_key 'w'
+set -g @worktree_remove_key 'X'
+
+# Tool list (only installed ones are selectable)
+set -g @worktree_open_cmds 'claude,gemini,aider,codex,opencode,$SHELL'
+
+# Popup dimensions
+set -g @worktree_popup_width '60%'
+set -g @worktree_popup_height '40%'
+```
+
+## 🧱 Implementation
+
+The plugin is pure Bash — no compiled dependencies, no runtime requirements beyond tmux 3.2+, fzf, and git. The structure is minimal:
+
+```
+tmux-worktree/
+├── worktree.tmux          # Entry point, keybindings
+└── scripts/
+    ├── common.sh           # Shared theme, helpers, fzf config
+    ├── worktree-create.sh  # Create flow
+    ├── worktree-switch.sh  # Switch flow
+    └── worktree-remove.sh  # Remove flow
+```
+
+Each workflow runs inside a `tmux display-popup` — a floating window that overlays your current session. The popups use fzf for interactive selection with a consistent theme across all three flows.
+
+Installation is through TPM (Tmux Plugin Manager):
+
+```bash
+set -g @plugin 'denesbeck/tmux-worktree'
+```
+
+## 🎯 Why this matters
+
+The combination of tmux + Neovim + git worktrees + AI coding tools is incredibly powerful. It's not about chasing the latest editor or IDE — it's about having a stable, composable environment where each piece does one thing well.
+
+Tmux manages sessions and windows. Neovim handles editing. Git worktrees provide isolated working directories. AI tools do the heavy lifting. And tmux-worktree is the glue that ties worktrees and tmux windows together.
+
+If you live in the terminal and use AI coding tools, this workflow eliminates the biggest friction point: context switching between features. Instead of working sequentially, you work in parallel — and your AI tools can too.
+
+💻 Check out tmux-worktree on [GitHub](https://github.com/denesbeck/tmux-worktree).
