@@ -145,7 +145,7 @@ export const SKILLS = [
 ]
 
 export const BIO = (
-  <p className="text-text-dark">
+  <div className="text-text-dark">
     <p className="mb-8">
       🚀 I&apos;m a full-stack software engineer with{' '}
       <Emphasize>{new Date().getFullYear() - 2019} years</Emphasize> of
@@ -196,5 +196,5 @@ export const BIO = (
       </a>{' '}
       on GitHub.
     </p>
-  </p>
+  </div>
 )
