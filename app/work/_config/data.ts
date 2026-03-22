@@ -58,6 +58,21 @@ const PROJECTS: Project[] = [
     blogPosts: [4, 5, 6, 7, 15, 16, 18, 21, 22, 23],
   },
   {
+    title: 'Tmux Worktree',
+    subtitle: 'Tmux Plugin',
+    highlights: [
+      'Built a tmux plugin for managing git worktrees via an interactive floating popup with fzf-based branch selection',
+      'Integrated an AI tool picker supporting Claude Code, Gemini CLI, Aider, Codex CLI, OpenCode, or a plain shell when opening a worktree',
+    ],
+    tech: [
+      { name: 'Bash', icon: SiGnubash },
+      { name: 'Tmux', icon: SiTmux },
+    ],
+    url: 'https://github.com/denesbeck/tmux-worktree',
+    status: 'active',
+    blogPosts: [],
+  },
+  {
     title: 'Serverless Deploy',
     subtitle: 'Deployment Automation',
     highlights: [
