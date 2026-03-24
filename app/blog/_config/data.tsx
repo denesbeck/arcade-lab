@@ -31,6 +31,9 @@ import techConferenceX from '@/../public/blog/covers/tech_conference_x.png'
 import tektonCicd from '@/../public/blog/covers/tekton_cicd.png'
 import tektonCicdSm from '@/../public/blog/covers/tekton_cicd_sm.png'
 import tektonCicdX from '@/../public/blog/covers/tekton_cicd_x.png'
+import tmuxWorktree from '@/../public/blog/covers/tmux_worktree.png'
+import tmuxWorktreeSm from '@/../public/blog/covers/tmux_worktree_sm.png'
+import tmuxWorktreeX from '@/../public/blog/covers/tmux_worktree_x.png'
 import arcadeLab from '@/../public/logo/arcade_lab_logo.png'
 import { BlogEntry } from '../_interfaces/blog'
 
@@ -135,12 +138,12 @@ const BLOG_ENTRIES: BlogEntry[] = [
     ],
     content: 'tmux-worktree',
     cover: {
-      image: arcadeLab,
-      original: arcadeLab,
-      xImage: arcadeLab,
-      alt: 'arcade_lab',
-      ogImage: '/logo/arcade_lab_logo.png',
-      ogImageX: '/logo/arcade_lab_logo.png',
+      image: tmuxWorktreeSm,
+      original: tmuxWorktree,
+      xImage: tmuxWorktreeX,
+      alt: 'tmux_worktree',
+      ogImage: '/blog/covers/tmux_worktree.png',
+      ogImageX: '/blog/covers/tmux_worktree_x.png',
     },
   },
   {
