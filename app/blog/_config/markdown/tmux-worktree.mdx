@@ -37,7 +37,7 @@ Three keybindings, three workflows:
 
 | Keybinding | Action | What happens |
 |---|---|---|
-| `prefix + W` | Create | Pick a base branch, name your new branch, select an AI tool, get a new tmux window |
+| `prefix + W` | Create | Pick a base branch, name your new branch, sync ignored files, select an AI tool, get a new tmux window |
 | `prefix + w` | Switch | Pick from existing worktrees, jump to or open the tmux window |
 | `prefix + X` | Remove | Select one or many worktrees to clean up (directory + branch + window) |
 
@@ -63,6 +63,20 @@ Removing worktrees is where things get dangerous — you don't want to accidenta
 3. **Safe branch deletion** — branches are deleted with `git branch -d` first. If unmerged, you're prompted per branch to force-delete or keep it
 4. **Main worktree protection** — the main worktree and default branch cannot be removed
 5. **Multiselect** — use Tab to select multiple worktrees for batch removal
+
+### Syncing gitignored files
+
+One problem I kept running into: `.env` files, local config, secrets — all gitignored, all needed in every new worktree. Without them, the project won't run. You'd have to manually copy them every time you create a worktree.
+
+The plugin solves this with a sync step built into the create flow. After naming your branch, you're prompted to sync ignored files:
+
+- **Create new config** — opens a multiselect picker listing all currently gitignored files. Pick the ones you want, then choose to either symlink or copy them into every new worktree.
+- **Load existing config** — reuses a previously saved selection, so you don't have to re-pick every time.
+- **Skip** — no sync.
+
+The config is saved per repo (outside the worktree, so it's shared across all of them). When a worktree is created, the plugin reads the config and applies it: symlinking or copying each file into the new working directory automatically.
+
+**Symlink vs copy:** symlinking means all worktrees share the same file — change it in one place and it updates everywhere. Copying gives each worktree its own independent version, useful when you want to tweak env vars per branch.
 
 ## ⚙️ Configuration
 
