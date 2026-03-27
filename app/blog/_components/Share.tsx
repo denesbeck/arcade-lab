@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { FaFacebook, FaLinkedin, FaTwitter } from 'react-icons/fa6'
+import { FaFacebook, FaLinkedin, FaXTwitter } from 'react-icons/fa6'
 
 interface IShare {
   id: string
@@ -24,7 +24,7 @@ const SHARE_OPTIONS = [
     getId: (id: string) => `${id}_twitter`,
     getHref: (id: string) =>
       `https://twitter.com/intent/tweet?url=${encodeURIComponent(`https://${domain}/blog/${id}`)}`,
-    icon: FaTwitter,
+    icon: FaXTwitter,
   },
 ]
 
