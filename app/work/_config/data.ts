@@ -19,6 +19,8 @@ import BLOG_ENTRIES from '@/blog/_config/data'
 
 export type BlogPostReference = (typeof BLOG_ENTRIES)[number]['id']
 
+export type Priority = 'low' | 'medium' | 'high' | 'critical'
+
 export type Project = {
   title: string
   subtitle: string
@@ -26,6 +28,7 @@ export type Project = {
   tech: { name: string; icon: IconType }[]
   url: string
   status: 'active' | 'archived'
+  priority: Priority
   blogPosts: BlogPostReference[]
 }
 
@@ -40,6 +43,7 @@ const PROJECTS: Project[] = [
     tech: [{ name: 'Go', icon: FaGolang }],
     url: 'https://github.com/denesbeck/nexio',
     status: 'active',
+    priority: 'high',
     blogPosts: [8, 9, 14, 17],
   },
   {
@@ -55,6 +59,7 @@ const PROJECTS: Project[] = [
     ],
     url: 'https://github.com/denesbeck/home-lab-ansible',
     status: 'active',
+    priority: 'critical',
     blogPosts: [4, 5, 6, 7, 15, 16, 18, 22, 23, 24],
   },
   {
@@ -70,6 +75,7 @@ const PROJECTS: Project[] = [
     ],
     url: 'https://github.com/denesbeck/tmux-worktree',
     status: 'active',
+    priority: 'high',
     blogPosts: [21],
   },
   {
@@ -85,6 +91,7 @@ const PROJECTS: Project[] = [
     ],
     url: 'https://github.com/denesbeck/tmux-pane-controller',
     status: 'active',
+    priority: 'high',
     blogPosts: [25],
   },
   {
@@ -102,6 +109,7 @@ const PROJECTS: Project[] = [
     ],
     url: 'https://github.com/denesbeck/lambda-functions',
     status: 'active',
+    priority: 'low',
     blogPosts: [3, 19],
   },
   {
@@ -128,6 +136,7 @@ const PROJECTS: Project[] = [
     ],
     url: 'https://github.com/denesbeck/arcade-lab',
     status: 'active',
+    priority: 'critical',
     blogPosts: [20],
   },
   {
@@ -144,6 +153,7 @@ const PROJECTS: Project[] = [
     ],
     url: 'https://github.com/denesbeck/dotfiles',
     status: 'active',
+    priority: 'medium',
     blogPosts: [],
   },
   {
@@ -160,6 +170,7 @@ const PROJECTS: Project[] = [
     ],
     url: 'https://github.com/denesbeck/auth-service',
     status: 'active',
+    priority: 'low',
     blogPosts: [],
   },
 
@@ -182,6 +193,7 @@ const PROJECTS: Project[] = [
     ],
     url: 'https://github.com/denesbeck/lost-in-dusk',
     status: 'archived',
+    priority: 'low',
     blogPosts: [],
   },
 ]

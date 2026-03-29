@@ -1,7 +1,23 @@
 import { FiExternalLink } from 'react-icons/fi'
+import {
+  LuChevronDown,
+  LuChevronsUp,
+  LuChevronUp,
+  LuEqual,
+} from 'react-icons/lu'
 import { Tooltip } from '@/_components'
-import type { Project } from '../_config/data'
+import type { Priority, Project } from '../_config/data'
 import BlogPosts from './BlogPosts'
+
+const PRIORITY_CONFIG: Record<
+  Priority,
+  { icon: typeof LuChevronDown; color: string }
+> = {
+  low: { icon: LuChevronDown, color: 'text-blue-400' },
+  medium: { icon: LuEqual, color: 'text-orange-400' },
+  high: { icon: LuChevronUp, color: 'text-orange-500' },
+  critical: { icon: LuChevronsUp, color: 'text-red-400' },
+}
 
 const ProjectCard = ({
   title,
@@ -10,20 +26,32 @@ const ProjectCard = ({
   tech,
   url,
   status,
+  priority,
   blogPosts,
 }: Project) => {
   const isLink = url.length > 0
 
   return (
-    <div className="flex relative flex-col gap-6 justify-between p-6 border-b-2 transition-all duration-300 ease-in-out sm:p-8 sm:border-b-0 sm:ring-2 last:border-b-0 border-secondary group ring-secondary backdrop-blur-md animate-text-focus ring-offset-root sm:hover:ring-primary sm:hover:ring-offset-4">
-      {/* status indicator */}
-      <div className="flex absolute top-4 right-4 gap-2 items-center">
-        <div
-          className={`w-2 h-2 rounded-full ${status === 'active' ? 'bg-macos-green animate-pulse' : 'bg-dark-400'}`}
-        />
-        <span className="text-xs tracking-widest uppercase text-dark-300">
-          {status}
-        </span>
+    <div className="flex relative flex-col gap-6 justify-between p-6 pt-10 border-b-2 transition-all duration-300 ease-in-out sm:p-8 sm:pt-10 sm:border-b-0 sm:ring-2 last:border-b-0 border-secondary group ring-secondary backdrop-blur-md animate-text-focus ring-offset-root sm:hover:ring-primary sm:hover:ring-offset-4">
+      {/* status & priority indicators */}
+      <div className="flex absolute top-4 right-4 gap-4 items-center">
+        <div className="flex gap-1 items-center">
+          {(() => {
+            const { icon: PriorityIcon, color } = PRIORITY_CONFIG[priority]
+            return <PriorityIcon className={`w-4 h-4 ${color}`} />
+          })()}
+          <span className="text-xs tracking-widest uppercase text-dark-300">
+            {priority}
+          </span>
+        </div>
+        <div className="flex gap-2 items-center">
+          <div
+            className={`w-2 h-2 rounded-full ${status === 'active' ? 'bg-macos-green animate-pulse' : 'bg-dark-400'}`}
+          />
+          <span className="text-xs tracking-widest uppercase text-dark-300">
+            {status}
+          </span>
+        </div>
       </div>
 
       {/* content */}
