@@ -1,0 +1,219 @@
+# 🎛️ tmux-pane-controller: Declarative Pane Layouts for tmux
+
+_A CLI tool and tmux plugin for defining, capturing, and restoring pane layouts_
+
+I spend most of my day inside tmux. Over time, I noticed I was doing the same thing over and over: open a project, split the window, resize panes, run the dev server in one, open the editor in another, start lazygit in a third. Every single time. The layout was always the same — the steps to get there were just muscle memory tax.
+
+So I built two tools to eliminate it: **tpc** (tmux-pane-controller), a CLI for defining and loading pane layouts from YAML config files, and **tpc-capture**, a tmux plugin that snapshots your current pane arrangement and saves it as a tpc config. Together, they let you define a layout once and restore it with a single command.
+
+## 🚧 The problem
+
+Tmux is great at splitting panes, but it has no built-in concept of a "layout definition." You can split, resize, and send commands — but you can't save that arrangement and replay it. Every new session starts from scratch.
+
+There are a few workarounds:
+
+- **Shell scripts** — manually chain `tmux split-window` and `tmux resize-pane` commands. Fragile, hard to maintain, and the percentage math is painful.
+- **tmuxinator / tmuxp** — external tools with their own config formats and abstractions. They work, but they bring in dependencies (Ruby, Python) and do more than I need.
+- **tmux hooks** — you can hook into session creation, but the logic for complex layouts gets messy fast.
+
+What I wanted was simpler: a YAML file that describes a layout as a tree of splits and panes, and a single command to apply it.
+
+## 🔧 tpc: The CLI tool
+
+**tpc** (tmux-pane-controller) reads a YAML layout definition and applies it to your current tmux window. The layout is a recursive tree — containers split the space, leaves are the actual panes.
+
+### Layout format
+
+```yaml
+layout:
+  name: dev-environment
+  description: "Editor + git + terminal"
+  split: vertical
+  panes:
+    - split: horizontal
+      size: 60
+      panes:
+        - name: editor
+          size: 70
+          command: "nvim"
+        - name: git
+          size: 30
+          command: "lazygit"
+    - name: terminal
+      size: 40
+      command: ""
+```
+
+Two node types:
+
+| Type | Has | Does |
+|---|---|---|
+| **Container** | `split` + `panes` | Splits the pane (vertical or horizontal) and recurses into children |
+| **Leaf** | `name` + optional `command` | Terminal pane — runs the command on load |
+
+Sizes are percentages relative to the parent container and must sum to 100 at each level.
+
+### Commands
+
+| Command | What it does |
+|---|---|
+| `tpc init` | Create a new layout config for the current directory |
+| `tpc edit` | Open the layout in `$EDITOR` |
+| `tpc load` | Apply the layout to the current tmux window |
+| `tpc check` | Validate the layout (syntax, structure, size constraints) |
+| `tpc list` | Show all registered layouts |
+| `tpc remove` | Delete a layout |
+| `tpc purge` | Remove all layouts |
+
+### Smart resolution
+
+`tpc load` resolves configs in three ways:
+
+1. **File path** — `tpc load ./layouts/custom.yml`
+2. **Layout name** — `tpc load dev-environment` (looks it up in the index)
+3. **Current directory** — `tpc load` (hashes `$PWD` and finds the matching config)
+
+The third option is the one I use most. `cd` into a project, run `tpc load`, and the right layout appears. No arguments needed.
+
+## 🧮 The percentage math problem
+
+This was the trickiest part of the implementation. When tmux splits a pane with `tmux split-window -p N`, it gives N% to the **new** pane and keeps the rest in the original. If you need three panes with sizes 50/25/25, you can't just pass those numbers directly — each split operates on the remaining space.
+
+The algorithm works in reverse:
+
+```
+Sizes: [50, 25, 25]
+
+Step 1: Split the last child (25%) from the rest
+  → 25 / 100 = 25% → split-window -p 25
+
+Step 2: Split the second child (25%) from the remaining 75%
+  → 25 / 75 = 33% → split-window -p 33
+
+Step 3: First child keeps the original pane (50%) — no split needed
+```
+
+By splitting from the last child backwards, each percentage calculation only needs to account for the cumulative remaining space. The recursion handles nested containers the same way — each level computes its own percentages independently.
+
+## 🔒 Storage and privacy
+
+Layouts are stored in `~/.config/tpc/`:
+
+```
+~/.config/tpc/
+├── index.yml              # Central registry of all layouts
+└── <blake3-hash>.yml      # Individual layout configs
+```
+
+Instead of storing directory paths in the index, tpc hashes each path with BLAKE3. This means the index doesn't reveal which projects you have on your machine — useful if you're sharing dotfiles or syncing configs across machines. The hash is deterministic, so the same project directory always maps to the same config file.
+
+## ✅ Validation
+
+`tpc check` validates a layout before you try to load it:
+
+- Valid YAML syntax
+- Root `layout` key exists with `split` and `panes`
+- Containers have at least 2 children
+- Sizes are between 1-99% and sum to 100 per container
+- Leaves don't have `panes`, containers don't have `command`
+- Nested error reporting with display paths (e.g., `layout > editor > [0]`)
+
+This catches mistakes early — before you end up with a broken tmux window.
+
+## 📸 tpc-capture: The tmux plugin
+
+Writing YAML by hand works, but it's tedious for complex layouts. What if you could just arrange your panes the way you want them and save that arrangement?
+
+That's what **tpc-capture** does. It's a tmux plugin that captures the current window's pane layout — geometry, splits, and running commands — and writes it as a tpc-compatible YAML config.
+
+### How it works
+
+Press `prefix + S` and a tmux popup appears. Enter a name and description, and the plugin:
+
+1. **Collects pane geometry** — queries tmux for each pane's position (X, Y), size (width, height), and PID
+2. **Resolves running commands** — inspects the process tree to find what's actually running in each pane (not just the shell)
+3. **Detects split boundaries** — scans for lines where pane edges align to determine where vertical and horizontal splits occur
+4. **Reconstructs the split tree** — recursively divides the window into a binary tree of splits, matching the actual layout
+5. **Generates YAML** — outputs the tree in tpc's format with calculated percentage sizes
+
+### Command resolution
+
+The plugin doesn't just grab the shell process — it walks the process tree to find the actual command. It also normalizes interpreter wrappers:
+
+- `node /usr/lib/node_modules/npm/bin/npm-cli.js run dev` → `npm run dev`
+- `python /path/to/script.py` → `script.py`
+
+This means when you restore the layout with `tpc load`, the panes run the same commands you had open.
+
+### Split detection algorithm
+
+The core challenge is reverse-engineering the split tree from a flat list of pane rectangles. The algorithm:
+
+1. Collect all X coordinates where pane right edges align — these are potential vertical split lines
+2. For each candidate, check if any pane spans across it — if so, it's not a valid split
+3. The first valid split line divides the panes into left and right groups
+4. Recurse into each group, now checking for horizontal splits
+5. When a group contains a single pane, emit a leaf node
+
+The same logic applies horizontally with Y coordinates. The recursion alternates between vertical and horizontal checks until every pane is accounted for.
+
+### Configuration
+
+```bash
+# Keybinding (default: prefix + S)
+set -g @tpc_capture_key 'S'
+
+# Popup dimensions
+set -g @tpc_capture_popup_width '60%'
+set -g @tpc_capture_popup_height '50%'
+```
+
+### Installation
+
+Via TPM:
+
+```bash
+set -g @plugin 'denesbeck/tpc-capture'
+```
+
+## 🔄 The workflow
+
+The two tools complement each other:
+
+1. **Start from scratch** — `tpc init` creates a config, edit the YAML manually, `tpc load` to apply
+2. **Capture what you have** — arrange panes however you want, `prefix + S` to save, `tpc load` to restore anytime
+3. **Iterate** — capture a layout, `tpc edit` to tweak it, `tpc load` to test
+
+Once a layout exists for a directory, restoring your workspace is one command: `tpc load`. No manual splitting, no resizing, no remembering which commands go where.
+
+## 🧱 Implementation
+
+Both tools are pure Bash — no compiled dependencies. tpc is distributed via Homebrew (`brew install denesbeck/tpc/tpc`), and tpc-capture is installed through TPM. Both depend on `tmux`, `yq` (for YAML manipulation), and `b3sum` (for BLAKE3 hashing).
+
+The project structure is minimal:
+
+```
+tmux-pane-controller/
+├── bin/tpc                # CLI entry point
+├── lib/
+│   ├── config.sh          # Config directory management
+│   ├── index.sh           # Layout registry (O(1) lookup)
+│   ├── layout.sh          # Recursive layout application
+│   └── validate.sh        # Schema validation
+└── templates/
+    └── default.yml        # Default layout template
+
+tpc-capture/
+├── capture.tmux           # tmux plugin entry point
+└── scripts/
+    ├── common.sh          # Shared utilities, theme
+    └── capture.sh         # Capture logic + popup UI
+```
+
+## 🎯 Why I built this
+
+I wanted a tool that does one thing: load a pane layout. Not manage sessions, not handle pane navigation, not provide a status bar. Just read a config and split the window accordingly. And I wanted a companion that lets me capture layouts without writing YAML by hand.
+
+The combination of `tpc` and `tpc-capture` covers the full lifecycle: create, capture, edit, validate, load. It's a small, focused toolset that fits into an existing tmux workflow without trying to replace it.
+
+💻 Check out [tmux-pane-controller](https://github.com/denesbeck/tmux-pane-controller) and [tpc-capture](https://github.com/denesbeck/tpc-capture) on GitHub.

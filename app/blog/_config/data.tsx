@@ -39,6 +39,23 @@ import { BlogEntry } from '../_interfaces/blog'
 
 const BLOG_ENTRIES: BlogEntry[] = [
   {
+    id: 25,
+    title: 'tmux-pane-controller',
+    description: 'Declarative pane layouts for tmux',
+    date: '2026-04-24',
+    hidden: false,
+    tags: ['tmux', 'bash', 'cli', 'yaml', 'productivity', 'tpm'],
+    content: 'tmux-pane-controller',
+    cover: {
+      image: tmuxWorktreeSm,
+      original: tmuxWorktree,
+      xImage: tmuxWorktreeX,
+      alt: 'tmux_pane_controller',
+      ogImage: '/blog/covers/tmux_worktree.png',
+      ogImageX: '/blog/covers/tmux_worktree_x.png',
+    },
+  },
+  {
     id: 24,
     title: 'Building my home server P10',
     description: 'Network visibility with NetAlertX',
