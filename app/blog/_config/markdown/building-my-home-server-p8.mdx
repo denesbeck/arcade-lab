@@ -250,6 +250,21 @@ The Tailscale playbook also handles subnet routing — it enables IP forwarding 
 
 The Pi-hole playbook was updated to publish DNS on both IPs (so it accepts queries from LAN and Tailscale clients) but registers local DNS records using only the LAN IP. Subnet routing takes care of making that IP reachable from remote Tailscale devices. The Samba template was updated to include `tailscale0` in the interface list and `100.64.0.0/10` in the host allow rules. The UFW playbook got a single new rule allowing traffic on the Tailscale interface.
 
+## 🐛 Cloudflare Wildcard DNS and IPv6
+
+After migrating my domain from Vercel's registrar to Cloudflare, remote access suddenly broke. Accessing `jellyfin.arcade-lab.io` from a Tailscale device returned a Vercel "DEPLOYMENT_NOT_FOUND" error — even though DNS and subnet routing appeared to be working correctly.
+
+The root cause was subtle. When I migrated to Cloudflare, two **proxied wildcard `*` A records** came along for the ride. Even though I never created AAAA (IPv6) records, Cloudflare's proxy automatically injects IPv6 responses for any proxied record. So when a client queried `jellyfin.arcade-lab.io`:
+
+- **A (IPv4)**: Pi-hole responded with `192.168.64.15` — correct
+- **AAAA (IPv6)**: Pi-hole had no local answer, so it forwarded the query upstream. Cloudflare's proxy returned its own IPv6 addresses (`2a06:98c1:...`) — pointing to Vercel
+
+Most modern clients prefer IPv6 over IPv4. So despite Pi-hole returning the correct IPv4 address, the client connected to Cloudflare's IPv6 address instead, which routed to Vercel — a deployment that no longer existed.
+
+The fix was simple: **delete the proxied wildcard DNS records in Cloudflare**. These subdomains should only resolve via Pi-hole, not through public DNS. After removing the wildcard records and flushing DNS caches, everything worked as expected.
+
+The takeaway: if you're using Pi-hole for local DNS with only A records, watch out for Cloudflare's proxy injecting AAAA responses. A single proxied wildcard record can silently break your entire setup by giving IPv6-preferring clients an alternate path that bypasses your local DNS.
+
 ## 🎉 Outcome
 
 With Tailscale deployed, I now have:
