@@ -42,6 +42,18 @@ const PROJECTS: Project[] = [
     relatedBlogPostIds: [21],
   },
   {
+    title: 'Tmux Pane Controller',
+    subtitle: 'CLI Tool & Tmux Plugin',
+    highlights: [
+      'Built a CLI tool that defines and loads tmux pane layouts from YAML config files with recursive split tree application',
+      'Developed a companion tmux plugin that captures running pane layouts by reverse-engineering split geometry from pane rectangles',
+    ],
+    tech: ['Bash', 'Tmux'],
+    url: 'https://github.com/denesbeck/tmux-pane-controller',
+    status: 'active',
+    relatedBlogPostIds: [25],
+  },
+  {
     title: 'Serverless Deploy',
     subtitle: 'Deployment Automation',
     highlights: [
