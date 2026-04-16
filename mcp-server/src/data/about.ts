@@ -43,8 +43,6 @@ export function getPersonalInfo(): PersonalInfo {
       { platform: 'GitHub', url: 'https://github.com/denesbeck' },
       { platform: 'LinkedIn', url: 'https://www.linkedin.com/in/denesbeck' },
       { platform: 'Credly', url: 'https://www.credly.com/users/denesbeck' },
-      { platform: 'X', url: 'https://x.com/denesbeck' },
-      { platform: 'Dev.to', url: 'https://dev.to/denesbeck' },
     ],
   }
 }
