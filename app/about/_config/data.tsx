@@ -106,10 +106,6 @@ export const SKILLS = [
     icon: SiGithubactions,
   },
   {
-    name: 'Tekton',
-    icon: SiTekton,
-  },
-  {
     name: 'Linux',
     icon: FaLinux,
   },

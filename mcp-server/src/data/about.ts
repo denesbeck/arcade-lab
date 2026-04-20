@@ -20,7 +20,6 @@ export function getPersonalInfo(): PersonalInfo {
       'Golang',
       'Lua',
       'GitHub Actions',
-      'Tekton',
       'Linux',
       'Bash',
       'Docker',
