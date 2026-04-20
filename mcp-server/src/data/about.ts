@@ -9,7 +9,7 @@ export function getPersonalInfo(): PersonalInfo {
     name: 'Denes Beck',
     location: 'Budapest, Hungary',
     company: 'SEON',
-    role: 'Software Engineer',
+    role: 'Senior Full-Stack Software Engineer',
     bio: `I'm a full-stack software engineer with ${new Date().getFullYear() - 2019} years of experience. I specialize in developing scalable, efficient, and maintainable applications using modern frameworks and best practices. I thrive on building self-hosted solutions and automating workflows, with a deep interest in DevOps, security and infrastructure management. I'm a huge Neovim and Tmux enthusiast. I mostly work with JavaScript and TypeScript, but I'm also comfortable working with other languages like Python and Lua. I'm currently diving into Golang. Nexio (https://github.com/denesbeck/nexio) is my latest project written in Go — a Git-inspired version control system.`,
     skills: [
       'Next.js',
@@ -42,7 +42,6 @@ export function getPersonalInfo(): PersonalInfo {
     connections: [
       { platform: 'GitHub', url: 'https://github.com/denesbeck' },
       { platform: 'LinkedIn', url: 'https://www.linkedin.com/in/denesbeck' },
-      { platform: 'Credly', url: 'https://www.credly.com/users/denesbeck' },
     ],
   }
 }

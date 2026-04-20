@@ -101,7 +101,6 @@ export default function RootLayout({
       'https://github.com/denesbeck',
       'https://www.linkedin.com/in/denesbeck',
       'https://x.com/DenesBeck',
-      'https://www.credly.com/users/denesbeck',
     ],
     knowsAbout: [
       'Software Engineering',

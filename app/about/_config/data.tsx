@@ -14,7 +14,6 @@ import { HiIdentification } from 'react-icons/hi2'
 import { RiNextjsFill, RiTailwindCssFill } from 'react-icons/ri'
 import {
   SiAnsible,
-  SiCredly,
   SiDocker,
   SiGithubactions,
   SiGnubash,
@@ -30,7 +29,7 @@ export const INFO = {
   Name: 'Denes Beck',
   Location: 'Budapest, Hungary',
   Company: 'SEON',
-  Role: 'Senior Full-Stack & Platform Engineer',
+  Role: 'Senior Full-Stack Software Engineer',
 }
 
 export const INFO_ICONS = {
@@ -48,10 +47,6 @@ export const CONNECTIONS = [
   {
     url: 'https://www.linkedin.com/in/denesbeck',
     icon: FaLinkedin,
-  },
-  {
-    url: 'https://www.credly.com/users/denesbeck',
-    icon: SiCredly,
   },
 ]
 
