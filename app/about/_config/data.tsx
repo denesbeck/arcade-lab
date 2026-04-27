@@ -65,6 +65,12 @@ export const CERTIFICATES: Certificate[] = [
     alt: 'awsDeveloperAssociate',
   },
   {
+    url: 'https://www.credly.com/badges/955a71c6-a223-4c7b-9b27-cc95268465ce/public_url',
+    size: 105,
+    img: 'https://images.credly.com/size/680x680/images/88a6405e-0f26-442a-95ed-f9b9db4c857e/blob',
+    alt: 'awsCloudOpsAssociate',
+  },
+  {
     url: 'https://www.credly.com/badges/91d294a8-8f7d-4f5a-80c1-071fa0bf2be6/public_url',
     size: 105,
     img: 'https://images.credly.com/size/680x680/images/0dc62494-dc94-469a-83af-e35309f27356/blob',
