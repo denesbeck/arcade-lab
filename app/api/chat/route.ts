@@ -74,7 +74,7 @@ export async function POST(request: Request) {
 
       // For the potential final round, check if we should stream
       const response = await client.messages.create({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-6',
         max_tokens: 1024,
         system: SYSTEM_PROMPT,
         tools,
@@ -88,7 +88,7 @@ export async function POST(request: Request) {
       if (toolUseBlocks.length === 0) {
         // Final response — stream it back
         const stream = client.messages.stream({
-          model: 'claude-sonnet-4-20250514',
+          model: 'claude-sonnet-4-6',
           max_tokens: 1024,
           system: SYSTEM_PROMPT,
           tools,

@@ -34,6 +34,10 @@ export function getPersonalInfo(): PersonalInfo {
         url: 'https://www.credly.com/badges/b4bf4117-6a90-49eb-baee-e382447b72c2/public_url',
       },
       {
+        name: 'AWS Certified CloudOps Engineer - Associate',
+        url: 'https://www.credly.com/badges/955a71c6-a223-4c7b-9b27-cc95268465ce/public_url',
+      },
+      {
         name: 'HashiCorp Certified: Terraform Associate',
         url: 'https://www.credly.com/badges/91d294a8-8f7d-4f5a-80c1-071fa0bf2be6/public_url',
       },

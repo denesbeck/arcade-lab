@@ -19,7 +19,6 @@ import {
   SiGnubash,
   SiKubernetes,
   SiLua,
-  SiTekton,
   SiTerraform,
   SiTypescript,
 } from 'react-icons/si'
