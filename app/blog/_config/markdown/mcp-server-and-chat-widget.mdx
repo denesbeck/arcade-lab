@@ -96,7 +96,7 @@ The chat widget doesn't wait for the full response — it streams tokens as they
 
 ```typescript
 const stream = client.messages.stream({
-  model: 'claude-sonnet-4-20250514',
+  model: 'claude-sonnet-4-6',
   max_tokens: 1024,
   system: SYSTEM_PROMPT,
   tools,
