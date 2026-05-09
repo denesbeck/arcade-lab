@@ -15,10 +15,13 @@ import { RiNextjsFill, RiTailwindCssFill } from 'react-icons/ri'
 import {
   SiAnsible,
   SiDocker,
+  SiElastic,
   SiGithubactions,
   SiGnubash,
+  SiGrafana,
   SiKubernetes,
   SiLua,
+  SiPrometheus,
   SiTerraform,
   SiTypescript,
 } from 'react-icons/si'
@@ -135,6 +138,9 @@ export const SKILLS = [
     name: 'AWS',
     icon: FaAws,
   },
+  { name: 'Elastic', icon: SiElastic },
+  { name: 'Prometheus', icon: SiPrometheus },
+  { name: 'Grafana', icon: SiGrafana },
 ]
 
 export const BIO = (

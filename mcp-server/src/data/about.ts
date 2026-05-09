@@ -27,6 +27,9 @@ export function getPersonalInfo(): PersonalInfo {
       'Terraform',
       'Ansible',
       'AWS',
+      'Elastic',
+      'Prometheus',
+      'Grafana',
     ],
     certificates: [
       {
