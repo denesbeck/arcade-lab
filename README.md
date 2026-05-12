@@ -13,8 +13,9 @@ It also includes an **MCP server** for Claude Code integration and an **AI-power
 ## Pages
 
 - **Home** -- Minimalist greeting with a contact CTA
-- **About** -- Bio, skills (16 technologies), certificates (AWS, Terraform), and social links
-- **Blog** -- 20 MDX-based technical posts covering topics like building a home server, developing a custom VCS in Go, CloudGoat ethical hacking write-ups, CI/CD pipelines, and AWS Lambda deployments. Supports tag-based filtering.
+- **Work** -- Portfolio of projects with tech stack, highlights, and links to related blog posts
+- **About** -- Bio, skills (17 technologies), certificates (AWS Developer Associate, AWS CloudOps Associate, Terraform Associate), and social links
+- **Blog** -- 25 MDX-based technical posts covering topics like building a home server, developing a custom VCS in Go, CloudGoat ethical hacking write-ups, CI/CD pipelines, and AWS Lambda deployments. Supports tag-based filtering.
 - **Contact** -- Form protected by Cloudflare Turnstile CAPTCHA, submitted via AWS Lambda
 
 ## Tech Stack
@@ -27,6 +28,7 @@ It also includes an **MCP server** for Claude Code integration and an **AI-power
 | Backend | AWS Lambda via `@aws-sdk/client-lambda`, Cloudflare Turnstile |
 | AI / Chat | Claude API (`@anthropic-ai/sdk`), MCP SDK (`@modelcontextprotocol/sdk`) |
 | Build | Turbopack |
+| Testing | Vitest |
 | Code Quality | Biome (lint + format), Husky, lint-staged |
 | CI/CD | GitHub Actions (Biome, npm audit, GitGuardian, SonarCloud) |
 | Analytics | Vercel Analytics, Vercel Speed Insights |
@@ -122,10 +124,19 @@ npm run build
 ### Lint & Format
 
 ```bash
-npx @biomejs/biome check --write .
+npm run lint
+npm run format
 ```
 
-This also runs automatically on staged files via the pre-commit hook.
+Both run automatically on staged files via the pre-commit hook.
+
+### Tests
+
+```bash
+npm test              # run once
+npm run test:watch    # watch mode
+npm run test:coverage # with coverage
+```
 
 ## Project Structure
 
@@ -134,12 +145,16 @@ app/
 ├── (home)/              # Home page (route group)
 ├── about/               # About page with bio, skills, certificates
 ├── api/
-│   └── chat/            # Chat API route (Claude API + tool execution)
+│   ├── chat/            # Chat API route (Claude API + tool execution)
+│   └── debug/           # Debug endpoint
 ├── blog/                # Blog listing + dynamic [id] pages
 │   └── _config/
 │       ├── data.tsx     # Blog entry metadata
 │       └── markdown/    # MDX blog posts
 ├── contact/             # Contact form with Turnstile + Lambda
+├── work/                # Portfolio projects page
+│   └── _config/
+│       └── data.ts      # Project metadata
 ├── _components/         # Shared UI components
 │   └── ChatWidget/      # AI chat widget (floating, resizable, streaming)
 ├── _config/             # Navigation config
@@ -149,6 +164,7 @@ mcp-server/
 │   ├── index.ts         # MCP server entry point (stdio transport)
 │   ├── tools.ts         # Tool definitions and execution logic
 │   ├── search.ts        # Blog post keyword search
+│   ├── search.test.ts   # Search unit tests (Vitest)
 │   ├── types.ts         # Shared TypeScript interfaces
 │   └── data/            # Data loaders (blog, about, projects)
 ├── package.json
