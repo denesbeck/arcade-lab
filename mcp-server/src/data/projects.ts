@@ -6,6 +6,18 @@ import type { Project } from '../types'
  */
 const PROJECTS: Project[] = [
   {
+    title: 'Dev Platform',
+    subtitle: 'Self-Hosted Internal Developer Platform',
+    highlights: [
+      'Designing a portfolio-grade Internal Developer Platform on AWS with end-to-end IaC — from VPC to running apps in a single repository',
+      'Running vanilla Kubernetes on Talos Linux with Cilium networking, spot instance self-healing, and GitOps via Argo CD',
+    ],
+    tech: ['AWS', 'Terraform', 'Kubernetes', 'Talos', 'Cilium', 'Helm'],
+    url: 'https://github.com/denesbeck/dev-platform',
+    status: 'active',
+    relatedBlogPostIds: [26],
+  },
+  {
     title: 'Nexio',
     subtitle: 'Version Control System',
     highlights: [
@@ -101,7 +113,7 @@ const PROJECTS: Project[] = [
     ],
     tech: ['TypeScript', 'PostgreSQL', 'Redis'],
     url: 'https://github.com/denesbeck/auth-service',
-    status: 'active',
+    status: 'archived',
     relatedBlogPostIds: [],
   },
   {

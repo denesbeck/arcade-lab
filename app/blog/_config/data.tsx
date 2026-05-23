@@ -48,6 +48,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
     date: '2026-05-22',
     hidden: false,
     tags: [
+      'dev-platform',
       'talos',
       'kubernetes',
       'aws',
@@ -95,6 +96,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
     tags: [
       'linux',
       'home-server',
+      'self-hosted',
       'netalertx',
       'docker',
       'networking',
@@ -121,6 +123,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
     tags: [
       'linux',
       'home-server',
+      'self-hosted',
       'ups',
       'bash',
       'prometheus',
@@ -148,6 +151,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
     tags: [
       'linux',
       'home-server',
+      'self-hosted',
       'tailscale',
       'wireguard',
       'vpn',
@@ -259,6 +263,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
       'docker',
       'containers',
       'home-server',
+      'self-hosted',
       'jellyfin',
       'media-server',
       'nginx',
@@ -302,6 +307,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
       'docker',
       'containers',
       'home-server',
+      'self-hosted',
       'grafana',
       'loki',
       'promtail',
@@ -333,6 +339,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
       'nginx',
       'containers',
       'home-server',
+      'self-hosted',
       'pi-hole',
       'dns',
       'ad-blocking',
@@ -541,6 +548,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
       'nginx',
       'containers',
       'home-server',
+      'self-hosted',
     ],
     content: 'building-my-home-server-p4',
     cover: {
@@ -567,6 +575,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
       'mkfs',
       'crontab',
       'home-server',
+      'self-hosted',
       'volumes',
       'rsync',
     ],
@@ -586,7 +595,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
     description: 'Part 2: SMB with Samba',
     date: '2025-10-03',
     hidden: false,
-    tags: ['linux', 'ubuntu', 'smb', 'samba', 'home-server'],
+    tags: ['linux', 'ubuntu', 'smb', 'samba', 'home-server', 'self-hosted'],
     content: 'building-my-home-server-p2',
     cover: {
       image: buildHomeServerSm,
@@ -610,6 +619,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
       'wifi',
       'netplan',
       'home-server',
+      'self-hosted',
       'security',
       'ufw',
     ],

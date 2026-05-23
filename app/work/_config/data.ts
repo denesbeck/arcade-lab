@@ -3,13 +3,17 @@ import { FaAws, FaGolang, FaReact } from 'react-icons/fa6'
 import { RiNextjsFill, RiTailwindCssFill } from 'react-icons/ri'
 import {
   SiAnsible,
+  SiCilium,
   SiGithubactions,
   SiGnubash,
+  SiHelm,
+  SiKubernetes,
   SiLua,
   SiMui,
   SiNeovim,
   SiPostgresql,
   SiRedis,
+  SiTalos,
   SiTerraform,
   SiTmux,
   SiTypescript,
@@ -33,6 +37,26 @@ export type Project = {
 }
 
 const PROJECTS: Project[] = [
+  {
+    title: 'Dev Platform',
+    subtitle: 'Self-Hosted Internal Developer Platform',
+    highlights: [
+      'Designing a portfolio-grade Internal Developer Platform on AWS with end-to-end IaC — from VPC to running apps in a single repository',
+      'Running vanilla Kubernetes on Talos Linux with Cilium networking, spot instance self-healing, and GitOps via Argo CD',
+    ],
+    tech: [
+      { name: 'AWS', icon: FaAws },
+      { name: 'Terraform', icon: SiTerraform },
+      { name: 'Kubernetes', icon: SiKubernetes },
+      { name: 'Talos', icon: SiTalos },
+      { name: 'Cilium', icon: SiCilium },
+      { name: 'Helm', icon: SiHelm },
+    ],
+    url: 'https://github.com/denesbeck/dev-platform',
+    status: 'active',
+    priority: 'critical',
+    blogPosts: [26],
+  },
   {
     title: 'Nexio',
     subtitle: 'Version Control System',
@@ -75,7 +99,7 @@ const PROJECTS: Project[] = [
     ],
     url: 'https://github.com/denesbeck/tmux-worktree',
     status: 'active',
-    priority: 'high',
+    priority: 'medium',
     blogPosts: [21],
   },
   {
@@ -91,7 +115,7 @@ const PROJECTS: Project[] = [
     ],
     url: 'https://github.com/denesbeck/tmux-pane-controller',
     status: 'active',
-    priority: 'high',
+    priority: 'medium',
     blogPosts: [25],
   },
   {
@@ -169,7 +193,7 @@ const PROJECTS: Project[] = [
       { name: 'Redis', icon: SiRedis },
     ],
     url: 'https://github.com/denesbeck/auth-service',
-    status: 'active',
+    status: 'archived',
     priority: 'low',
     blogPosts: [],
   },
