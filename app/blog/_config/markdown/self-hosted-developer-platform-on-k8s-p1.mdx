@@ -1,0 +1,321 @@
+# 🛠️ Self-hosted developer platform on K8s: Part 1
+
+_Bootstrapping Talos on AWS — a build log_
+
+## 🎯 What I was trying to do
+
+Spin up a three-node Talos Kubernetes cluster on AWS for a personal dev platform. One control plane, two spot workers, EIP on the master, in `eu-central-1`. Terraform was already managing the AWS side. I wanted to add the `siderolabs/talos` Terraform provider so the whole thing — PKI, machine configs, applying configs, bootstrap, kubeconfig — would happen with a single `terraform apply`.
+
+I budgeted maybe two hours. It took the whole day.
+
+---
+
+## 🌅 Morning — the cluster I already had
+
+I'd brought up the cluster the day before with `talosctl` by hand, following my own runbook. It worked. I had a master at `63.*.*.59`, two workers, etcd running, kubeconfig on the laptop. Done.
+
+This morning I opened a fresh shell, exported `TALOSCONFIG`, ran:
+
+```sh
+talosctl version
+```
+
+```
+Server:
+error getting version: 1 error occurred:
+    * 63.*.*.59: rpc error: code = Unavailable
+      desc = "transport: Error while dialing: dial tcp 63.*.*.59:50000: i/o timeout"
+```
+
+I read the error literally: the TCP dial to `63.*.*.59:50000` timed out. Most likely cause for a TCP timeout: firewall. My residential ISP rotates IPs occasionally, so the SG might be allowing a stale address.
+
+```sh
+curl -s https://checkip.amazonaws.com    # 84.*.*.174
+grep operator_cidr terraform/terraform.tfvars
+# operator_cidr = "84.*.*.174/32"
+```
+
+Matches. So the SG is fine. Then `nc`:
+
+```sh
+nc -vz -G 5 63.*.*.59 50000
+Connection to 63.*.*.59 port 50000 [tcp/*] succeeded!
+```
+
+Wait. TCP succeeds. Then `openssl` for the TLS layer:
+
+```sh
+echo | openssl s_client -connect 63.*.*.59:50000 -showcerts 2>&1 | head
+```
+
+That worked too — got a cert back, valid SANs, including the EIP and the private IP. So TCP works, TLS works, the SG is fine, my IP is right. But `talosctl version` errors with `i/o timeout`.
+
+I checked `TALOSCONFIG`, `talosctl config info`, env for proxy vars. All clean. The state of the world was: every layer I could probe was healthy, the application client wasn't. I had no explanation.
+
+I noticed something while staring at it: the failure was _fast_. Like, 397ms fast. A real TCP `i/o timeout` from Go's `net.Dial` takes the OS default — tens of seconds. A sub-second `i/o timeout` is something else dressed up as a TCP error. That was the first crack in the story but I didn't follow it for another twenty minutes because I went down a rabbit hole on cert SANs.
+
+When I came back, I cranked up gRPC tracing:
+
+```sh
+GRPC_GO_LOG_VERBOSITY_LEVEL=99 GRPC_GO_LOG_SEVERITY_LEVEL=info talosctl version
+```
+
+And there it was, in the lifecycle log:
+
+```
+[Channel #1 SubChannel #2] Subchannel Connectivity change to READY    ← TCP+TLS OK
+[Channel #1] Channel Connectivity change to READY
+[Channel #1] Channel Connectivity change to SHUTDOWN
+error getting version: ... dial tcp 63.*.*.59:50000: i/o timeout
+```
+
+The channel reaches READY. The first hop succeeded. Whatever timed out happened _after_ the handshake. So the `i/o timeout` isn't from my laptop's TCP stack at all.
+
+That's when I remembered: `talosctl` is a two-hop call. The client dials `endpoint`. The endpoint forwards the RPC to `node`. My talosconfig had both set to the same public EIP. So the master got the call, then tried to forward to "the node" — its own EIP — from inside the VPC.
+
+Which doesn't work on AWS. I knew this in a general sense (EIPs are NAT mappings at the IGW, instances can't reach their own EIPs) but I hadn't connected it to `talosctl` until this moment. The error didn't tell me. The error said `dial tcp <EIP>:50000: i/o timeout` and that's what I had been chasing, but the _EIP_ in the error was the address the _master_ was trying to reach, not my laptop. The endpoint's failure was being returned through the gRPC stream and re-wrapped on my side with the address I'd asked about, so it looked like my dial had failed.
+
+Fix:
+
+```sh
+talosctl config node 10.*.*.210   # private IP, not the EIP
+```
+
+`talosctl version` returned in 80ms.
+
+That's failure 1 down. I felt smart for about five minutes.
+
+---
+
+## 🧱 Late morning — adding the Terraform provider
+
+Time for the actual task. Added `siderolabs/talos` to `providers.tf`, wrote `04-talos.tf` with the obvious mapping:
+
+- `talos_machine_secrets` for PKI
+- `data "talos_machine_configuration"` for controlplane + worker
+- `data "talos_client_configuration"` for the talosconfig
+- `talos_machine_configuration_apply` for each node
+- `talos_machine_bootstrap` for the master
+- `data "talos_cluster_health"` to wait
+- `talos_cluster_kubeconfig` to fetch
+
+I wrote `cluster_endpoint = "https://${aws_eip.master.public_ip}:6443"` without thinking about it. That's what the docs do. I did remember to set `node = private_ip` for each apply, since I'd just learned that lesson.
+
+`terraform destroy` on the manual cluster, fresh `apply`. EC2 came up. Then:
+
+```
+talos_machine_configuration_apply.controlplane: Still creating... [09m50s elapsed]
+Error: rpc error: ... dial tcp 3.*.*.140:50000: connect: connection refused
+```
+
+`connection refused`, not timeout. So the host _is_ answering — the SG is fine, the route is fine, but nothing is listening on `:50000`.
+
+I started with the obvious checks (SG, current IP, openssl). All fine. Then pulled the EC2 console output:
+
+```
+[talos] service[apid](Waiting): Waiting for api certificates
+[talos] task startAllServices (1/1): service "apid" to be "up"   ← every 15s, forever
+[talos] controller failed: secrets.APIController:
+  failed to sign API server CSR:
+    * dial tcp 3.*.*.140:50001: i/o timeout
+```
+
+There it is. The master, during its own boot, was trying to reach `trustd` (Talos's cert-signing service, port 50001) at the cluster endpoint — which I'd set to the public EIP. **Same hairpin as this morning**, but on the other side: not the operator, the master itself, dialing its own EIP for an internal service.
+
+I caught my own pattern. EIPs are not reachable from inside the VPC. Period. The `cluster_endpoint` is what the _whole cluster_ uses for internal traffic — apiserver, kubelet, trustd, all of it. On AWS, that has to be the private IP. The fix:
+
+```hcl
+cluster_endpoint = "https://${aws_instance.master.private_ip}:6443"
+```
+
+But now my kubeconfig will point at the private IP too. My laptop can't reach that. So I added a post-processing step:
+
+```hcl
+resource "local_sensitive_file" "kubeconfig" {
+  content = replace(
+    talos_cluster_kubeconfig.this.kubeconfig_raw,
+    "https://${aws_instance.master.private_ip}:6443",
+    "https://${aws_eip.master.public_ip}:6443",
+  )
+  filename = "${path.module}/../kubeconfig"
+  file_permission = "0600"
+}
+```
+
+The certSANs already include both IPs from a `config_patches`, so kubectl validates fine when hitting the EIP. Fine. Run apply again.
+
+---
+
+## ⚠️ Early afternoon — versions disagreeing
+
+```
+Error: validation failed: kubelet image is not valid:
+  version of Kubernetes 1.36.0 is too new to be used with Talos 1.12.8
+```
+
+I groaned. The AMI is being selected by `most_recent = true` on a filter of `talos-v*`, which gave me `talos-v1.12.8`. The provider, with no `talos_version` set, defaulted to its own newest contract, which is `v1.13`, which defaults to Kubernetes `1.36.0`.
+
+Two independent default selectors. Neither one knew the other existed. Of course they disagreed.
+
+```hcl
+locals {
+  talos_version      = "v1.12"
+  kubernetes_version = "v1.34.1"
+}
+```
+
+And tightened the AMI filter to `talos-v1.12*` so the same problem couldn't recur the next time SideroLabs publishes a newer AMI. Either fix alone catches the drift; both together makes it deliberate.
+
+---
+
+## 🪤 Mid-afternoon — the wedged master
+
+`terraform apply` again. Connection refused on the master again. Different layer this time, since the EIP hairpin during boot was fixed.
+
+I pulled the console screenshot this time (AWS Console → EC2 → Actions → Monitor and troubleshoot → Get instance screenshot), not just the text log:
+
+```
+HOST       ip-10-*-*-39
+TYPE       controlplane
+CLUSTER    dev-platform (1 machine)
+KUBERNETES v1.34.1
+STAGE      Maintenance     ← still
+READY      True
+KUBELET    n/a
+APISERVER  n/a
+```
+
+Stuck in maintenance stage. Uptime 57 minutes. Config was clearly applied (TYPE and KUBERNETES fields are populated from the persisted config), but the stage transition from maintenance to configured never happened. So neither the maintenance service nor `apid` was on `:50000`. Half-transitioned.
+
+I went down a real rabbit hole on this one. Why would Talos receive config, persist it, and then just sit there? I read parts of the Talos source. Tried to use `talosctl --insecure` to poke the maintenance API; got nothing (the syntax was different than I remembered in the new version). Stared at the dashboard for a while.
+
+Eventually I went pragmatic. The provider has `apply_mode`. Default is `"auto"`, which lets Talos decide between in-place transition and reboot. Talos picked in-place. The in-place transition wedged. Forcing a full kernel reboot should sidestep the entire problem — reboots from disk always work, the persisted config is the source of truth, services start fresh.
+
+I checked the provider source for which values it accepts:
+
+```go
+stringvalidator.OneOf("auto", "reboot", "no_reboot", "staged", "staged_if_needing_reboot")
+```
+
+`"reboot"` is accepted; it's just not in the docs. Set it on the apply resources, destroyed everything, applied again.
+
+(Why did the in-place transition wedge specifically here? I still don't know. Could be a Talos 1.12.8 bug, could be something specific to my config. The investigation cost would be steep and the value would be zero — the reboot mode works.)
+
+---
+
+## 👷 Late afternoon — workers that "applied" but didn't
+
+Apply ran further this time. Workers reported success in 20 seconds each. The master apply ran for the full 10-minute timeout and failed.
+
+I checked the master dashboard expecting to see it still in maintenance.
+
+```
+HOST       ip-10-*-*-148
+TYPE       worker          ← WAT
+STAGE      Booting
+READY      False
+```
+
+It was running **worker** config. The master was configured as a worker. That's a horrible thing to see.
+
+Meanwhile, the workers' dashboards:
+
+```
+HOST       ip-10-*-*-249
+TYPE       unknown         ← never configured
+CLUSTER    n/a
+STAGE      Maintenance
+```
+
+Uptime 1h26m. Pristine. Never rebooted. The "successful" worker applies in Terraform — the 20-second ones — had touched these workers _zero times_.
+
+It took me a few minutes to figure out where the worker configs had actually gone. The clue was in my own HCL:
+
+```hcl
+resource "talos_machine_configuration_apply" "worker" {
+  count    = length(aws_instance.worker)
+  endpoint = aws_eip.master.public_ip                       ← all three applies hit here
+  node     = aws_instance.worker[count.index].private_ip
+}
+```
+
+All three apply resources (the master and both workers) had `endpoint = master EIP`. In configured mode, that's correct — the master is the mTLS entry point and forwards by `node`. In **maintenance** mode, there's no mTLS, there's no forwarding, the maintenance API just applies whatever config it receives to whatever node it's running on. The `node` field is sent as gRPC metadata and silently ignored.
+
+So all three configs got applied to the master, in some order. Last one wins. Whichever worker apply ran last overwrote the controlplane config with worker config. That's why the master came up as a worker.
+
+This is genuinely a documentation gap in the provider. Every example shows a single-node case where `endpoint == node`, so the bug is invisible. The lesson: in the talos provider's maintenance-mode apply, `endpoint` is the wire address and that's all. The `node` field only does anything once mTLS is established.
+
+Fix is straightforward — for the first-time apply, dial each node directly. Our workers have ephemeral public IPs (auto-assigned by the subnet), so:
+
+```hcl
+endpoint = aws_instance.worker[count.index].public_ip
+node     = aws_instance.worker[count.index].private_ip
+```
+
+The master apply stays as-is, since the master EIP routes to the master itself.
+
+---
+
+## 🌙 Evening — the health check that can't reach the cluster
+
+I was tired by this point but didn't want to leave it overnight. Destroy, apply, again. This time:
+
+```
+✓ etcd healthy
+✓ etcd members consistent
+✓ apid ready
+✓ kubelet healthy
+✓ all nodes finished boot sequence
+✗ Get "https://10.*.*.175:6443/api/v1/nodes": context deadline exceeded
+```
+
+The cluster was up. Everything important passed. The only failing check was the final "can we list nodes via the kube-apiserver" — and the URL was the master's private IP, which my laptop on the Terraform side can't reach. The check inherits `cluster_endpoint` (correctly, per the day's earlier fix, set to private IP). The data source has no override for the k8s URL.
+
+`skip_kubernetes_checks = true`. The Talos-level checks were already green, and `kubectl get nodes` from the rewritten kubeconfig would tell me the same thing in the next minute anyway.
+
+One more apply. 30 seconds.
+
+```
+kubeconfig_path = "./../kubeconfig"
+master_private_ip = "10.*.*.175"
+master_public_ip = "63.*.*.86"
+```
+
+```sh
+export KUBECONFIG="$(terraform output -raw kubeconfig_path)"
+kubectl get nodes
+NAME             STATUS   ROLES           AGE   VERSION
+ip-10-*-*-13    Ready    <none>          44m   v1.34.1
+ip-10-*-*-175   Ready    control-plane   44m   v1.34.1
+ip-10-*-*-235   Ready    <none>          43m   v1.34.1
+```
+
+Three nodes, Ready immediately because Talos ships Flannel as the default CNI. Done.
+
+---
+
+## 📝 What I'll remember
+
+I'm writing this the same night, so the lessons are fresh.
+
+**Every failure today was a low-level network error that pointed at the wrong layer.** `connection refused` four times. `i/o timeout` once. `context deadline exceeded` once. Every single time, the actual cause was a layer or two up: AWS NAT semantics, Talos state machine behavior, provider edge cases, version-drift mismatches. The error message named the wrong layer every single time.
+
+**The most useful diagnostic moment was the gRPC trace this morning.** Seeing the channel reach `READY` and then `SHUTDOWN` before the error appeared — that single observation moved the suspect list off the network and onto the proxy hop. Without it I'd have spent the rest of the morning on cert SANs.
+
+**The console screenshot was the second most useful thing.** Twice today I had a node that wasn't responding on its API port, and the console screenshot told me in seconds what no amount of `nc` could ever show. (Wedged in `STAGE=Maintenance` the first time. Running as `TYPE=worker` when it was supposed to be a controlplane the second.) When the wire looks fine, look at what the remote process thinks it's doing.
+
+**I should have read the provider source earlier.** Two of today's bugs (the undocumented `apply_mode = "reboot"`, the maintenance-mode endpoint/node trap) were five-minute reads in the provider's Go source. The docs only ever showed the working case. Whenever I'm using a declarative tool that wraps a procedural API, I should be reading the source for whatever resource I'm using, not just the docs.
+
+**Default selectors that pick versions independently will eventually disagree.** The AMI's `most_recent` filter and the provider's default `talos_version` were both picking "the newest thing" but from different vantage points. The cure is a single source of truth — the `locals` block — and tight enough filters that nothing newer can sneak in. Two-line change, prevents a category of bug.
+
+---
+
+## 💭 What I'd tell myself this morning, if I could
+
+You are about to spend the whole day on this. That's fine. The thing you'll actually be learning is not "how to bring up Talos on AWS" — that's just the substrate. The thing you'll be learning is _how to debug error messages that lie about which layer they're from_. That's worth the day.
+
+When a transport-level error names a specific `IP:port`, that's where the error was _reported_, not necessarily where it was _generated_. Especially in proxy/forwarder architectures (which gRPC, sidecars, and service meshes all are), the visible address is almost never the right one to suspect first. Probe each layer individually with `nc`, `openssl`, the application client. The shape of the failure tells you where to look.
+
+And on AWS, the EIP is NAT, not an address. From inside the VPC, the EIP doesn't exist as a destination — only the private IP does. Any time something inside the VPC tries to reach a public address that belongs to itself or to a peer in the same VPC, you have a hairpin problem. Use the private IP for internal traffic. Use the public IP only for external ingress. Internalize this — you're going to hit variations of it three times today.
+
+Also: write things down as you go. You're going to want a write-up at the end.

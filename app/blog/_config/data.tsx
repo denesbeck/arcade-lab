@@ -25,6 +25,9 @@ import lambdaDeployX from '@/../public/blog/covers/lambda_deploy_x.png'
 import remoteStateManagement from '@/../public/blog/covers/remote_state_management.png'
 import remoteStateManagementSm from '@/../public/blog/covers/remote_state_management_sm.png'
 import remoteStateManagementX from '@/../public/blog/covers/remote_state_management_x.png'
+import selfHostedDevPlatform from '@/../public/blog/covers/self_hosted_dev_platform.png'
+import selfHostedDevPlatformSm from '@/../public/blog/covers/self_hosted_dev_platform_sm.png'
+import selfHostedDevPlatformX from '@/../public/blog/covers/self_hosted_dev_platform_x.png'
 import techConference from '@/../public/blog/covers/tech_conference.png'
 import techConferenceSm from '@/../public/blog/covers/tech_conference_sm.png'
 import techConferenceX from '@/../public/blog/covers/tech_conference_x.png'
@@ -38,6 +41,34 @@ import arcadeLab from '@/../public/logo/arcade_lab_logo.png'
 import { BlogEntry } from '../_interfaces/blog'
 
 const BLOG_ENTRIES: BlogEntry[] = [
+  {
+    id: 26,
+    title: 'Self-hosted developer platform on K8s P1',
+    description: 'Bootstrapping Talos on AWS',
+    date: '2026-05-22',
+    hidden: false,
+    tags: [
+      'talos',
+      'kubernetes',
+      'aws',
+      'terraform',
+      'ec2',
+      'networking',
+      'grpc',
+      'devops',
+      'debugging',
+      'self-hosted',
+    ],
+    content: 'self-hosted-developer-platform-on-k8s-p1',
+    cover: {
+      image: selfHostedDevPlatformSm,
+      original: selfHostedDevPlatform,
+      xImage: selfHostedDevPlatformX,
+      alt: 'self_hosted_dev_platform',
+      ogImage: '/blog/covers/self_hosted_dev_platform.png',
+      ogImageX: '/blog/covers/self_hosted_dev_platform_x.png',
+    },
+  },
   {
     id: 25,
     title: 'tmux-pane-controller',
