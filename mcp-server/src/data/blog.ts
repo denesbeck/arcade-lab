@@ -8,6 +8,31 @@ import type { BlogPost, BlogPostMeta } from '../types'
  */
 const BLOG_ENTRIES: BlogPostMeta[] = [
   {
+    id: 27,
+    title: 'Building my home server P11',
+    description: 'Self-hosting Vaultwarden with automated disaster recovery',
+    date: '2026-05-25',
+    hidden: false,
+    tags: [
+      'linux',
+      'home-server',
+      'self-hosted',
+      'vaultwarden',
+      'docker',
+      'ansible',
+      'aws',
+      'terraform',
+      'cloudwatch',
+      'lambda',
+      'ec2',
+      's3',
+      'tailscale',
+      'disaster-recovery',
+      'nginx',
+    ],
+    slug: 'building-my-home-server-p11',
+  },
+  {
     id: 26,
     title: 'Self-hosted developer platform on K8s P1',
     description: 'Bootstrapping Talos on AWS',

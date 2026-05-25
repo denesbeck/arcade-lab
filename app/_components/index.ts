@@ -13,6 +13,7 @@ import Info from './Info'
 import Input from './Input'
 import Kbd from './Kbd'
 import MacOSBar from './MacOSBar'
+import Mermaid from './Mermaid'
 import Navbar from './Navbar'
 import PageHeader from './PageHeader'
 import ScrollToTop from './ScrollToTop'
@@ -36,6 +37,7 @@ export {
   Input,
   Kbd,
   MacOSBar,
+  Mermaid,
   Navbar,
   PageHeader,
   ScrollToTop,

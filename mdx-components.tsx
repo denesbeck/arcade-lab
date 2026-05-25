@@ -1,6 +1,6 @@
 import type { MDXComponents } from 'mdx/types'
 import Image from 'next/image'
-import { CopyButton, MacOSBar } from '@/_components'
+import { CopyButton, MacOSBar, Mermaid } from '@/_components'
 
 const components: MDXComponents = {
   // Wrapper for all MDX content (e.g., for margin, padding, and layout)
@@ -86,13 +86,13 @@ const components: MDXComponents = {
     let codeString = ''
 
     const codeChild = children?.props?.children
+    const className = children?.props?.className || ''
 
     if (typeof codeChild === 'string') {
       codeString = codeChild
     } else if (Array.isArray(codeChild)) {
       codeString = codeChild
         .map((child) => {
-          // if child is a string, keep it; if it's an element, try to get its children
           if (typeof child === 'string') return child
           if (typeof child === 'object' && child?.props?.children) {
             return typeof child.props.children === 'string'
@@ -103,6 +103,11 @@ const components: MDXComponents = {
         })
         .join('')
     }
+
+    if (className.includes('language-mermaid')) {
+      return <Mermaid chart={codeString.trim()} />
+    }
+
     return (
       <pre className="relative p-5 my-6 text-sm rounded-lg text-dark-200 bg-dark-700">
         <MacOSBar size="sm" />

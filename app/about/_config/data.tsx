@@ -146,43 +146,64 @@ export const SKILLS = [
 export const BIO = (
   <div className="text-text-dark">
     <p className="mb-8">
-      🚀 I&apos;m a full-stack software engineer with{' '}
+      🚀 Full-stack engineer with{' '}
       <Emphasize>{new Date().getFullYear() - 2019} years</Emphasize> of
-      experience.
+      experience, now focused on platform engineering — designing and operating
+      Kubernetes-based platforms from the ground up.
     </p>
     <p className="mb-8">
-      🏗️ I specialize in developing scalable, efficient, and maintainable
-      applications using modern frameworks and best practices. I thrive on
-      building self-hosted solutions and automating workflows, with a deep
-      interest in DevOps, security and infrastructure management.
-    </p>
-    <p className="mb-8">
-      🛠️ I&apos;m a huge <Emphasize>Neovim</Emphasize> and{' '}
-      <Emphasize>Tmux</Emphasize> enthusiast — both help me optimize my
-      development environment (check out{' '}
+      🏗️ My flagship project is{' '}
       <a
         target="_blank"
         className="underline text-active underline-offset-4"
-        href="https://github.com/denesbeck/dotfiles"
+        href="https://github.com/denesbeck/dev-platform"
       >
-        my dotfiles
-      </a>
-      ).
+        Dev Platform
+      </a>{' '}
+      — a self-hosted Internal Developer Platform on AWS with end-to-end IaC via
+      Terraform, Kubernetes on Talos Linux, Cilium networking, GitOps with Argo
+      CD, and a full observability stack (Prometheus, Grafana, Loki, Tempo).
     </p>
     <p className="mb-8">
-      💼 I mostly work with <Emphasize>JavaScript</Emphasize> and{' '}
-      <Emphasize>TypeScript</Emphasize>, but I&apos;m also comfortable working
-      with other languages like <Emphasize>Python</Emphasize> and{' '}
-      <Emphasize>Lua</Emphasize>. I&apos;m currently diving into{' '}
-      <Emphasize>Golang</Emphasize>. Take a look at{' '}
+      💼 I also maintain{' '}
       <a
         target="_blank"
         className="underline text-active underline-offset-4"
         href="https://github.com/denesbeck/nexio"
       >
         Nexio
+      </a>{' '}
+      — a Git-inspired version control system written in Go that taught me
+      content-addressable storage, DAG-based history, and remote state sync —
+      and an Ansible-driven{' '}
+      <a
+        target="_blank"
+        className="underline text-active underline-offset-4"
+        href="https://github.com/denesbeck/home-lab-ansible"
+      >
+        Home Lab
+      </a>{' '}
+      running Docker, Nginx, Pi-hole, Prometheus, and Grafana on bare metal.
+    </p>
+    <p className="mb-8">
+      🛠️ I&apos;m a huge <Emphasize>Neovim</Emphasize> and{' '}
+      <Emphasize>Tmux</Emphasize> enthusiast — I build{' '}
+      <a
+        target="_blank"
+        className="underline text-active underline-offset-4"
+        href="https://github.com/denesbeck/tmux-worktree"
+      >
+        plugins
+      </a>{' '}
+      for my workflow and maintain my own{' '}
+      <a
+        target="_blank"
+        className="underline text-active underline-offset-4"
+        href="https://github.com/denesbeck/dotfiles"
+      >
+        dotfiles
       </a>
-      , my latest project written in Go.
+      .
     </p>
     <p>
       📁 Check out{' '}
