@@ -79,6 +79,7 @@ const PROJECTS: Project[] = [
     ],
     tech: [
       { name: 'Ansible', icon: SiAnsible },
+      { name: 'Terraform', icon: SiTerraform },
       { name: 'Bash', icon: SiGnubash },
     ],
     url: 'https://github.com/denesbeck/home-lab-infra',
