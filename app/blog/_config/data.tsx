@@ -77,8 +77,9 @@ const BLOG_ENTRIES: BlogEntry[] = [
   },
   {
     id: 26,
-    title: 'Self-hosted developer platform on K8s P1',
-    description: 'Bootstrapping Talos on AWS',
+    title: 'Dev Platform: Bootstrapping Talos on AWS',
+    description:
+      'Provisioning Kubernetes on Talos Linux with Terraform and EC2',
     date: '2026-05-22',
     hidden: false,
     tags: [
