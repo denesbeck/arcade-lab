@@ -43,13 +43,14 @@ import { BlogEntry } from '../_interfaces/blog'
 const BLOG_ENTRIES: BlogEntry[] = [
   {
     id: 27,
-    title: 'Building my home server P11',
-    description: 'Self-hosting Vaultwarden with automated disaster recovery',
+    title: 'Home Lab: Vaultwarden & Disaster Recovery',
+    description:
+      'Self-hosting a password manager with automated backups to AWS',
     date: '2026-05-25',
     hidden: false,
     tags: [
       'linux',
-      'home-server',
+      'home-lab',
       'self-hosted',
       'vaultwarden',
       'docker',
@@ -122,13 +123,14 @@ const BLOG_ENTRIES: BlogEntry[] = [
   },
   {
     id: 24,
-    title: 'Building my home server P10',
-    description: 'Network visibility with NetAlertX',
+    title: 'Home Lab: Network Scanning with NetAlertX',
+    description:
+      'Detecting devices and monitoring ARP traffic on the local network',
     date: '2026-04-17',
     hidden: false,
     tags: [
       'linux',
-      'home-server',
+      'home-lab',
       'self-hosted',
       'netalertx',
       'docker',
@@ -149,13 +151,13 @@ const BLOG_ENTRIES: BlogEntry[] = [
   },
   {
     id: 23,
-    title: 'Building my home server P9',
-    description: 'UPS failover with automated shutdown',
+    title: 'Home Lab: UPS Monitoring & Failover',
+    description: 'Automated shutdown on power loss with Prometheus alerting',
     date: '2026-04-10',
     hidden: false,
     tags: [
       'linux',
-      'home-server',
+      'home-lab',
       'self-hosted',
       'ups',
       'bash',
@@ -177,13 +179,14 @@ const BLOG_ENTRIES: BlogEntry[] = [
   },
   {
     id: 22,
-    title: 'Building my home server P8',
-    description: 'Remote access with Tailscale',
+    title: 'Home Lab: Remote Access with Tailscale',
+    description:
+      'Secure WireGuard-based VPN with Pi-hole DNS and Samba over the mesh',
     date: '2026-04-03',
     hidden: false,
     tags: [
       'linux',
-      'home-server',
+      'home-lab',
       'self-hosted',
       'tailscale',
       'wireguard',
@@ -287,15 +290,15 @@ const BLOG_ENTRIES: BlogEntry[] = [
   },
   {
     id: 18,
-    title: 'Building my home server P7',
-    description: 'Streaming movies with Jellyfin',
+    title: 'Home Lab: Media Streaming with Jellyfin',
+    description: 'Self-hosted media server with Docker and Nginx reverse proxy',
     date: '2026-03-13',
     hidden: false,
     tags: [
       'linux',
       'docker',
       'containers',
-      'home-server',
+      'home-lab',
       'self-hosted',
       'jellyfin',
       'media-server',
@@ -331,15 +334,16 @@ const BLOG_ENTRIES: BlogEntry[] = [
   },
   {
     id: 16,
-    title: 'Building my home server P6',
-    description: 'Centralized logging with Loki',
+    title: 'Home Lab: Centralized Logging with Loki',
+    description:
+      'Aggregating container and system logs with Promtail and Grafana',
     date: '2026-03-07',
     hidden: false,
     tags: [
       'linux',
       'docker',
       'containers',
-      'home-server',
+      'home-lab',
       'self-hosted',
       'grafana',
       'loki',
@@ -360,8 +364,9 @@ const BLOG_ENTRIES: BlogEntry[] = [
   },
   {
     id: 15,
-    title: 'Building my home server P5',
-    description: 'Network-wide ad blocking with Pi-hole',
+    title: 'Home Lab: Ad Blocking with Pi-hole',
+    description:
+      'Network-wide DNS filtering with Docker and custom firewall rules',
     date: '2026-03-02',
     hidden: false,
     tags: [
@@ -371,7 +376,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
       'ufw',
       'nginx',
       'containers',
-      'home-server',
+      'home-lab',
       'self-hosted',
       'pi-hole',
       'dns',
@@ -569,8 +574,8 @@ const BLOG_ENTRIES: BlogEntry[] = [
   },
   {
     id: 7,
-    title: 'Building my home server P4',
-    description: 'Part 4: Docker, UFW and Nginx',
+    title: 'Home Lab: Docker, UFW & Nginx',
+    description: 'Containerized services with firewall rules and reverse proxy',
     date: '2025-10-26',
     hidden: false,
     tags: [
@@ -580,7 +585,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
       'ufw',
       'nginx',
       'containers',
-      'home-server',
+      'home-lab',
       'self-hosted',
     ],
     content: 'building-my-home-server-p4',
@@ -595,8 +600,8 @@ const BLOG_ENTRIES: BlogEntry[] = [
   },
   {
     id: 6,
-    title: 'Building my home server P3',
-    description: 'Part 3: Volumes and backup',
+    title: 'Home Lab: Volumes & Backups',
+    description: 'Disk partitioning, mounting, and automated rsync backups',
     date: '2025-10-11',
     hidden: false,
     tags: [
@@ -607,7 +612,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
       'fdisk',
       'mkfs',
       'crontab',
-      'home-server',
+      'home-lab',
       'self-hosted',
       'volumes',
       'rsync',
@@ -624,11 +629,11 @@ const BLOG_ENTRIES: BlogEntry[] = [
   },
   {
     id: 5,
-    title: 'Building my home server P2',
-    description: 'Part 2: SMB with Samba',
+    title: 'Home Lab: File Sharing with Samba',
+    description: 'Setting up SMB shares for local network access',
     date: '2025-10-03',
     hidden: false,
-    tags: ['linux', 'ubuntu', 'smb', 'samba', 'home-server', 'self-hosted'],
+    tags: ['linux', 'ubuntu', 'smb', 'samba', 'home-lab', 'self-hosted'],
     content: 'building-my-home-server-p2',
     cover: {
       image: buildHomeServerSm,
@@ -641,8 +646,9 @@ const BLOG_ENTRIES: BlogEntry[] = [
   },
   {
     id: 4,
-    title: 'Building my home server P1',
-    description: 'Part 1: Starting and connecting to the server',
+    title: 'Home Lab: Initial Setup & SSH',
+    description:
+      'Ubuntu install, networking with Netplan, and hardened SSH access',
     date: '2025-10-03',
     hidden: false,
     tags: [
@@ -651,7 +657,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
       'ssh',
       'wifi',
       'netplan',
-      'home-server',
+      'home-lab',
       'self-hosted',
       'security',
       'ufw',

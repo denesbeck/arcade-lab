@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     'GitHub Actions',
     'Terraform',
     'Ansible',
-    'Home Server',
+    'Home Lab',
     'Linux',
     'Next.js',
     'Technical Writing',

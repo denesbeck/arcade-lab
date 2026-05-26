@@ -25,7 +25,7 @@ server.registerTool(
         .string()
         .optional()
         .describe(
-          'Optional: filter results to a specific tag (e.g., "docker", "aws", "home-server")'
+          'Optional: filter results to a specific tag (e.g., "docker", "aws", "home-lab")'
         ),
     },
   },

@@ -5,12 +5,13 @@ import type { BlogPostMeta } from './types'
 const ENTRIES: BlogPostMeta[] = [
   {
     id: 1,
-    title: 'Building my home server P1',
-    description: 'Part 1: Starting and connecting to the server',
+    title: 'Home Lab: Initial Setup & SSH',
+    description:
+      'Ubuntu install, networking with Netplan, and hardened SSH access',
     date: '2025-10-03',
     hidden: false,
-    tags: ['linux', 'ubuntu', 'ssh', 'home-server'],
-    slug: 'building-my-home-server-p1',
+    tags: ['linux', 'ubuntu', 'ssh', 'home-lab'],
+    slug: 'home-lab-initial-setup-and-ssh',
   },
   {
     id: 2,
@@ -56,7 +57,7 @@ describe('searchBlogPosts', () => {
   })
 
   it('matches by title', () => {
-    const results = searchBlogPosts(ENTRIES, 'home server')
+    const results = searchBlogPosts(ENTRIES, 'home lab')
     expect(results.length).toBe(1)
     expect(results[0].id).toBe(1)
   })
@@ -161,8 +162,8 @@ describe('searchBlogPosts', () => {
   })
 
   it('handles partial tag matches', () => {
-    // "home-server" tag should partially match "server"
-    const results = searchBlogPosts(ENTRIES, 'server')
+    // "home-lab" tag should partially match "lab"
+    const results = searchBlogPosts(ENTRIES, 'lab')
     expect(results.some((r) => r.id === 1)).toBe(true)
   })
 

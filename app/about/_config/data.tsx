@@ -175,7 +175,7 @@ export const BIO = (
       </a>{' '}
       — a Git-inspired version control system written in Go that taught me
       content-addressable storage, DAG-based history, and remote state sync —
-      and an Ansible-driven{' '}
+      and an Ansible- and Terraform-driven{' '}
       <a
         target="_blank"
         className="underline text-active underline-offset-4"

@@ -29,7 +29,7 @@ export const TOOL_DEFINITIONS = [
         tag: {
           type: 'string',
           description:
-            'Optional: filter results to a specific tag (e.g., "docker", "aws", "home-server")',
+            'Optional: filter results to a specific tag (e.g., "docker", "aws", "home-lab")',
         },
       },
       required: ['query'],
