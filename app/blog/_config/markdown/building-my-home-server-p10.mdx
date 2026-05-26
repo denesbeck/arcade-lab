@@ -64,7 +64,7 @@ These prevent the kernel from responding to ARP requests on the wrong interface 
 
 ## 🤖 Automating with Ansible
 
-The full deployment is captured in a single [Ansible playbook](https://github.com/denesbeck/home-lab-ansible/blob/main/playbooks/netalertx.yml). It creates the data directories (`/home/netalertx/data/config` and `/home/netalertx/data/db`), gathers the runtime user's PUID/PGID, sets the ARP flux sysctls on the host, and deploys the container with all the security hardening described above. All configuration — container name, image, data path, port, timezone — lives in a separate variables file, consistent with how every other service in the home lab is managed.
+The full deployment is captured in a single [Ansible playbook](https://github.com/denesbeck/home-lab-infra/blob/main/playbooks/netalertx.yml). It creates the data directories (`/home/netalertx/data/config` and `/home/netalertx/data/db`), gathers the runtime user's PUID/PGID, sets the ARP flux sysctls on the host, and deploys the container with all the security hardening described above. All configuration — container name, image, data path, port, timezone — lives in a separate variables file, consistent with how every other service in the home lab is managed.
 
 The Nginx reverse proxy entry was added to the existing Nginx configuration template, so `https://netalertx.arcade-lab.io` routes to `127.0.0.1:20211`. A corresponding DNS record in Pi-hole makes the subdomain resolve on the local network.
 

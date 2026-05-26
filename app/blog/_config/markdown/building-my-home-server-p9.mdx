@@ -129,7 +129,7 @@ The dashboard auto-refreshes every 30 seconds, matching the ping interval. It's 
 
 ## 🤖 Automating with Ansible
 
-The entire setup is captured in an [Ansible playbook](https://github.com/denesbeck/home-lab-ansible/blob/main/playbooks/ups-monitor.yml). It creates the textfile collector directory, deploys the power monitor script with all variables templated (the router IP lives in a separate vars file, excluded from version control), sets up the log file, and registers the `@reboot` cron job.
+The entire setup is captured in an [Ansible playbook](https://github.com/denesbeck/home-lab-infra/blob/main/playbooks/ups-monitor.yml). It creates the textfile collector directory, deploys the power monitor script with all variables templated (the router IP lives in a separate vars file, excluded from version control), sets up the log file, and registers the `@reboot` cron job.
 
 The router IP is the only sensitive variable — it reveals LAN topology. Everything else (ping interval, failure threshold, file paths) is generic and lives directly in the playbook. Running the playbook is the only step needed to set up power monitoring on the server.
 

@@ -37,7 +37,7 @@ const PROJECTS: Project[] = [
       'Automated infrastructure setup and service deployment using Infrastructure-as-Code principles',
     ],
     tech: ['Ansible', 'Bash'],
-    url: 'https://github.com/denesbeck/home-lab-ansible',
+    url: 'https://github.com/denesbeck/home-lab-infra',
     status: 'active',
     relatedBlogPostIds: [4, 5, 6, 7, 15, 16, 18, 22, 23, 24],
   },

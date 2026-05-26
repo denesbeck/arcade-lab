@@ -81,7 +81,7 @@ const PROJECTS: Project[] = [
       { name: 'Ansible', icon: SiAnsible },
       { name: 'Bash', icon: SiGnubash },
     ],
-    url: 'https://github.com/denesbeck/home-lab-ansible',
+    url: 'https://github.com/denesbeck/home-lab-infra',
     status: 'active',
     priority: 'critical',
     blogPosts: [4, 5, 6, 7, 15, 16, 18, 22, 23, 24, 27],

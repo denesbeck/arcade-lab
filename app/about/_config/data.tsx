@@ -179,7 +179,7 @@ export const BIO = (
       <a
         target="_blank"
         className="underline text-active underline-offset-4"
-        href="https://github.com/denesbeck/home-lab-ansible"
+        href="https://github.com/denesbeck/home-lab-infra"
       >
         Home Lab
       </a>{' '}
