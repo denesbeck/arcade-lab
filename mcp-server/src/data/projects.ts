@@ -33,13 +33,14 @@ const PROJECTS: Project[] = [
     title: 'Home Lab',
     subtitle: 'Infrastructure Automation',
     highlights: [
-      'Built Ansible playbooks to automate provisioning and configuration of a personal homelab environment',
-      'Automated infrastructure setup and service deployment using Infrastructure-as-Code principles',
+      'Automated provisioning of a single-node Ubuntu server with Ansible — Docker services behind NGINX reverse proxy with SSL, Tailscale VPN, and hardened SSH/firewall',
+      'Managed AWS infrastructure with Terraform for encrypted S3 backups and a fully automated Vaultwarden DR failover using CloudWatch, Lambda, and EC2 spot instances',
+      'Built a Prometheus, Grafana, and Loki monitoring stack with alerting to Discord for host metrics, container health, and power outage detection',
     ],
-    tech: ['Ansible', 'Terraform', 'Bash'],
+    tech: ['Ansible', 'Terraform', 'AWS', 'Prometheus', 'Grafana', 'Bash'],
     url: 'https://github.com/denesbeck/home-lab-infra',
     status: 'active',
-    relatedBlogPostIds: [4, 5, 6, 7, 15, 16, 18, 22, 23, 24],
+    relatedBlogPostIds: [4, 5, 6, 7, 15, 16, 18, 22, 23, 24, 27],
   },
   {
     title: 'Tmux Worktree',
