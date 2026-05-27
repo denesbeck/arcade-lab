@@ -318,7 +318,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
   },
   {
     id: 17,
-    title: 'Remote State Management with S3',
+    title: 'Nexio: Remote State Management with S3',
     description: 'Taking Nexio from Local-Only to Collaborative',
     date: '2026-03-09',
     hidden: false,
@@ -396,7 +396,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
   },
   {
     id: 14,
-    title: 'From JSON Files to SQLite',
+    title: 'Nexio: From JSON Files to SQLite',
     description:
       "How a Simple Benchmark Convinced Me to Rewrite Nexio's Storage Layer",
     date: '2026-02-28',
@@ -530,7 +530,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
   },
   {
     id: 9,
-    title: 'Storage optimization',
+    title: 'Nexio: Storage Optimization',
     description: 'Transforming Nexio with Content-Addressable Storage',
     date: '2025-12-21',
     hidden: false,
@@ -558,7 +558,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
   },
   {
     id: 8,
-    title: 'Developing my own VCS',
+    title: 'Nexio: Developing My Own VCS',
     description: 'Learning Git the Hard Way',
     date: '2025-11-13',
     hidden: false,
