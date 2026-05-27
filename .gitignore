@@ -44,3 +44,8 @@ next-env.d.ts
 # mcp-server
 mcp-server/node_modules
 mcp-server/dist
+
+# lambda
+lambda/layers/*/node_modules
+lambda/functions/**/.code.hash
+lambda/functions/**/.config.hash

@@ -1,0 +1,11 @@
+{
+  "function_name": "ArcadeLabContact",
+  "runtime": "nodejs22.x",
+  "handler": "index.handler",
+  "role": "ArcadeLabContactRole",
+  "layers": [
+    {
+      "eu-central-1": ["Axios:24", "Validator:22"]
+    }
+  ]
+}

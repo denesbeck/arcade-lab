@@ -1,0 +1,338 @@
+name: Deploy Lambda
+
+on:
+  push:
+    branches:
+      - "**"
+    paths:
+      - "lambda/**"
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: deploy-lambda-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@2.0.0
+        with:
+          scandir: lambda/scripts
+          severity: warning
+
+  deploy-layers:
+    needs: validate
+    runs-on: ubuntu-latest
+
+    environment: eu-central-1
+
+    env:
+      LAYERS_S3_BUCKET: ${{ vars.LAYERS_S3_BUCKET }}
+      REGION: eu-central-1
+      ACCOUNT_NUMBER: ${{ secrets.ACCOUNT_NUMBER }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up AWS credentials
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.ACCOUNT_NUMBER }}:role/ArcadeLabDeployRole
+          aws-region: eu-central-1
+
+      - name: Get changed layer directories
+        id: layer_dirs
+        run: |
+          echo "Detecting changed layer directories..."
+          BEFORE=${{ github.event.before }}
+          AFTER=${{ github.event.after }}
+          DIRS=""
+
+          if git cat-file -e "$BEFORE"^{commit} &>/dev/null; then
+            echo "Commit $BEFORE found."
+            DIRS=$(git diff --name-only "$BEFORE" "$AFTER" | awk -F/ '$1 == "lambda" && $2 == "layers" && NF>=3 {print $1 "/" $2 "/" $3}' | sort -u)
+          else
+            echo "Commit $BEFORE NOT found. First commit."
+            DIRS=$(find lambda/layers -mindepth 1 -maxdepth 1 -type d -not -path '*/.*' | sort -u)
+          fi
+
+          if [[ -z "$DIRS" ]]; then
+            echo "No changed layer directories found. Skipping deployment."
+          else
+            echo "Changed layer directories:"
+            echo "$DIRS"
+            echo "dirs<<EOF" >> "$GITHUB_OUTPUT"
+            echo "$DIRS" >> "$GITHUB_OUTPUT"
+            echo "EOF" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Package and deploy layers
+        if: steps.layer_dirs.outputs.dirs != ''
+        run: |
+          set -euo pipefail
+
+          REPO_ROOT="$(pwd)"
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          COMMIT_SHA=${{ github.sha }}
+          BRANCH="${{ github.ref_name }}"
+
+          DEPLOY_ALIAS=$("${REPO_ROOT}/lambda/scripts/get-alias.sh" "$BRANCH")
+          echo "Branch '$BRANCH' will deploy to alias: $DEPLOY_ALIAS"
+
+          while IFS= read -r path; do
+            LAYER=$(basename "$path")
+
+            CONFIG_FILE="${path}/config.json"
+            if [[ ! -f "$CONFIG_FILE" ]]; then
+              echo "WARNING: Missing config.json in $path, skipping..." >&2
+              continue
+            fi
+
+            LAYER_NAME=$(jq -r .name "$CONFIG_FILE")
+            DESCRIPTION=$(jq -r .description "$CONFIG_FILE")
+            TYPE=$(jq -r .type "$CONFIG_FILE")
+            COMPATIBLE_RUNTIMES=$(jq -r '.runtimes | join(" ")' "$CONFIG_FILE")
+
+            ZIP_FILE="${LAYER}-${TIMESTAMP}-${COMMIT_SHA}.zip"
+            S3_KEY="${LAYER}/${ZIP_FILE}"
+
+            echo "::group::Deploy layer: $LAYER_NAME"
+
+            echo "Installing packages for $path..."
+            cd "$path"
+            "${REPO_ROOT}/lambda/scripts/install-packages.sh" "$TYPE"
+
+            echo "Zipping $path..."
+            zip -r "${REPO_ROOT}/${ZIP_FILE}" . > /dev/null
+            cd "${REPO_ROOT}"
+
+            echo "Uploading to s3://${LAYERS_S3_BUCKET}/${S3_KEY}"
+            aws s3 cp --region "$REGION" "$ZIP_FILE" "s3://${LAYERS_S3_BUCKET}/${S3_KEY}"
+
+            echo "Publishing new layer version..."
+            VERSION=$(aws lambda publish-layer-version \
+              --layer-name "arn:aws:lambda:${REGION}:${ACCOUNT_NUMBER}:layer:${LAYER_NAME}" \
+              --description "$DESCRIPTION" \
+              --content S3Bucket="$LAYERS_S3_BUCKET",S3Key="$S3_KEY" \
+              --compatible-runtimes $COMPATIBLE_RUNTIMES \
+              --region "$REGION" \
+              --output text \
+              --query 'Version')
+
+            echo "Published version $VERSION of $LAYER_NAME"
+
+            rm "$ZIP_FILE"
+            echo "::endgroup::"
+
+          done <<< "${{ steps.layer_dirs.outputs.dirs }}"
+
+  deploy-functions:
+    needs: [validate, deploy-layers]
+    runs-on: ubuntu-latest
+
+    environment: eu-central-1
+
+    env:
+      FUNCTIONS_S3_BUCKET: ${{ vars.FUNCTIONS_S3_BUCKET }}
+      HASHES_S3_BUCKET: ${{ vars.HASHES_S3_BUCKET }}
+      REGION: eu-central-1
+      ACCOUNT_NUMBER: ${{ secrets.ACCOUNT_NUMBER }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up AWS credentials
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.ACCOUNT_NUMBER }}:role/ArcadeLabDeployRole
+          aws-region: eu-central-1
+
+      - name: Download previous hash files from S3
+        run: |
+          mkdir -p .hash-cache
+          BRANCH="${{ github.ref_name }}"
+          find lambda/functions -mindepth 1 -maxdepth 1 -type d | while read -r func_dir; do
+            FUNC=$(basename "$func_dir")
+            TARGET=".hash-cache/${func_dir}"
+            mkdir -p "$TARGET"
+            aws s3 cp --region "$REGION" "s3://${HASHES_S3_BUCKET}/functions/$BRANCH/$FUNC.code.hash" "$TARGET/.code.hash" || true
+            aws s3 cp --region "$REGION" "s3://${HASHES_S3_BUCKET}/functions/$BRANCH/$FUNC.config.hash" "$TARGET/.config.hash" || true
+          done
+
+      - name: Get Lambda directories
+        id: function_dirs
+        run: |
+          echo "Detecting Lambda function directories..."
+
+          DIRS=$(find lambda/functions -mindepth 1 -maxdepth 1 -type d -not -path '*/.*' | sort -u)
+
+          if [[ -z "$DIRS" ]]; then
+            echo "No Lambda directories found. Skipping deployment."
+          else
+            echo "Lambda directories:"
+            echo "$DIRS"
+            echo "dirs<<EOF" >> "$GITHUB_OUTPUT"
+            echo "$DIRS" >> "$GITHUB_OUTPUT"
+            echo "EOF" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Generate code and config hashes
+        run: bash ./lambda/scripts/generate-function-hashes.sh
+
+      - name: Deploy Lambda functions
+        if: steps.function_dirs.outputs.dirs != ''
+        run: |
+          set -euo pipefail
+
+          REPO_ROOT="$(pwd)"
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          COMMIT_SHA=${{ github.sha }}
+          BRANCH="${{ github.ref_name }}"
+
+          DEPLOY_ALIAS=$("${REPO_ROOT}/lambda/scripts/get-alias.sh" "$BRANCH")
+          echo "Branch '$BRANCH' will deploy to alias: $DEPLOY_ALIAS"
+
+          while IFS= read -r path; do
+            FUNC=$(basename "$path")
+
+            CONFIG_FILE="${path}/config.json"
+            if [[ ! -f "$CONFIG_FILE" ]]; then
+              echo "WARNING: Missing config.json in $path, skipping..." >&2
+              continue
+            fi
+
+            echo "::group::Process $FUNC"
+
+            source "${REPO_ROOT}/lambda/scripts/expand-config.sh" "$CONFIG_FILE"
+
+            CODE_HASH_FILE="$path/.code.hash"
+            CONFIG_HASH_FILE="$path/.config.hash"
+            LAST_HASH_PATH=".hash-cache/$path/.code.hash"
+            LAST_CONFIG_HASH_FILE=".hash-cache/$path/.config.hash"
+            DEPLOY_CODE=false
+            UPDATE_CONFIG=false
+
+            if [[ ! -f "$LAST_HASH_PATH" ]]; then
+              echo "No previous code hash — will deploy"
+              DEPLOY_CODE=true
+            else
+              CURRENT_HASH=$(cat "$CODE_HASH_FILE")
+              LAST_HASH=$(cat "$LAST_HASH_PATH")
+
+              if [[ "$CURRENT_HASH" != "$LAST_HASH" ]]; then
+                echo "Hash changed — will deploy"
+                DEPLOY_CODE=true
+              else
+                echo "Code unchanged — skipping zip and version publish"
+              fi
+            fi
+
+            if [[ ! -f "$LAST_CONFIG_HASH_FILE" ]]; then
+              echo "No previous config hash — will update config"
+              UPDATE_CONFIG=true
+            else
+              CURRENT_CONFIG_HASH=$(cat "$CONFIG_HASH_FILE")
+              LAST_CONFIG_HASH=$(cat "$LAST_CONFIG_HASH_FILE")
+              if [[ "$CURRENT_CONFIG_HASH" != "$LAST_CONFIG_HASH" ]]; then
+                echo "Config hash changed — will update config"
+                UPDATE_CONFIG=true
+              else
+                echo "Config unchanged — skipping config update"
+              fi
+            fi
+
+            if [[ "$DEPLOY_CODE" == true ]]; then
+              ZIP_FILE="${FUNC}-${TIMESTAMP}-${COMMIT_SHA}.zip"
+              S3_KEY="${FUNC}/${ZIP_FILE}"
+
+              echo "Zipping $path to $ZIP_FILE"
+              cd "$path"
+              zip -r "${REPO_ROOT}/${ZIP_FILE}" . > /dev/null
+              cd "${REPO_ROOT}"
+
+              echo "Uploading to s3://${FUNCTIONS_S3_BUCKET}/${S3_KEY}"
+              aws s3 cp --region "$REGION" "$ZIP_FILE" "s3://${FUNCTIONS_S3_BUCKET}/${S3_KEY}"
+
+              echo "Checking if Lambda function ${FUNCTION_NAME} exists..."
+              if aws lambda get-function --function-name "$FUNCTION_NAME" --region "$REGION" >/dev/null 2>&1; then
+                echo "Updating Lambda ${FUNCTION_NAME}..."
+                aws lambda update-function-code \
+                  --function-name "$FUNCTION_NAME" \
+                  --s3-bucket "$FUNCTIONS_S3_BUCKET" \
+                  --s3-key "$S3_KEY" \
+                  --region "$REGION"
+              else
+                echo "ERROR: Lambda function ${FUNCTION_NAME} does not exist, skipping..." >&2
+                rm "$ZIP_FILE"
+                echo "::endgroup::"
+                continue
+              fi
+
+              aws lambda wait function-updated \
+                --function-name "$FUNCTION_NAME" \
+                --region "$REGION"
+
+              echo "Publishing new version for ${FUNCTION_NAME}..."
+              VERSION=$(aws lambda publish-version \
+                --function-name "$FUNCTION_NAME" \
+                --region "$REGION" \
+                --output text \
+                --query 'Version')
+
+              echo "Published version $VERSION"
+
+              echo "Updating or creating alias '$DEPLOY_ALIAS'..."
+              aws lambda update-alias \
+                --function-name "$FUNCTION_NAME" \
+                --name "$DEPLOY_ALIAS" \
+                --function-version "$VERSION" \
+                --region "$REGION" || \
+              aws lambda create-alias \
+                --function-name "$FUNCTION_NAME" \
+                --name "$DEPLOY_ALIAS" \
+                --function-version "$VERSION" \
+                --region "$REGION"
+
+              rm "$ZIP_FILE"
+            fi
+
+            if [[ "$UPDATE_CONFIG" == true ]]; then
+              echo "Updating configuration for ${FUNCTION_NAME}..."
+              aws lambda update-function-configuration \
+                --function-name "$FUNCTION_NAME" \
+                --runtime "$RUNTIME" \
+                --handler "$HANDLER" \
+                --role "$IAM_ROLE_ARN" \
+                --layers $LAYERS \
+                --region "$REGION"
+
+              aws lambda wait function-updated \
+                --function-name "$FUNCTION_NAME" \
+                --region "$REGION"
+            fi
+
+            echo "::endgroup::"
+          done <<< "${{ steps.function_dirs.outputs.dirs }}"
+
+      - name: Upload updated hash files to S3
+        run: |
+          BRANCH="${{ github.ref_name }}"
+          find lambda/functions -type f \( -name ".code.hash" -o -name ".config.hash" \) | while read -r file; do
+            FUNC=$(basename "$(dirname "$file")")
+            NAME=$(basename "$file")
+            aws s3 cp "$file" "s3://${HASHES_S3_BUCKET}/functions/$BRANCH/${FUNC}${NAME}"
+          done
