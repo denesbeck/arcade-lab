@@ -47,6 +47,45 @@ arcade-lab/
 
 The `lambda/` directory mirrors the convention from the shared repo: each function has a `config.json` declaring its name, runtime, IAM role, and which layer versions to attach. The deploy workflow reads these configs to know what to ship.
 
+## 🧬 The Auth Architecture
+
+Three runtimes need to touch AWS: HCP Terraform to provision infrastructure, GitHub Actions to deploy Lambda code, and the Vercel runtime to invoke the Lambda from the contact form. All three authenticate via OIDC federation — no shared secrets, no rotating access keys, no `.aws/credentials` files anywhere.
+
+```mermaid
+graph LR
+    subgraph SRC["External Identity Issuers"]
+        HCP[HCP Terraform]
+        GHA[GitHub Actions]
+        VRC[Vercel Runtime]
+    end
+
+    subgraph AWS_OIDC["AWS OIDC Providers"]
+        HCPO[app.terraform.io]
+        GHAO[token.actions.githubusercontent.com]
+        VRCO[oidc.vercel.com/arcade-lab]
+    end
+
+    subgraph AWS_ROLES["AWS IAM Roles"]
+        HCPR[HCPTerraformRole<br/>provisions infra]
+        GHAR[ArcadeLabDeployRole<br/>publishes code]
+        VRCR[ArcadeLabInvokerRole<br/>invokes function]
+        LAMR[ArcadeLabContactRole<br/>function execution]
+    end
+
+    LAM[Lambda: ArcadeLabContact]
+
+    HCP -->|sts:AssumeRoleWithWebIdentity| HCPO --> HCPR
+    GHA -->|sts:AssumeRoleWithWebIdentity| GHAO --> GHAR
+    VRC -->|sts:AssumeRoleWithWebIdentity| VRCO --> VRCR
+
+    HCPR -.->|creates| LAM
+    GHAR -.->|update-function-code| LAM
+    VRCR -.->|InvokeFunction| LAM
+    LAMR -.->|assumed at runtime| LAM
+```
+
+The Lambda execution role (`ArcadeLabContactRole`) is the only one not tied to an OIDC provider — it's trusted by the Lambda service itself, which is the AWS-native pattern. Every other role uses `sts:AssumeRoleWithWebIdentity` with tight `sub` conditions that scope each role to a specific workspace, repository, or Vercel project.
+
 ## 🔑 HCP Terraform Without Static Keys
 
 The original TF repo authenticated with AWS using long-lived access keys passed as TF variables. I wanted dynamic credentials instead — HCP Terraform supports this natively via OIDC federation with AWS.
