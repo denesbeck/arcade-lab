@@ -9,6 +9,7 @@
     "lint": "npx @biomejs/biome lint --write",
     "format": "npx @biomejs/biome format --write",
     "update": "npx npm-check-updates -u && npm i",
+    "lock:sync": "docker run --rm -v \"$PWD\":/app -w /app node:24 npm install --no-audit --no-fund",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
