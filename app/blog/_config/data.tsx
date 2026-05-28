@@ -42,6 +42,39 @@ import { BlogEntry } from '../_interfaces/blog'
 
 const BLOG_ENTRIES: BlogEntry[] = [
   {
+    id: 28,
+    title: 'Consolidating Lambda Infrastructure',
+    description:
+      'Bringing the contact Lambda, layers, and Terraform into one repo with end-to-end OIDC',
+    date: '2026-05-28',
+    hidden: false,
+    tags: [
+      'aws',
+      'terraform',
+      'hcp-terraform',
+      'lambda',
+      'iam',
+      'oidc',
+      'cloudflare',
+      'vercel',
+      'ses',
+      'ssm',
+      's3',
+      'github-actions',
+      'next.js',
+      'devops',
+    ],
+    content: 'consolidating-lambda-infrastructure',
+    cover: {
+      image: lambdaDeploySm,
+      original: lambdaDeploy,
+      xImage: lambdaDeployX,
+      alt: 'lambda_deploy',
+      ogImage: '/blog/covers/lambda_deploy.png',
+      ogImageX: '/blog/covers/lambda_deploy_x.png',
+    },
+  },
+  {
     id: 27,
     title: 'Home Lab: Vaultwarden & Disaster Recovery',
     description:

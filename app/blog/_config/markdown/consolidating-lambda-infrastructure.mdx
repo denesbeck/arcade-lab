@@ -1,0 +1,223 @@
+# 🔄 Consolidating Lambda Infrastructure
+
+_Bringing the contact Lambda, layers, and Terraform into one repo — with end-to-end OIDC and a single apply_
+
+## 🧭 Introduction
+
+When I first set up the contact form Lambda, the code lived in a shared [lambda-functions](https://github.com/denesbeck/lambda-functions) repo alongside other apps' functions, and its infrastructure was provisioned from a separate [lambda-functions-tf](https://github.com/denesbeck/lambda-functions-tf) repo. It worked, but it meant three places to look whenever something changed: this app's repo for how the Lambda is invoked, the functions repo for the function's code, and the TF repo for the infrastructure.
+
+For arcade-lab specifically, this fragmentation made less and less sense. The contact form is the *only* thing arcade-lab uses from those shared repos. It was time to bring everything home.
+
+The end state I wanted:
+
+- The Lambda code, layers, and Terraform all live in this repo
+- HCP Terraform manages everything — AWS, Cloudflare DNS, Vercel project settings — from one workspace
+- No static AWS credentials anywhere — not in HCP, not in Vercel, not in GitHub Actions
+- One `terraform apply` provisions the full stack
+
+This post is about how I got there.
+
+## 🏗️ The New Layout
+
+The repo grew two top-level directories:
+
+```
+arcade-lab/
+├── app/                      # Next.js app (unchanged)
+├── lambda/
+│   ├── functions/
+│   │   └── contact/          # Lambda source + config.json
+│   ├── layers/
+│   │   ├── axios/
+│   │   └── validator/
+│   └── scripts/              # deploy helpers (zip, hash, alias resolution)
+├── terraform/
+│   ├── providers.tf
+│   ├── main.tf
+│   ├── variables.tf
+│   ├── outputs.tf
+│   ├── vercel.tf
+│   └── modules/
+│       ├── core/             # Lambda, S3, SES, SSM, Cloudflare DNS
+│       └── iam/              # Roles, OIDC providers, policies
+└── .github/workflows/
+    ├── main.yml              # existing Next.js CI
+    └── deploy-lambda.yml     # new — zips and deploys the Lambda
+```
+
+The `lambda/` directory mirrors the convention from the shared repo: each function has a `config.json` declaring its name, runtime, IAM role, and which layer versions to attach. The deploy workflow reads these configs to know what to ship.
+
+## 🔑 HCP Terraform Without Static Keys
+
+The original TF repo authenticated with AWS using long-lived access keys passed as TF variables. I wanted dynamic credentials instead — HCP Terraform supports this natively via OIDC federation with AWS.
+
+The setup has three parts:
+
+1. **An OIDC identity provider in AWS** for `https://app.terraform.io` with audience `aws.workload.identity`
+2. **An IAM role** (`HCPTerraformRole`) that trusts that OIDC provider, scoped to my specific HCP organization and workspace
+3. **Three workspace environment variables** in HCP:
+   - `TFC_AWS_PROVIDER_AUTH=true`
+   - `TFC_AWS_RUN_ROLE_ARN=arn:aws:iam::<account>:role/HCPTerraformRole`
+   - `TFC_AWS_WORKLOAD_IDENTITY_AUDIENCE=aws.workload.identity`
+
+The trust policy uses a tight `sub` condition so only runs from this specific workspace can assume the role:
+
+```json
+{
+  "StringLike": {
+    "app.terraform.io:sub": [
+      "organization:arcade-lab:project:*:workspace:arcade-lab:run_phase:*"
+    ]
+  }
+}
+```
+
+Once wired up, the provider block has no credentials at all:
+
+```hcl
+provider "aws" {
+  region = "eu-central-1"
+}
+```
+
+HCP injects short-lived STS credentials at runtime. Zero static secrets.
+
+## ☁️ Multi-Provider Setup
+
+This workspace coordinates three providers:
+
+| Provider | Manages |
+|---|---|
+| `hashicorp/aws` | Lambda, IAM, S3, SES, SSM |
+| `cloudflare/cloudflare` | DNS records for SES verification + DKIM |
+| `vercel/vercel` | Vercel project, env vars, OIDC config |
+
+Each has its own auth path: AWS via the OIDC role above, Cloudflare via a scoped API token (Zone:DNS:Edit on `arcade-lab.io`), and Vercel via an API token. The latter two are stored as sensitive TF variables in HCP.
+
+This is the bit that delivers the "one apply" experience. When TF creates the SES domain identity, it gets back DKIM tokens. Those flow straight into Cloudflare DNS records:
+
+```hcl
+resource "aws_ses_domain_dkim" "arcade_lab" {
+  domain = aws_ses_domain_identity.arcade_lab.domain
+}
+
+resource "cloudflare_dns_record" "ses_dkim" {
+  count   = 3
+  zone_id = data.cloudflare_zone.arcade_lab.zone_id
+  name    = "${aws_ses_domain_dkim.arcade_lab.dkim_tokens[count.index]}._domainkey.arcade-lab.io"
+  type    = "CNAME"
+  content = "${aws_ses_domain_dkim.arcade_lab.dkim_tokens[count.index]}.dkim.amazonses.com"
+  ttl     = 1
+}
+```
+
+Three CNAME records, derived from runtime TF outputs, applied without touching the Cloudflare dashboard.
+
+## 🎫 Vercel → AWS Without Access Keys
+
+The Next.js app invokes the Lambda directly from a server action. Previously it used static AWS credentials stored as Vercel env vars (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`) — the same anti-pattern I was trying to eliminate from HCP.
+
+Vercel supports OIDC federation with AWS too. The flow is the mirror image of HCP's:
+
+1. **An OIDC provider in AWS** for `https://oidc.vercel.com/arcade-lab` with audience `https://vercel.com/arcade-lab`
+2. **An IAM role** (`ArcadeLabInvokerRole`) trusting it, scoped to this specific Vercel project
+3. **The Next.js server action** exchanges the Vercel-issued OIDC token for STS credentials
+
+```ts
+import { LambdaClient } from '@aws-sdk/client-lambda'
+import { awsCredentialsProvider } from '@vercel/functions/oidc'
+
+const contactLambda = new LambdaClient({
+  credentials: awsCredentialsProvider({
+    roleArn: process.env.AWS_ROLE_ARN as string,
+  }),
+  region: process.env.AWS_REGION,
+})
+```
+
+The OIDC token rotates every ~45 minutes. `@vercel/functions/oidc` handles fetching the current token, calling `sts:AssumeRoleWithWebIdentity`, caching the resulting credentials, and refreshing them on expiry — all transparent to the SDK consumer.
+
+## 🪝 Vercel Project Settings in Terraform
+
+The Vercel provider can manage the project itself, not just env vars. I used an `import` block to bring the existing project under TF management without recreating it:
+
+```hcl
+import {
+  to = vercel_project.arcade_lab
+  id = var.vercel_project_id
+}
+
+resource "vercel_project" "arcade_lab" {
+  name      = "arcade-lab"
+  framework = "nextjs"
+
+  git_repository = {
+    type = "github"
+    repo = "denesbeck/arcade-lab"
+  }
+
+  oidc_token_config = {
+    enabled     = true
+    issuer_mode = "team"
+  }
+}
+```
+
+That last block enables OIDC federation at the project level — the same switch you'd flip in the Vercel dashboard, now declarative. From there, env var resources reference the project and the IAM role:
+
+```hcl
+resource "vercel_project_environment_variable" "aws_role_arn" {
+  project_id = vercel_project.arcade_lab.id
+  key        = "AWS_ROLE_ARN"
+  value      = module.iam.invoker_role_arn
+  target     = ["production", "preview", "development"]
+}
+```
+
+The `AWS_ROLE_ARN` env var that Vercel needs is *derived from* the IAM role TF just created. There's no manual copying between consoles. If I ever rename the role, the env var follows automatically on the next apply.
+
+## 🚀 The Deploy Workflow
+
+Terraform creates the Lambda function as an empty shell (`PLACEHOLDER.zip`, `ignore_changes = all`). The actual code deployment happens in a separate GitHub Actions workflow that runs on changes under `lambda/**`:
+
+```yaml
+on:
+  push:
+    branches: ["**"]
+    paths:
+      - "lambda/**"
+  workflow_dispatch:
+```
+
+The workflow has three jobs:
+
+1. **validate** — ShellCheck on the deploy scripts
+2. **deploy-layers** — detects which layers changed, zips them, uploads to S3, publishes a new layer version
+3. **deploy-functions** — for each function, compares code/config hashes against the previous deploy (stored in S3) and only zips/publishes if something actually changed
+
+It authenticates to AWS via — yet another OIDC role. `ArcadeLabDeployRole` trusts GitHub Actions' OIDC provider with a `sub` condition scoping to this repo's refs.
+
+The full IAM role inventory after all of this:
+
+| Role | Trusted by | Used for |
+|---|---|---|
+| `HCPTerraformRole` | HCP Terraform | Provisioning all infra |
+| `ArcadeLabContactRole` | Lambda | Function execution (SSM, SES, KMS) |
+| `ArcadeLabInvokerRole` | Vercel | Invoking the Lambda from the Next.js app |
+| `ArcadeLabDeployRole` | GitHub Actions | Deploying Lambda code/layers from CI |
+
+Four roles, four distinct OIDC trust relationships, zero static credentials.
+
+## 🎉 Outcome
+
+What changed:
+
+- **Lambda code, layers, and TF** all live in `arcade-lab` now. Three repos collapsed into one.
+- **HCP Terraform workspace `arcade-lab`** provisions everything: AWS infrastructure (Lambda, IAM, S3, SES, SSM), Cloudflare DNS records (SES verification + DKIM), and Vercel project settings (env vars, OIDC).
+- **Zero static AWS credentials** anywhere. All authentication flows through OIDC.
+- **One `terraform apply` for the full stack.** Rotating an SES identity, changing the contact email destination, renaming an IAM role — each is now one variable change away.
+- **Deploys still work the same way** from a CI perspective: push to a branch under `lambda/**`, GitHub Actions zips and ships. The infrastructure underneath is just much cleaner.
+
+The migration took a few hours and a fair amount of back-and-forth on OIDC trust policies — the difference between my GitHub username and the actual Vercel owner slug caused one memorable round of debugging. But the result is exactly what I wanted: one place for everything, no long-lived keys, one apply.
+
+Noice! 🎉

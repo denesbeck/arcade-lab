@@ -10,12 +10,14 @@ Arcade Lab is a portfolio site featuring a retro/arcade-inspired dark theme with
 
 It also includes an **MCP server** for Claude Code integration and an **AI-powered chat widget** that lets visitors ask questions about blog posts, projects, and the author.
 
+The repository now also houses the **contact Lambda source code, its layers, and the Terraform configuration** that provisions every piece of cloud infrastructure (AWS, Cloudflare DNS, Vercel project settings). One workspace, one apply, end-to-end OIDC — no static cloud credentials anywhere.
+
 ## Pages
 
 - **Home** -- Minimalist greeting with a contact CTA
 - **Work** -- Portfolio of projects with tech stack, highlights, and links to related blog posts
 - **About** -- Bio, skills (17 technologies), certificates (AWS Developer Associate, AWS CloudOps Associate, Terraform Associate), and social links
-- **Blog** -- 25 MDX-based technical posts covering topics like building a home server, developing a custom VCS in Go, CloudGoat ethical hacking write-ups, CI/CD pipelines, and AWS Lambda deployments. Supports tag-based filtering.
+- **Blog** -- 28 MDX-based technical posts covering topics like building a home server, developing a custom VCS in Go, CloudGoat ethical hacking write-ups, CI/CD pipelines, and AWS Lambda deployments. Supports tag-based filtering.
 - **Contact** -- Form protected by Cloudflare Turnstile CAPTCHA, submitted via AWS Lambda
 
 ## Tech Stack
@@ -31,6 +33,8 @@ It also includes an **MCP server** for Claude Code integration and an **AI-power
 | Testing | Vitest |
 | Code Quality | Biome (lint + format), Husky, lint-staged |
 | CI/CD | GitHub Actions (Biome, npm audit, GitGuardian, SonarCloud) |
+| Infra as Code | Terraform managed via HCP Terraform (`hashicorp/aws`, `cloudflare/cloudflare`, `vercel/vercel`) |
+| Auth | OIDC federation everywhere (HCP→AWS, Vercel→AWS, GitHub Actions→AWS) |
 | Analytics | Vercel Analytics, Vercel Speed Insights |
 | SEO | JSON-LD structured data, dynamic sitemap, OpenGraph/Twitter cards |
 
@@ -94,17 +98,24 @@ The chat widget calls `/api/chat`, which runs an agentic tool-use loop: Claude d
 
 ### Environment Variables
 
-Create a `.env.local` file with the following variables:
+In production, all env vars are managed by Terraform (`terraform/vercel.tf`) and pulled by Vercel automatically. For local development, run `vercel env pull` to fetch them:
 
+```bash
+vercel link        # one-time, links to the existing project
+vercel env pull    # writes .env.local
 ```
-AWS_REGION=
-AWS_ACCESS_KEY_ID=
-AWS_SECRET_ACCESS_KEY=
-NEXT_PUBLIC_DOMAIN=
-NEXT_PUBLIC_TS_SITE_KEY=
-CONTACT_LAMBDA=
-ANTHROPIC_API_KEY=
-```
+
+The full set of env vars used by the app:
+
+| Variable | Purpose |
+|---|---|
+| `AWS_REGION` | AWS region for the contact Lambda (`eu-central-1`) |
+| `AWS_ROLE_ARN` | IAM role the Vercel runtime assumes via OIDC to invoke Lambda |
+| `CONTACT_LAMBDA` | Lambda function name (`ArcadeLabContact`) |
+| `ANTHROPIC_API_KEY` | Claude API key for the chat widget |
+| `NEXT_PUBLIC_DOMAIN` | Public site domain (used in metadata / OG tags) |
+| `NEXT_PUBLIC_TS_SITE_KEY` | Cloudflare Turnstile site key for the contact form |
+| `VERCEL_OIDC_TOKEN` | Auto-injected by Vercel at runtime; exchanged for AWS STS credentials |
 
 ### Development
 
@@ -174,12 +185,97 @@ public/
 ├── blog/                # Blog cover images (sm, x, full)
 ├── fonts/               # DepartureMono-Regular.woff2
 └── logo/                # Site logos
+lambda/
+├── functions/
+│   └── contact/         # Contact form handler (Node.js 22)
+│       ├── index.js
+│       ├── package.json
+│       └── config.json  # Function name, runtime, IAM role, layer versions
+├── layers/
+│   ├── axios/           # HTTP client layer
+│   └── validator/       # Input validation layer
+└── scripts/             # Deploy helpers (zip, hash, alias resolution)
+terraform/
+├── providers.tf         # HCP Terraform cloud block + AWS/CF/Vercel providers
+├── main.tf              # Module composition
+├── variables.tf         # Sensitive vars sourced from HCP
+├── outputs.tf
+├── vercel.tf            # Vercel project + env vars (imports the existing project)
+└── modules/
+    ├── core/            # Lambda function, S3 buckets, SES + DKIM, SSM params, CF DNS
+    └── iam/             # Roles + OIDC providers (HCP, Vercel, GitHub Actions)
 ```
 
 Underscore-prefixed directories (`_components`, `_config`, `_hooks`, `_utils`) are co-located with their routes but excluded from Next.js routing.
 
+## Infrastructure & Automation
+
+All cloud infrastructure is managed via a single HCP Terraform workspace (`arcade-lab`). Terraform coordinates three providers (AWS, Cloudflare, Vercel) and authenticates to each without any long-lived credentials — AWS via OIDC, the others via sensitive API tokens stored in HCP.
+
+### Automation Flow
+
+```mermaid
+graph TB
+    DEV[git push to main]
+
+    subgraph GH[GitHub Actions]
+        CI[main.yml<br/>tests + lint + scan]
+        LDA[deploy-lambda.yml<br/>zip + S3 + publish]
+    end
+
+    subgraph HCP[HCP Terraform]
+        TF[arcade-lab workspace<br/>plan + apply]
+    end
+
+    subgraph VRC[Vercel]
+        APP[Next.js auto-deploy]
+        TOK[VERCEL_OIDC_TOKEN<br/>injected at runtime]
+    end
+
+    subgraph AWS
+        IAM[IAM roles +<br/>3 OIDC providers]
+        LAM[Lambda<br/>ArcadeLabContact]
+        STORE[S3 + SSM + SES]
+    end
+
+    subgraph CF[Cloudflare]
+        DNS[SES verification +<br/>DKIM CNAMEs]
+    end
+
+    DEV -->|always| CI
+    DEV -->|lambda/** changes| LDA
+    DEV -->|terraform/** changes| TF
+    DEV -->|push to main| APP
+
+    LDA -->|OIDC<br/>ArcadeLabDeployRole| STORE
+    LDA -->|OIDC<br/>ArcadeLabDeployRole| LAM
+
+    TF -->|OIDC<br/>HCPTerraformRole| IAM
+    TF -->|OIDC<br/>HCPTerraformRole| LAM
+    TF -->|OIDC<br/>HCPTerraformRole| STORE
+    TF -->|CF API token| DNS
+    TF -->|Vercel API token| APP
+
+    APP --- TOK
+    TOK -->|OIDC<br/>ArcadeLabInvokerRole| LAM
+    LAM --> STORE
+```
+
+### IAM Role Inventory
+
+| Role | Trusted by | Used for |
+|---|---|---|
+| `HCPTerraformRole` | HCP Terraform OIDC | Provisioning all infrastructure |
+| `ArcadeLabContactRole` | Lambda service | Function execution (SSM, SES, KMS) |
+| `ArcadeLabInvokerRole` | Vercel OIDC | Invoking the Lambda from the Next.js runtime |
+| `ArcadeLabDeployRole` | GitHub Actions OIDC | Zipping & deploying Lambda code/layers |
+
 ## Deployment
 
-Deployed on [Vercel](https://vercel.com). Pushes and PRs to `main` trigger the CI pipeline (GitHub Actions) which runs linting, security scanning, and code analysis before deployment.
+There are three independent deploy paths, all triggered by pushes to `main`:
+
+- **Next.js app** → Vercel auto-deploys on every push. The CI workflow (`main.yml`) runs tests, Biome lint, npm audit, GitGuardian, and SonarCloud in parallel.
+- **Lambda code & layers** → `deploy-lambda.yml` only runs when paths under `lambda/**` change. It uses hash comparison (stored in S3) to skip rebuilds when neither code nor config has actually changed.
+- **Infrastructure** → HCP Terraform watches the `terraform/` directory via VCS integration. Plans run automatically on PRs; applies run on merges to `main`.
 
 The MCP server is not deployed -- it runs locally as a stdio process for Claude Code.
