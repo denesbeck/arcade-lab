@@ -20,3 +20,11 @@ output "layers_s3_bucket" {
 output "hashes_s3_bucket" {
   value = aws_s3_bucket.hashes.bucket
 }
+
+output "ses_verification_token" {
+  value = aws_ses_domain_identity.arcade_lab.verification_token
+}
+
+output "ses_dkim_tokens" {
+  value = aws_ses_domain_dkim.arcade_lab.dkim_tokens
+}

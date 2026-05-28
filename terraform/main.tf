@@ -2,6 +2,8 @@ module "core" {
   source = "./modules/core"
 
   contact_role_arn = module.iam.contact_role_arn
+  cf_secret_key    = var.cf_secret_key
+  ses_target       = var.ses_target
 }
 
 module "iam" {
