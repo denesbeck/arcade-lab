@@ -5,10 +5,11 @@ import {
   LambdaClient,
 } from '@aws-sdk/client-lambda'
 import { fromWebToken } from '@aws-sdk/credential-providers'
+import { getVercelOidcToken } from '@vercel/oidc'
 
 const contactLambda = new LambdaClient({
   credentials: fromWebToken({
-    webIdentityToken: process.env.VERCEL_OIDC_TOKEN as string,
+    webIdentityToken: getVercelOidcToken,
     roleArn: process.env.AWS_ROLE_ARN as string,
   }),
   region: process.env.AWS_REGION,
