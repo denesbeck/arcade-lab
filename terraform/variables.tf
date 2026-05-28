@@ -20,3 +20,15 @@ variable "cloudflare_api_token" {
   sensitive   = true
   description = "Cloudflare API token with Zone:DNS:Edit permissions on arcade-lab.io"
 }
+
+variable "vercel_api_token" {
+  type        = string
+  sensitive   = true
+  description = "Vercel API token for managing project environment variables"
+}
+
+variable "vercel_project_id" {
+  type        = string
+  default     = "prj_yJnmpKBmpqjtME6BATD7habvf0sO"
+  description = "Vercel project ID for arcade-lab"
+}

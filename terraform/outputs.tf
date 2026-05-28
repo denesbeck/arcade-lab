@@ -17,3 +17,7 @@ output "ses_verification_token" {
 output "ses_dkim_tokens" {
   value = module.core.ses_dkim_tokens
 }
+
+output "invoker_role_arn" {
+  value = module.iam.invoker_role_arn
+}

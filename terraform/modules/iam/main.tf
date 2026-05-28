@@ -68,6 +68,56 @@ resource "aws_iam_role_policy" "contact_ses" {
   })
 }
 
+# --- Vercel OIDC invoker ---
+
+resource "aws_iam_openid_connect_provider" "vercel" {
+  url            = "https://oidc.vercel.com/denesbeck"
+  client_id_list = ["https://vercel.com/denesbeck"]
+  # Thumbprint is stored but not used by IAM for well-known OIDC providers
+  thumbprint_list = ["0000000000000000000000000000000000000000"]
+}
+
+resource "aws_iam_role" "invoker" {
+  name = "ArcadeLabInvokerRole"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        Federated = aws_iam_openid_connect_provider.vercel.arn
+      }
+      Action = "sts:AssumeRoleWithWebIdentity"
+      Condition = {
+        StringEquals = {
+          "oidc.vercel.com/denesbeck:aud" = "https://vercel.com/denesbeck"
+        }
+        StringLike = {
+          "oidc.vercel.com/denesbeck:sub" = "owner:denesbeck:project:arcade-lab:environment:*"
+        }
+      }
+    }]
+  })
+
+  tags = {
+    application = "arcade-lab"
+  }
+}
+
+resource "aws_iam_role_policy" "invoker_lambda" {
+  name = "LambdaInvokePolicy"
+  role = aws_iam_role.invoker.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = "lambda:InvokeFunction"
+      Resource = "arn:aws:lambda:eu-central-1:${data.aws_caller_identity.current.account_id}:function:ArcadeLabContact"
+    }]
+  })
+}
+
 # --- GitHub Actions deploy role ---
 
 resource "aws_iam_openid_connect_provider" "github" {

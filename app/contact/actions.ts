@@ -4,12 +4,13 @@ import {
   InvokeCommand,
   LambdaClient,
 } from '@aws-sdk/client-lambda'
+import { fromWebToken } from '@aws-sdk/credential-providers'
 
 const contactLambda = new LambdaClient({
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID as string,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY as string,
-  },
+  credentials: fromWebToken({
+    webIdentityToken: process.env.VERCEL_OIDC_TOKEN as string,
+    roleArn: process.env.AWS_ROLE_ARN as string,
+  }),
   region: process.env.AWS_REGION,
 })
 
