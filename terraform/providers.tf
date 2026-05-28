@@ -34,4 +34,5 @@ provider "cloudflare" {
 
 provider "vercel" {
   api_token = var.vercel_api_token
+  team      = "team_ApJek5a8gGkYDdylo9x3D2qz"
 }

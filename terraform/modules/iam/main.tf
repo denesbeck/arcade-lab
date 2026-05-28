@@ -71,8 +71,8 @@ resource "aws_iam_role_policy" "contact_ses" {
 # --- Vercel OIDC invoker ---
 
 resource "aws_iam_openid_connect_provider" "vercel" {
-  url            = "https://oidc.vercel.com/denesbeck"
-  client_id_list = ["https://vercel.com/denesbeck"]
+  url            = "https://oidc.vercel.com/arcade-lab"
+  client_id_list = ["https://vercel.com/arcade-lab"]
   # Thumbprint is stored but not used by IAM for well-known OIDC providers
   thumbprint_list = ["0000000000000000000000000000000000000000"]
 }
@@ -90,10 +90,10 @@ resource "aws_iam_role" "invoker" {
       Action = "sts:AssumeRoleWithWebIdentity"
       Condition = {
         StringEquals = {
-          "oidc.vercel.com/denesbeck:aud" = "https://vercel.com/denesbeck"
+          "oidc.vercel.com/arcade-lab:aud" = "https://vercel.com/arcade-lab"
         }
         StringLike = {
-          "oidc.vercel.com/denesbeck:sub" = "owner:denesbeck:project:arcade-lab:environment:*"
+          "oidc.vercel.com/arcade-lab:sub" = "owner:arcade-lab:project:arcade-lab:environment:*"
         }
       }
     }]

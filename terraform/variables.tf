@@ -32,3 +32,9 @@ variable "vercel_project_id" {
   default     = "prj_yJnmpKBmpqjtME6BATD7habvf0sO"
   description = "Vercel project ID for arcade-lab"
 }
+
+variable "anthropic_api_key" {
+  type        = string
+  sensitive   = true
+  description = "Anthropic API key used by the chat widget"
+}
