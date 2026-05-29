@@ -16,7 +16,7 @@ The repository now also houses the **contact Lambda source code, its layers, and
 
 - **Home** -- Minimalist greeting with a contact CTA
 - **Work** -- Portfolio of projects with tech stack, highlights, and links to related blog posts
-- **About** -- Bio, skills (18 technologies), certificates (AWS Developer Associate, AWS CloudOps Associate, Terraform Associate), and social links
+- **About** -- Bio, skills (21 technologies), certificates (AWS Developer Associate, AWS CloudOps Associate, Terraform Associate), and social links
 - **Blog** -- 28 MDX-based technical posts covering topics like building a home server, developing a custom VCS in Go, CloudGoat ethical hacking write-ups, CI/CD pipelines, and AWS Lambda deployments. Supports tag-based filtering.
 - **Contact** -- Form protected by Cloudflare Turnstile CAPTCHA, submitted via AWS Lambda
 

@@ -11,14 +11,17 @@ import {
 } from 'react-icons/fa'
 import { FaGolang } from 'react-icons/fa6'
 import { HiIdentification } from 'react-icons/hi2'
+import { LuLogs } from 'react-icons/lu'
 import { RiNextjsFill, RiTailwindCssFill } from 'react-icons/ri'
 import {
   SiAnsible,
+  SiArgo,
   SiDocker,
   SiElastic,
   SiGithubactions,
   SiGnubash,
   SiGrafana,
+  SiHelm,
   SiKubernetes,
   SiLua,
   SiPrometheus,
@@ -81,66 +84,27 @@ export const CERTIFICATES: Certificate[] = [
 ]
 
 export const SKILLS = [
-  {
-    name: 'Next.js',
-    icon: RiNextjsFill,
-  },
-  {
-    name: 'React',
-    icon: FaReact,
-  },
-  {
-    name: 'Tailwind CSS',
-    icon: RiTailwindCssFill,
-  },
-  {
-    name: 'Node.js',
-    icon: FaNodeJs,
-  },
-  {
-    name: 'TypeScript',
-    icon: SiTypescript,
-  },
-  {
-    name: 'Golang',
-    icon: FaGolang,
-  },
-  {
-    name: 'Lua',
-    icon: SiLua,
-  },
-  {
-    name: 'GitHub Actions',
-    icon: SiGithubactions,
-  },
-  {
-    name: 'Linux',
-    icon: FaLinux,
-  },
-  { name: 'Bash', icon: SiGnubash },
-  {
-    name: 'Docker',
-    icon: SiDocker,
-  },
-  {
-    name: 'Kubernetes',
-    icon: SiKubernetes,
-  },
-  {
-    name: 'Terraform',
-    icon: SiTerraform,
-  },
-  {
-    name: 'Ansible',
-    icon: SiAnsible,
-  },
-  {
-    name: 'AWS',
-    icon: FaAws,
-  },
-  { name: 'Elastic', icon: SiElastic },
+  { name: 'AWS', icon: FaAws },
+  { name: 'Terraform', icon: SiTerraform },
+  { name: 'Kubernetes', icon: SiKubernetes },
+  { name: 'Docker', icon: SiDocker },
+  { name: 'Helm', icon: SiHelm },
+  { name: 'Ansible', icon: SiAnsible },
+  { name: 'Linux', icon: FaLinux },
+  { name: 'GitHub Actions', icon: SiGithubactions },
+  { name: 'Argo CD', icon: SiArgo },
   { name: 'Prometheus', icon: SiPrometheus },
   { name: 'Grafana', icon: SiGrafana },
+  { name: 'Loki', icon: LuLogs },
+  { name: 'Elastic', icon: SiElastic },
+  { name: 'Golang', icon: FaGolang },
+  { name: 'TypeScript', icon: SiTypescript },
+  { name: 'Bash', icon: SiGnubash },
+  { name: 'Node.js', icon: FaNodeJs },
+  { name: 'Lua', icon: SiLua },
+  { name: 'Next.js', icon: RiNextjsFill },
+  { name: 'React', icon: FaReact },
+  { name: 'Tailwind CSS', icon: RiTailwindCssFill },
 ]
 
 export const BIO = (
