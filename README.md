@@ -16,7 +16,7 @@ The repository now also houses the **contact Lambda source code, its layers, and
 
 - **Home** -- Minimalist greeting with a contact CTA
 - **Work** -- Portfolio of projects with tech stack, highlights, and links to related blog posts
-- **About** -- Bio, skills (17 technologies), certificates (AWS Developer Associate, AWS CloudOps Associate, Terraform Associate), and social links
+- **About** -- Bio, skills (18 technologies), certificates (AWS Developer Associate, AWS CloudOps Associate, Terraform Associate), and social links
 - **Blog** -- 28 MDX-based technical posts covering topics like building a home server, developing a custom VCS in Go, CloudGoat ethical hacking write-ups, CI/CD pipelines, and AWS Lambda deployments. Supports tag-based filtering.
 - **Contact** -- Form protected by Cloudflare Turnstile CAPTCHA, submitted via AWS Lambda
 
@@ -26,7 +26,7 @@ The repository now also houses the **contact Lambda source code, its layers, and
 |---|---|
 | Framework | Next.js 16, React 19, TypeScript |
 | Styling | Tailwind CSS v4, MUI Material |
-| Content | MDX with rehype-highlight (Nord theme) and remark-gfm |
+| Content | MDX with rehype-highlight (Nord theme), remark-gfm, Mermaid diagrams |
 | Backend | AWS Lambda via `@aws-sdk/client-lambda`, Cloudflare Turnstile |
 | AI / Chat | Claude API (`@anthropic-ai/sdk`), MCP SDK (`@modelcontextprotocol/sdk`) |
 | Build | Turbopack |
@@ -114,6 +114,7 @@ The full set of env vars used by the app:
 | `CONTACT_LAMBDA` | Lambda function name (`ArcadeLabContact`) |
 | `ANTHROPIC_API_KEY` | Claude API key for the chat widget |
 | `NEXT_PUBLIC_DOMAIN` | Public site domain (used in metadata / OG tags) |
+| `NEXT_PUBLIC_SHOW_ALL_BLOG_POSTS` | Set to `1` to show hidden and future-dated blog posts (for local previewing) |
 | `NEXT_PUBLIC_TS_SITE_KEY` | Cloudflare Turnstile site key for the contact form |
 | `VERCEL_OIDC_TOKEN` | Auto-injected by Vercel at runtime; exchanged for AWS STS credentials |
 
@@ -149,6 +150,16 @@ npm run test:watch    # watch mode
 npm run test:coverage # with coverage
 ```
 
+### Lockfile Sync
+
+`package-lock.json` must be regenerated inside Linux so CI's `npm ci` finds the Linux-only optional native binaries (e.g. `lightningcss-linux-x64-gnu`). Use:
+
+```bash
+npm run lock:sync     # runs npm install inside a node:24 Docker container
+```
+
+Never delete and regenerate `package-lock.json` on macOS — Linux-only transitive deps get dropped and CI breaks.
+
 ## Project Structure
 
 ```
@@ -156,8 +167,7 @@ app/
 ├── (home)/              # Home page (route group)
 ├── about/               # About page with bio, skills, certificates
 ├── api/
-│   ├── chat/            # Chat API route (Claude API + tool execution)
-│   └── debug/           # Debug endpoint
+│   └── chat/            # Chat API route (Claude API + tool execution)
 ├── blog/                # Blog listing + dynamic [id] pages
 │   └── _config/
 │       ├── data.tsx     # Blog entry metadata
