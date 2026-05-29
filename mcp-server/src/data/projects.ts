@@ -75,7 +75,7 @@ const PROJECTS: Project[] = [
     ],
     tech: ['GitHub Actions', 'Bash', 'Terraform', 'AWS'],
     url: 'https://github.com/denesbeck/lambda-functions',
-    status: 'active',
+    status: 'archived',
     relatedBlogPostIds: [3, 19],
   },
   {
@@ -91,7 +91,7 @@ const PROJECTS: Project[] = [
     tech: ['Next.js', 'React', 'Tailwind CSS', 'TypeScript'],
     url: 'https://github.com/denesbeck/arcade-lab',
     status: 'active',
-    relatedBlogPostIds: [20],
+    relatedBlogPostIds: [20, 28],
   },
   {
     title: 'Dotfiles',

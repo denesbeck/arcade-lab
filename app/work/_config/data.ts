@@ -40,110 +40,6 @@ export type Project = {
 
 const PROJECTS: Project[] = [
   {
-    title: 'Dev Platform',
-    subtitle: 'Self-Hosted Internal Developer Platform',
-    highlights: [
-      'Designing a portfolio-grade Internal Developer Platform on AWS with end-to-end IaC — from VPC to running apps in a single repository',
-      'Running vanilla Kubernetes on Talos Linux with Cilium networking, spot instance self-healing, and GitOps via Argo CD',
-    ],
-    tech: [
-      { name: 'AWS', icon: FaAws },
-      { name: 'Terraform', icon: SiTerraform },
-      { name: 'Kubernetes', icon: SiKubernetes },
-      { name: 'Talos', icon: SiTalos },
-      { name: 'Cilium', icon: SiCilium },
-      { name: 'Helm', icon: SiHelm },
-    ],
-    url: 'https://github.com/denesbeck/dev-platform',
-    status: 'active',
-    priority: 'critical',
-    blogPosts: [26],
-  },
-  {
-    title: 'Nexio',
-    subtitle: 'Version Control System',
-    highlights: [
-      'Implemented a Git-inspired version control system written in Go, exploring core concepts such as commits, snapshots, and repository state management',
-      'Designed CLI tooling and repository structure to manage file history and version tracking',
-    ],
-    tech: [{ name: 'Go', icon: FaGolang }],
-    url: 'https://github.com/denesbeck/nexio',
-    status: 'active',
-    priority: 'high',
-    blogPosts: [8, 9, 14, 17],
-  },
-  {
-    title: 'Home Lab',
-    subtitle: 'Infrastructure Automation',
-    highlights: [
-      'Automated provisioning of a single-node Ubuntu server with Ansible — Docker services behind NGINX reverse proxy with SSL, Tailscale VPN, and hardened SSH/firewall',
-      'Managed AWS infrastructure with Terraform for encrypted S3 backups and a fully automated Vaultwarden DR failover using CloudWatch, Lambda, and EC2 spot instances',
-      'Built a Prometheus, Grafana, and Loki monitoring stack with alerting to Discord for host metrics, container health, and power outage detection',
-    ],
-    tech: [
-      { name: 'Ansible', icon: SiAnsible },
-      { name: 'Terraform', icon: SiTerraform },
-      { name: 'AWS', icon: FaAws },
-      { name: 'Prometheus', icon: SiPrometheus },
-      { name: 'Grafana', icon: SiGrafana },
-      { name: 'Bash', icon: SiGnubash },
-    ],
-    url: 'https://github.com/denesbeck/home-lab-infra',
-    status: 'active',
-    priority: 'critical',
-    blogPosts: [4, 5, 6, 7, 15, 16, 18, 22, 23, 24, 27],
-  },
-  {
-    title: 'Tmux Worktree',
-    subtitle: 'Tmux Plugin',
-    highlights: [
-      'Built a tmux plugin for managing git worktrees via an interactive floating popup with fzf-based branch selection',
-      'Integrated an AI tool picker supporting Claude Code, Gemini CLI, Aider, Codex CLI, OpenCode, or a plain shell when opening a worktree',
-    ],
-    tech: [
-      { name: 'Bash', icon: SiGnubash },
-      { name: 'Tmux', icon: SiTmux },
-    ],
-    url: 'https://github.com/denesbeck/tmux-worktree',
-    status: 'active',
-    priority: 'medium',
-    blogPosts: [21],
-  },
-  {
-    title: 'Tmux Pane Controller',
-    subtitle: 'CLI Tool & Tmux Plugin',
-    highlights: [
-      'Built a CLI tool that defines and loads tmux pane layouts from YAML config files with recursive split tree application',
-      'Developed a companion tmux plugin that captures running pane layouts by reverse-engineering split geometry from pane rectangles',
-    ],
-    tech: [
-      { name: 'Bash', icon: SiGnubash },
-      { name: 'Tmux', icon: SiTmux },
-    ],
-    url: 'https://github.com/denesbeck/tmux-pane-controller',
-    status: 'active',
-    priority: 'medium',
-    blogPosts: [25],
-  },
-  {
-    title: 'Serverless Deploy',
-    subtitle: 'Deployment Automation',
-    highlights: [
-      'Developed automation scripts and GitHub Actions workflows to deploy AWS Lambda functions',
-      'Implemented CI/CD pipeline for serverless infrastructure using shell scripting and Infrastructure-as-Code practices',
-    ],
-    tech: [
-      { name: 'GitHub Actions', icon: SiGithubactions },
-      { name: 'Bash', icon: SiGnubash },
-      { name: 'Terraform', icon: SiTerraform },
-      { name: 'AWS', icon: FaAws },
-    ],
-    url: 'https://github.com/denesbeck/lambda-functions',
-    status: 'active',
-    priority: 'low',
-    blogPosts: [3, 19],
-  },
-  {
     title: 'Arcade Lab',
     subtitle: 'Developer Portfolio',
     highlights: [
@@ -168,7 +64,61 @@ const PROJECTS: Project[] = [
     url: 'https://github.com/denesbeck/arcade-lab',
     status: 'active',
     priority: 'critical',
-    blogPosts: [20],
+    blogPosts: [20, 28],
+  },
+  {
+    title: 'Dev Platform',
+    subtitle: 'Self-Hosted Internal Developer Platform',
+    highlights: [
+      'Designing a portfolio-grade Internal Developer Platform on AWS with end-to-end IaC — from VPC to running apps in a single repository',
+      'Running vanilla Kubernetes on Talos Linux with Cilium networking, spot instance self-healing, and GitOps via Argo CD',
+    ],
+    tech: [
+      { name: 'AWS', icon: FaAws },
+      { name: 'Terraform', icon: SiTerraform },
+      { name: 'Kubernetes', icon: SiKubernetes },
+      { name: 'Talos', icon: SiTalos },
+      { name: 'Cilium', icon: SiCilium },
+      { name: 'Helm', icon: SiHelm },
+    ],
+    url: 'https://github.com/denesbeck/dev-platform',
+    status: 'active',
+    priority: 'critical',
+    blogPosts: [26],
+  },
+  {
+    title: 'Home Lab',
+    subtitle: 'Infrastructure Automation',
+    highlights: [
+      'Automated provisioning of a single-node Ubuntu server with Ansible — Docker services behind NGINX reverse proxy with SSL, Tailscale VPN, and hardened SSH/firewall',
+      'Managed AWS infrastructure with Terraform for encrypted S3 backups and a fully automated Vaultwarden DR failover using CloudWatch, Lambda, and EC2 spot instances',
+      'Built a Prometheus, Grafana, and Loki monitoring stack with alerting to Discord for host metrics, container health, and power outage detection',
+    ],
+    tech: [
+      { name: 'Ansible', icon: SiAnsible },
+      { name: 'Terraform', icon: SiTerraform },
+      { name: 'AWS', icon: FaAws },
+      { name: 'Prometheus', icon: SiPrometheus },
+      { name: 'Grafana', icon: SiGrafana },
+      { name: 'Bash', icon: SiGnubash },
+    ],
+    url: 'https://github.com/denesbeck/home-lab-infra',
+    status: 'active',
+    priority: 'critical',
+    blogPosts: [4, 5, 6, 7, 15, 16, 18, 22, 23, 24, 27],
+  },
+  {
+    title: 'Nexio',
+    subtitle: 'Version Control System',
+    highlights: [
+      'Implemented a Git-inspired version control system written in Go, exploring core concepts such as commits, snapshots, and repository state management',
+      'Designed CLI tooling and repository structure to manage file history and version tracking',
+    ],
+    tech: [{ name: 'Go', icon: FaGolang }],
+    url: 'https://github.com/denesbeck/nexio',
+    status: 'active',
+    priority: 'high',
+    blogPosts: [8, 9, 14, 17],
   },
   {
     title: 'Dotfiles',
@@ -188,6 +138,38 @@ const PROJECTS: Project[] = [
     blogPosts: [],
   },
   {
+    title: 'Tmux Pane Controller',
+    subtitle: 'CLI Tool & Tmux Plugin',
+    highlights: [
+      'Built a CLI tool that defines and loads tmux pane layouts from YAML config files with recursive split tree application',
+      'Developed a companion tmux plugin that captures running pane layouts by reverse-engineering split geometry from pane rectangles',
+    ],
+    tech: [
+      { name: 'Bash', icon: SiGnubash },
+      { name: 'Tmux', icon: SiTmux },
+    ],
+    url: 'https://github.com/denesbeck/tmux-pane-controller',
+    status: 'active',
+    priority: 'medium',
+    blogPosts: [25],
+  },
+  {
+    title: 'Tmux Worktree',
+    subtitle: 'Tmux Plugin',
+    highlights: [
+      'Built a tmux plugin for managing git worktrees via an interactive floating popup with fzf-based branch selection',
+      'Integrated an AI tool picker supporting Claude Code, Gemini CLI, Aider, Codex CLI, OpenCode, or a plain shell when opening a worktree',
+    ],
+    tech: [
+      { name: 'Bash', icon: SiGnubash },
+      { name: 'Tmux', icon: SiTmux },
+    ],
+    url: 'https://github.com/denesbeck/tmux-worktree',
+    status: 'active',
+    priority: 'medium',
+    blogPosts: [21],
+  },
+  {
     title: 'Auth Service',
     subtitle: 'OAuth 2.1 Authorization Server',
     highlights: [
@@ -204,7 +186,6 @@ const PROJECTS: Project[] = [
     priority: 'low',
     blogPosts: [],
   },
-
   {
     title: 'Lost in Dusk',
     subtitle: 'Developer Portfolio',
@@ -227,6 +208,47 @@ const PROJECTS: Project[] = [
     priority: 'low',
     blogPosts: [],
   },
+  {
+    title: 'Serverless Deploy',
+    subtitle: 'Deployment Automation',
+    highlights: [
+      'Developed automation scripts and GitHub Actions workflows to deploy AWS Lambda functions',
+      'Implemented CI/CD pipeline for serverless infrastructure using shell scripting and Infrastructure-as-Code practices',
+    ],
+    tech: [
+      { name: 'GitHub Actions', icon: SiGithubactions },
+      { name: 'Bash', icon: SiGnubash },
+      { name: 'Terraform', icon: SiTerraform },
+      { name: 'AWS', icon: FaAws },
+    ],
+    url: 'https://github.com/denesbeck/lambda-functions',
+    status: 'archived',
+    priority: 'low',
+    blogPosts: [3, 19],
+  },
 ]
 
-export default PROJECTS
+// Ordering: active before archived, then by priority (critical → low),
+// then alphabetically by title. Keeps the work page sorted automatically
+// regardless of the order entries are declared above.
+const STATUS_ORDER: Record<Project['status'], number> = {
+  active: 0,
+  archived: 1,
+}
+
+const PRIORITY_ORDER: Record<Priority, number> = {
+  critical: 0,
+  high: 1,
+  medium: 2,
+  low: 3,
+}
+
+const sortProjects = (projects: Project[]): Project[] =>
+  [...projects].sort(
+    (a, b) =>
+      STATUS_ORDER[a.status] - STATUS_ORDER[b.status] ||
+      PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority] ||
+      a.title.localeCompare(b.title)
+  )
+
+export default sortProjects(PROJECTS)
