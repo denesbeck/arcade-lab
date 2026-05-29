@@ -1,3 +1,6 @@
+import arcadeLab from '@/../public/blog/covers/arcade_lab.png'
+import arcadeLabSm from '@/../public/blog/covers/arcade_lab_sm.png'
+import arcadeLabX from '@/../public/blog/covers/arcade_lab_x.png'
 import blobStorageOptimization from '@/../public/blog/covers/blob_storage_optimization.png'
 import blobStorageOptimizationSm from '@/../public/blog/covers/blob_storage_optimization_sm.png'
 import blobStorageOptimizationX from '@/../public/blog/covers/blob_storage_optimization_x.png'
@@ -37,7 +40,6 @@ import tektonCicdX from '@/../public/blog/covers/tekton_cicd_x.png'
 import tmuxWorktree from '@/../public/blog/covers/tmux_worktree.png'
 import tmuxWorktreeSm from '@/../public/blog/covers/tmux_worktree_sm.png'
 import tmuxWorktreeX from '@/../public/blog/covers/tmux_worktree_x.png'
-import arcadeLab from '@/../public/logo/arcade_lab_logo.png'
 import { BlogEntry } from '../_interfaces/blog'
 
 const BLOG_ENTRIES: BlogEntry[] = [
@@ -66,12 +68,12 @@ const BLOG_ENTRIES: BlogEntry[] = [
     ],
     content: 'consolidating-lambda-infrastructure',
     cover: {
-      image: lambdaDeploySm,
-      original: lambdaDeploy,
-      xImage: lambdaDeployX,
-      alt: 'lambda_deploy',
-      ogImage: '/blog/covers/lambda_deploy.png',
-      ogImageX: '/blog/covers/lambda_deploy_x.png',
+      image: arcadeLabSm,
+      original: arcadeLab,
+      xImage: arcadeLabX,
+      alt: 'arcade_lab',
+      ogImage: '/blog/covers/arcade_lab.png',
+      ogImageX: '/blog/covers/arcade_lab_x.png',
     },
   },
   {
@@ -287,12 +289,12 @@ const BLOG_ENTRIES: BlogEntry[] = [
     ],
     content: 'mcp-server-and-chat-widget',
     cover: {
-      image: arcadeLab,
+      image: arcadeLabSm,
       original: arcadeLab,
-      xImage: arcadeLab,
+      xImage: arcadeLabX,
       alt: 'arcade_lab',
-      ogImage: '/logo/arcade_lab_logo.png',
-      ogImageX: '/logo/arcade_lab_logo.png',
+      ogImage: '/blog/covers/arcade_lab.png',
+      ogImageX: '/blog/covers/arcade_lab_x.png',
     },
   },
   {
