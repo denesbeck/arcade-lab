@@ -8,6 +8,31 @@ import type { BlogPost, BlogPostMeta } from '../types'
  */
 const BLOG_ENTRIES: BlogPostMeta[] = [
   {
+    id: 28,
+    title: 'Consolidating Lambda Infrastructure',
+    description:
+      'Bringing the contact Lambda, layers, and Terraform into one repo with end-to-end OIDC',
+    date: '2026-05-28',
+    hidden: false,
+    tags: [
+      'aws',
+      'terraform',
+      'hcp-terraform',
+      'lambda',
+      'iam',
+      'oidc',
+      'cloudflare',
+      'vercel',
+      'ses',
+      'ssm',
+      's3',
+      'github-actions',
+      'next.js',
+      'devops',
+    ],
+    slug: 'consolidating-lambda-infrastructure',
+  },
+  {
     id: 27,
     title: 'Home Lab: Vaultwarden & Disaster Recovery',
     description:

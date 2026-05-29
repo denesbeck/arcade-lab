@@ -25,6 +25,7 @@ import {
   SiKubernetes,
   SiLua,
   SiPrometheus,
+  SiTalos,
   SiTerraform,
   SiTypescript,
 } from 'react-icons/si'
@@ -87,6 +88,7 @@ export const SKILLS = [
   { name: 'AWS', icon: FaAws },
   { name: 'Terraform', icon: SiTerraform },
   { name: 'Kubernetes', icon: SiKubernetes },
+  { name: 'Talos', icon: SiTalos },
   { name: 'Docker', icon: SiDocker },
   { name: 'Helm', icon: SiHelm },
   { name: 'Ansible', icon: SiAnsible },

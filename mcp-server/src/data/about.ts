@@ -15,6 +15,7 @@ export function getPersonalInfo(): PersonalInfo {
       'AWS',
       'Terraform',
       'Kubernetes',
+      'Talos',
       'Docker',
       'Helm',
       'Ansible',
