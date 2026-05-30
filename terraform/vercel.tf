@@ -1,8 +1,3 @@
-import {
-  to = vercel_project.arcade_lab
-  id = var.vercel_project_id
-}
-
 resource "vercel_project" "arcade_lab" {
   name      = "arcade-lab"
   framework = "nextjs"
