@@ -25,7 +25,7 @@ const PROJECTS: Project[] = [
     ],
     url: 'https://github.com/denesbeck/dev-platform',
     status: 'active',
-    relatedBlogPostIds: [26],
+    relatedBlogPostIds: [26, 29],
   },
   {
     title: 'Nexio',

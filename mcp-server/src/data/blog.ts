@@ -8,6 +8,32 @@ import type { BlogPost, BlogPostMeta } from '../types'
  */
 const BLOG_ENTRIES: BlogPostMeta[] = [
   {
+    id: 29,
+    title: 'Dev Platform: Guardrails, then Trading Flannel for eBPF',
+    description:
+      'Milestones 0 and 1: SOPS-encrypted secrets, CI gates, and swapping the CNI for Cilium on Talos',
+    date: '2026-05-31',
+    hidden: false,
+    tags: [
+      'dev-platform',
+      'kubernetes',
+      'cilium',
+      'ebpf',
+      'talos',
+      'sops',
+      'age',
+      'github-actions',
+      'kubeconform',
+      'kyverno',
+      'helm',
+      'terraform',
+      'gitops',
+      'devops',
+      'self-hosted',
+    ],
+    slug: 'self-hosted-developer-platform-on-k8s-p2',
+  },
+  {
     id: 28,
     title: 'Consolidating Lambda Infrastructure',
     description:

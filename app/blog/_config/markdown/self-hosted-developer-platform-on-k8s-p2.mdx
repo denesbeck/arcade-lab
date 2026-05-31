@@ -1,0 +1,219 @@
+# 🔌 Dev Platform: Guardrails, then Trading Flannel for eBPF
+
+_Milestones 0 and 1: SOPS-encrypted secrets, CI gates that run before the cluster, and swapping the CNI for Cilium on Talos_
+
+## 🎯 What I was trying to do
+
+[Part 1](/blog/26) ended with three nodes `Ready` and Flannel — Talos's default CNI — quietly doing its job. A working cluster, and nothing on it.
+
+The temptation at that point is to start deploying things. I didn't, because everything I'm about to build is GitOps: Argo CD reconciling the cluster from a repo. That only works if the repo can hold secrets safely and if bad manifests get stopped *before* they're merged. So before any workloads, two unglamorous milestones:
+
+- **M0** — secrets encryption (SOPS + age) and CI gates. No infrastructure changes.
+- **M1** — rip out Flannel, install Cilium, and turn off `kube-proxy`. The one milestone with a real fight in it.
+
+Part 1 was a debugging war story. This one is calmer — right up until the CNI swap hit a race condition that only exists because of how Talos boots.
+
+---
+
+## 🔐 M0 — secrets that can live in Git
+
+GitOps wants the repo to be the full source of truth, secrets included. But you can't commit a raw Cloudflare token to a repo. The two obvious escapes are both bad: keep secrets out of Git (and lose reproducibility), or encrypt the whole file (and lose the ability to review a diff — every one-character change looks like a full rewrite).
+
+**SOPS** splits the difference by encrypting *only the values*, leaving keys and structure in cleartext. Given:
+
+```yaml
+# cloudflare-secret.yaml (cleartext)
+stringData:
+  api-token: cf_abc123xyz_realsecret
+```
+
+`sops --encrypt` produces:
+
+```yaml
+# cloudflare-secret.enc.yaml (commit this)
+stringData:
+  api-token: ENC[AES256_GCM,data:abc...,tag:xyz...,type:str]
+sops:
+  age:
+    - recipient: age1xyz...
+  encrypted_regex: ^(data|stringData)$
+```
+
+The structure stays diff-friendly; only the secret is ciphertext. I picked **age** as the backend — one keypair, no cloud KMS dependency, none of the PGP web-of-trust pain. Public key goes in `.sops.yaml` (committed), private key lives at `~/.config/sops/age/keys.txt` (never committed). Recovery story is just: clone the repo, restore one key file from a password manager, done.
+
+### The macOS gotcha that cost me twenty minutes
+
+I generated the key, put it at `~/.config/sops/age/keys.txt`, and `sops --decrypt` failed with:
+
+```
+no identity matched any of the recipients
+```
+
+The key was *right there*. The recipient in the file matched the key I'd generated. Nothing made sense — until I read how SOPS finds the key. It uses Go's `os.UserConfigDir()`, and that resolves differently per OS:
+
+- Linux: `~/.config/sops/age/keys.txt`
+- macOS: `~/Library/Application Support/sops/age/keys.txt`
+
+Every tutorial is written for Linux, so the path everyone copies is wrong on a Mac. SOPS wasn't failing to decrypt — it was never finding the key to try. The portable fix, and the one I standardized on so this can't bite future-me on another machine:
+
+```sh
+echo 'export SOPS_AGE_KEY_FILE="$HOME/.config/sops/age/keys.txt"' >> ~/.zshrc
+```
+
+An explicit env var beats relying on a per-OS default convention. This is a recurring theme: a tool "can't find" something and the error names the symptom, not the cause.
+
+---
+
+## 🚦 M0 — CI gates that run before the cluster
+
+Three GitHub Actions workflows, all triggered on `pull_request` only (the gate runs *before* merge) and all path-filtered so a docs PR doesn't burn minutes.
+
+**`terraform.yml`** guards `terraform/**` with two parallel jobs:
+
+- `validate` — `terraform fmt -check`, `terraform init -backend=false`, `terraform validate`. Type-checks the config, catches attribute typos and undefined variable refs. Never contacts AWS.
+- `tfsec` — static scan for misconfigurations: public S3 buckets, `0.0.0.0/0` on port 22, `Action: "*"` IAM policies, unencrypted volumes.
+
+What's deliberately *not* there: `terraform plan`. A plan needs AWS credentials, which means either an OIDC-to-AWS dance in CI or long-lived secrets in GitHub. For a solo project that's over-engineering — I plan locally.
+
+**`helm-lint.yml`** guards `argocd/**`. It finds every `Chart.yaml`, runs `helm dependency build` + `helm lint`, then renders each chart with `helm template` and validates the output with `kubeconform -strict`.
+
+**`manifests.yml`** guards the raw `Application` YAMLs in `argocd/apps/**` and the `policies/**` tree, with `kubeconform` and a `kyverno test` job.
+
+### Two tools that sound the same and aren't: kubeconform vs Kyverno
+
+These both show up in M0 and again later in the security milestone, and it took me a beat to articulate the difference cleanly:
+
+| | kubeconform | Kyverno |
+|---|---|---|
+| Question | "Is this valid Kubernetes?" | "Is this allowed by *our* rules on top of Kubernetes?" |
+| Runs | In CI, on the PR | In CI (`kyverno test`) **and** live in the cluster as an admission webhook |
+| Catches | Wrong API versions, typo'd fields, wrong types | Privileged pods, `:latest` tags, missing resource limits |
+
+`kubeconform` validates structure against the K8s OpenAPI schemas — it'll reject `apps/v1beta1` (removed in 1.16) or silently-ignored typos like `spec.replicaz`. The `-strict` flag is non-negotiable in CI: without it, a misspelled field is accepted exactly the way the real API would accept-and-ignore it, and you'd debug "why isn't it scaling" for an hour. With `-strict`, the typo fails the PR.
+
+One subtlety I baked in on purpose: the Helm-rendered `kubeconform` job ends with `|| true`. Operators I install later define CRDs (`Application`, `ClusterPolicy`, `Certificate`) that aren't in the default schema set, and I don't want the whole run to fail on a schema it's never heard of. The tightening — passing `-schema-location` URLs for known CRDs — comes when those CRDs actually land. The raw-manifest job in `manifests.yml` has *no* `|| true`, because those files are fully under my control.
+
+Kyverno is the other half: a policy engine that registers as an admission webhook and gets to allow / mutate / reject every write to the API server. Pure-YAML policies (no Rego to learn), and its `kyverno test` CLI lets CI catch policy *regressions* before merge. There are no policies yet, so that job gracefully no-ops today — the scaffold is there for when it matters.
+
+---
+
+## 🧠 M1 — why Flannel had to go
+
+Now the interesting milestone. To understand what swapping the CNI buys you, you have to go down to the kernel.
+
+Every Kubernetes networking decision ends up as kernel configuration: routing tables, network namespaces, and — classically — **iptables** rules. A `Service` is a stable virtual IP that load-balances across pods, and the thing that makes that virtual IP route to a real pod is `kube-proxy`. It watches the API for Services and Endpoints and, on every change, writes the corresponding iptables NAT rules into the kernel on its node.
+
+The problem is the data structure. iptables is a **linear rule list** — service lookup is `O(n)`. Each Service × each endpoint is several rules; a cluster with 1,000 Services produces tens of thousands of rules, and every packet to a ClusterIP walks that list top-to-bottom. Updates rewrite the whole table. At scale it's a measurable per-packet tax and seconds of sync lag.
+
+**eBPF** changes the shape of the problem. It's a sandboxed VM *inside* the Linux kernel: you compile a small, restricted C program to bytecode, the kernel mathematically verifies it can't crash or loop forever, and then attaches it to a hook — at a NIC, a syscall, a kernel function. **Cilium** is a CNI built on eBPF from the ground up. When it replaces `kube-proxy`, Service routing becomes an `O(1)` hash-table lookup in an eBPF program attached at the same kernel hooks iptables used — no thousands of NAT rules, no separate proxy daemon.
+
+In M1 that's two switches: `proxy.disabled = true` in the Talos machine config, and `kubeProxyReplacement = true` in the Cilium Helm values.
+
+### Is eBPF actually "faster"? Honestly, not for me — yet
+
+Worth being straight about this, because the marketing oversells it for a 3-node homelab. The kernel isn't inherently faster than userspace — same instructions, same cores. And classic iptables-mode `kube-proxy` already runs *in* the kernel on the packet path; it doesn't bounce to userspace per packet. So "kernel vs userspace" isn't the real story for routing.
+
+The genuine wins are: (1) a **better algorithm** — hash lookup vs linear walk, which only bites at hundreds of nodes and thousands of Services; (2) **avoiding the syscall boundary for observation** — Hubble emits flow data via shared-memory eBPF maps instead of a syscall per packet, which is genuinely orders of magnitude cheaper when you're watching *every* flow; and (3) **attaching deeper than userspace can reach** (XDP at the NIC driver, dropping floods before a packet struct even exists).
+
+For my cluster, Cilium isn't measurably faster than Flannel + kube-proxy. What M1 actually buys me is **operational simplification** (one tool instead of Flannel + kube-proxy + a bolt-on observability layer), **capability** (enforced NetworkPolicies, L7 awareness, and Hubble's live flow graph — things Flannel structurally cannot do at any speed), and **a correct foundation** so the bottleneck isn't sitting there waiting if I ever scale. It's the right choice for the future, not a speed win today. I'd rather say that plainly than pretend otherwise.
+
+---
+
+## 🐝 M1 — installing Cilium on Talos (where it gets Talos-specific)
+
+Talos is not generic Linux, and Cilium's defaults assume generic Linux. Three overrides in `terraform/05-cilium.tf` carry all the platform knowledge.
+
+**The cgroup mount.** Modern Cilium attaches an eBPF program to the cgroup v2 socket hook — that's how it does kube-proxy replacement *above* packet level, rewriting the connection as the app calls `connect()`. For that it needs the cgroup v2 hierarchy mounted somewhere it can see, and by default Cilium tries to mount cgroup2 *itself* inside its container. On Talos, cgroup2 is already mounted on the host at `/sys/fs/cgroup` and Talos won't let Cilium re-mount it. So:
+
+```yaml
+cgroup:
+  autoMount:
+    enabled: false          # don't try to mount it yourself
+  hostRoot: /sys/fs/cgroup  # the host already mounted it here
+```
+
+Without these, the cgroup hook fails to attach and kube-proxy replacement silently breaks.
+
+**The chicken-and-egg.** Here's the one I find genuinely elegant. A CNI gives pods their networking — but `cilium-agent` is itself a pod that needs to reach the kube-apiserver to learn about Services. With Flannel gone and Cilium not yet up, there's *no working pod network*. How does the agent talk to the API before it has installed the thing that makes pod networking work?
+
+Talos answers it: it runs a localhost API proxy on each node at `:7445`. So:
+
+```yaml
+k8sServiceHost: localhost
+k8sServicePort: "7445"
+```
+
+`cilium-agent` reaches the API through the node's own loopback — no CNI required, no bootstrap deadlock.
+
+The full `helm_release` is otherwise unremarkable: `ipam.mode = kubernetes` (pod CIDRs come from the node spec), Hubble relay + UI on, and the eBPF security-context capabilities Talos requires. The Kubernetes/Helm Terraform providers are pointed at the master EIP with the cluster client config — same EIP-vs-private-IP lesson from Part 1.
+
+---
+
+## ⏱️ The race condition — a health check that lies green
+
+First `terraform apply` of the Cilium release, and Helm fell over:
+
+```
+Error: ... dial tcp <EIP>:6443: connect: connection refused
+```
+
+The cluster was up. So why was the connection refused? The dependency chain looked right: the Helm release `depends_on` the Talos health check, which only passes when the cluster is healthy. Except — the health check has an asterisk.
+
+`data.talos_cluster_health` is configured with `skip_kubernetes_checks = true`. I'd set that in Part 1 for a good reason: its Kubernetes probe targets the master's *private* cluster endpoint, which my laptop running Terraform can't reach. So the data source returns OK as soon as the *Talos-level* services (etcd, apid, kubelet) are healthy. But at that exact moment the kube-apiserver static pod is still spinning up. The health check goes green, Helm immediately tries to connect, and the apiserver isn't serving HTTPS yet. `connection refused`.
+
+The fix is an explicit gate that polls the apiserver through the EIP before Helm is allowed to connect:
+
+```hcl
+resource "null_resource" "wait_for_apiserver" {
+  depends_on = [talos_cluster_kubeconfig.this, data.talos_cluster_health.this]
+
+  provisioner "local-exec" {
+    interpreter = ["/bin/sh", "-c"]
+    command     = <<-EOT
+      for i in $(seq 1 60); do
+        code=$(curl -ks -o /dev/null -w '%%{http_code}' --max-time 5 \
+          https://${aws_eip.master.public_ip}:6443/livez || echo 000)
+        if [ "$code" = "200" ] || [ "$code" = "401" ]; then
+          echo "kube-apiserver responding (HTTP $code) after $i attempts"
+          exit 0
+        fi
+        sleep 5
+      done
+      exit 1
+    EOT
+  }
+}
+```
+
+The detail I almost got wrong: **401 counts as "up."** The apiserver runs with `--anonymous-auth=false`, so an unauthenticated probe of `/livez` returns 401 — and a 401 only comes back *after* a successful TLS handshake against a live API server. That's exactly the condition I need before any client connects. If I'd only accepted 200, the gate would have waited forever. Now `helm_release.cilium` depends on this resource, and the race is gone.
+
+### Verify
+
+```sh
+kubectl get nodes                                   # all Ready
+kubectl -n kube-system get pods -l k8s-app=cilium   # DaemonSet, one per node
+kubectl -n kube-system get pods | grep -i proxy     # empty — kube-proxy is gone
+kubectl -n kube-system get deploy hubble-ui hubble-relay
+```
+
+`kube-proxy` absent, Cilium running on every node, Hubble up. M1 done.
+
+---
+
+## 📝 What I'll remember
+
+**Tools "can't find" things constantly, and the error always names the symptom.** SOPS's "no identity matched any of the recipients" wasn't a decryption failure — it never located the key, because of a per-OS default path. The cure for a category of these is to stop relying on implicit conventions and set the thing explicitly (`SOPS_AGE_KEY_FILE`).
+
+**A green check is only as honest as what it actually probes.** `talos_cluster_health` passed while the apiserver was still starting, because I'd told it to skip the one check that would've caught it — for a legitimate reason. The lesson isn't "don't skip checks," it's "know precisely what each check covers, and add an explicit gate for the gap." The 200-*or*-401 detail is the whole game: I had to understand *why* a healthy-but-locked-down apiserver returns 401 to write a correct probe.
+
+**The best infra config is mostly platform knowledge.** The entire Cilium-on-Talos story is three Helm overrides — cgroup mount, kube-proxy replacement, and the `localhost:7445` API proxy. None are tunables you'd find by trial and error; each encodes one fact about how Talos differs from generic Linux. That's the part worth writing down.
+
+**Say the honest version of the "fast" story.** eBPF is genuinely faster at scale and for deep observability. On three nodes it isn't, and the real wins are operational and architectural. Being able to state that precisely is more convincing than repeating the benchmark slide.
+
+---
+
+## 💭 Where this leaves me
+
+Two milestones that produce nothing a user can see: encrypted secrets, CI gates, and a CNI swap that — if I did it right — behaves exactly like the CNI it replaced, minus a `kube-proxy` DaemonSet. That's the nature of platform work. The payoff is that everything after this gets to assume a safe repo, a pre-merge safety net, and a network layer that can enforce policy and show me every flow.
+
+Next up is the part where it stops being plumbing: IRSA so pods can assume IAM roles without static keys, then Argo CD as the seed that takes over and reconciles the rest of the platform from Git. That's M2 and M3 — and where the App-of-Apps tree starts paying for the scaffolding I just built.
