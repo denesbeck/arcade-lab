@@ -12,19 +12,11 @@ interface BlogCardProps {
   title: string
   description: string
   date: string
-  tags: string[]
   content: string
   cover: { image: StaticImageData; alt: string }
 }
 
-const BlogCard = ({
-  id,
-  title,
-  description,
-  date,
-  tags,
-  cover,
-}: BlogCardProps) => {
+const BlogCard = ({ id, title, description, date, cover }: BlogCardProps) => {
   const searchParams = useSearchParams()
   const [loading, setLoading] = useState(false)
 
@@ -39,7 +31,7 @@ const BlogCard = ({
   return (
     <Link
       href={`/blog/${id}?${searchParams.toString()}`}
-      className="flex overflow-hidden relative border-b-2 transition-all duration-200 ease-in-out cursor-pointer sm:border-b-0 sm:ring-2 last:border-b-0 ring-offset-root border-secondary ring-secondary group animate-text-focus max-h-[11rem] min-h-[11rem] sm:hover:ring-primary sm:active:ring-active sm:hover:ring-offset-4"
+      className="flex overflow-hidden relative max-h-44 border-b-2 transition-all duration-200 ease-in-out cursor-pointer sm:border-b-0 sm:ring-2 last:border-b-0 backdrop-blur-md ring-offset-root border-secondary ring-secondary group animate-text-focus min-h-44 sm:hover:ring-primary sm:active:ring-active sm:hover:ring-offset-4"
     >
       {loading && (
         <ThemeProvider theme={darkTheme}>

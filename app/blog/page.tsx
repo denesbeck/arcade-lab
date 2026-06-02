@@ -1,5 +1,5 @@
 import { Metadata } from 'next'
-import { Heading1, Info, PageHeader } from '@/_components'
+import { PageHeader } from '@/_components'
 import { BlogCard, FilterTags, NoRecords } from './_components'
 import blogEntries from './_config/data'
 import { isPublished } from './_utils/isPublished'
@@ -82,7 +82,7 @@ const Blog = async ({
         {entries.length === 0 ? (
           <NoRecords message="No results based on your tag selection." />
         ) : (
-          <div className="grid justify-center mr-6 w-full sm:gap-6 sm:px-10 sm:[grid-template-columns:repeat(auto-fit,minmax(33rem,0))]">
+          <div className="grid justify-center w-full sm:gap-6 sm:px-10 sm:grid-cols-[repeat(auto-fit,minmax(33rem,0))]">
             {entries.filter(isPublished).map((entry) => (
               <BlogCard
                 key={entry.id}
@@ -90,7 +90,6 @@ const Blog = async ({
                 title={entry.title}
                 description={entry.description}
                 date={entry.date}
-                tags={entry.tags}
                 content={entry.content}
                 cover={entry.cover}
               />

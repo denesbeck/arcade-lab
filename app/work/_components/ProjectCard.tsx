@@ -32,7 +32,7 @@ const ProjectCard = ({
   const isLink = url.length > 0
 
   return (
-    <div className="flex relative flex-col gap-6 justify-between p-6 pt-10 border-b-2 transition-all duration-300 ease-in-out sm:p-8 sm:pt-10 sm:border-b-0 sm:ring-2 last:border-b-0 border-secondary group ring-secondary backdrop-blur-md animate-text-focus ring-offset-root sm:hover:ring-primary sm:hover:ring-offset-4">
+    <div className="flex relative flex-col gap-6 justify-between p-6 pt-10 bg-transparent border-b-2 transition-all duration-300 ease-in-out sm:p-8 sm:pt-10 sm:border-b-0 sm:ring-2 last:border-b-0 max-w-screen border-secondary group ring-secondary backdrop-blur-md animate-text-focus ring-offset-root sm:hover:ring-primary sm:hover:ring-offset-4">
       {/* status & priority indicators */}
       <div className="flex absolute top-4 right-4 gap-4 items-center">
         <div className="flex gap-1 items-center">

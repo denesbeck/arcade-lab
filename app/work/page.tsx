@@ -43,7 +43,7 @@ const Work = () => {
         description="A collection of tools and services I&apos;ve built and maintain."
       />
       <div className="flex justify-center py-4">
-        <div className="grid justify-center mr-6 w-full sm:gap-6 sm:px-10 sm:[grid-template-columns:repeat(auto-fit,minmax(415px,0))]">
+        <div className="grid justify-center w-full sm:gap-6 sm:px-10 sm:grid-cols-[repeat(auto-fit,minmax(415px,0))]">
           {PROJECTS.map((project) => (
             <ProjectCard key={project.title} {...project} />
           ))}
