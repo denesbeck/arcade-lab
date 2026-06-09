@@ -42,6 +42,9 @@ const Home = () => {
         <div className="mt-2 text-center animate-text-focus">
           I&apos;m a {INFO.Role}.
         </div>
+        <div className="mt-2 text-center animate-text-focus text-dark-200">
+          Full-Stack Applications · Backend Systems · Cloud-Native Systems
+        </div>
         <Suspense>
           <ContactButton label={'Contact me'} />
         </Suspense>
