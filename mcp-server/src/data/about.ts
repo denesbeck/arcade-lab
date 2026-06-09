@@ -9,8 +9,14 @@ export function getPersonalInfo(): PersonalInfo {
     name: 'Denes Beck',
     location: 'Budapest, Hungary',
     company: 'SEON',
-    role: 'Senior Full-Stack Software Engineer & Platform Engineer',
-    bio: `Full-stack engineer with ${new Date().getFullYear() - 2019} years of experience, now focused on platform engineering — designing and operating Kubernetes-based platforms from the ground up. My flagship project is Dev Platform (https://github.com/denesbeck/dev-platform) — a self-hosted Internal Developer Platform on AWS with end-to-end IaC via Terraform, Kubernetes on Talos Linux, Cilium networking, GitOps with Argo CD, and a full observability stack (Prometheus, Grafana, Loki, Tempo). I also maintain Nexio (https://github.com/denesbeck/nexio) — a Git-inspired version control system written in Go that taught me content-addressable storage, DAG-based history, and remote state sync — and an Ansible- and Terraform-driven Home Lab (https://github.com/denesbeck/home-lab-infra) running Docker, Nginx, Pi-hole, Prometheus, and Grafana on bare metal. I'm a huge Neovim and Tmux enthusiast — I build plugins (https://github.com/denesbeck/tmux-worktree) for my workflow and maintain my own dotfiles (https://github.com/denesbeck/dotfiles).`,
+    role: 'Senior Software Engineer',
+    bio: `Senior Software Engineer with ${new Date().getFullYear() - 2019} years of experience building full-stack applications, cloud-native systems, and developer tooling. My work spans frontend and backend development, cloud infrastructure, Kubernetes, CI/CD, and platform engineering, with a particular interest in developer experience, automation, and distributed systems.
+
+    My flagship project is Dev Platform (https://github.com/denesbeck/dev-platform), a self-hosted Internal Developer Platform on AWS featuring end-to-end Infrastructure as Code with Terraform, Kubernetes on Talos Linux, Cilium networking, GitOps workflows via Argo CD, and a complete observability stack built with Prometheus, Grafana, Loki, and Tempo.
+
+    I also maintain Nexio (https://github.com/denesbeck/nexio), a Git-inspired version control system written in Go, where I explored content-addressable storage, DAG-based history, and remote state synchronization. In addition, I operate a Home Lab environment (https://github.com/denesbeck/home-lab-infra) managed through Ansible and Terraform, running containerized services, monitoring, and infrastructure automation on bare metal.
+
+    Outside of work, I'm passionate about developer productivity and open-source tooling. I am a long-time Neovim and Tmux user, maintain my own development environment (https://github.com/denesbeck/dotfiles), and build tools (https://github.com/denesbeck/tmux-worktree) that improve my daily workflow.`,
     skills: [
       'AWS',
       'Terraform',

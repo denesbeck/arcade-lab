@@ -35,7 +35,7 @@ export const INFO = {
   Name: 'Denes Beck',
   Location: 'Budapest, Hungary',
   Company: 'SEON',
-  Role: 'Senior Full-Stack Software Engineer & Platform Engineer',
+  Role: 'Senior Software Engineer',
 }
 
 export const INFO_ICONS = {
@@ -112,10 +112,13 @@ export const SKILLS = [
 export const BIO = (
   <div className="text-text-dark">
     <p className="mb-8">
-      🚀 Full-stack engineer with{' '}
+      🚀 Senior Software Engineer with{' '}
       <Emphasize>{new Date().getFullYear() - 2019} years</Emphasize> of
-      experience, now focused on platform engineering — designing and operating
-      Kubernetes-based platforms from the ground up.
+      experience building full-stack applications, cloud-native systems, and
+      developer tooling. My work spans frontend and backend development, cloud
+      infrastructure, Kubernetes, CI/CD, and platform engineering, with a
+      particular interest in developer experience, automation, and distributed
+      systems.
     </p>
     <p className="mb-8">
       🏗️ My flagship project is{' '}
@@ -125,10 +128,11 @@ export const BIO = (
         href="https://github.com/denesbeck/dev-platform"
       >
         Dev Platform
-      </a>{' '}
-      — a self-hosted Internal Developer Platform on AWS with end-to-end IaC via
-      Terraform, Kubernetes on Talos Linux, Cilium networking, GitOps with Argo
-      CD, and a full observability stack (Prometheus, Grafana, Loki, Tempo).
+      </a>
+      , a self-hosted Internal Developer Platform on AWS featuring end-to-end
+      Infrastructure as Code with Terraform, Kubernetes on Talos Linux, Cilium
+      networking, GitOps workflows via Argo CD, and a complete observability
+      stack built with Prometheus, Grafana, Loki, and Tempo.
     </p>
     <p className="mb-8">
       💼 I also maintain{' '}
@@ -138,10 +142,10 @@ export const BIO = (
         href="https://github.com/denesbeck/nexio"
       >
         Nexio
-      </a>{' '}
-      — a Git-inspired version control system written in Go that taught me
-      content-addressable storage, DAG-based history, and remote state sync —
-      and an Ansible- and Terraform-driven{' '}
+      </a>
+      , a Git-inspired version control system written in Go, where I explored
+      content-addressable storage, DAG-based history, and remote state
+      synchronization. In addition, I operate a{' '}
       <a
         target="_blank"
         className="underline text-active underline-offset-4"
@@ -149,27 +153,29 @@ export const BIO = (
       >
         Home Lab
       </a>{' '}
-      running Docker, Nginx, Pi-hole, Prometheus, and Grafana on bare metal.
+      environment managed through Ansible and Terraform, running containerized
+      services, monitoring, and infrastructure automation on bare metal.
     </p>
     <p className="mb-8">
-      🛠️ I&apos;m a huge <Emphasize>Neovim</Emphasize> and{' '}
-      <Emphasize>Tmux</Emphasize> enthusiast — I build{' '}
-      <a
-        target="_blank"
-        className="underline text-active underline-offset-4"
-        href="https://github.com/denesbeck/tmux-worktree"
-      >
-        plugins
-      </a>{' '}
-      for my workflow and maintain my own{' '}
+      🛠️ Outside of work, I&apos;m passionate about developer productivity and
+      open-source tooling. I am a long-time <Emphasize>Neovim</Emphasize> and{' '}
+      <Emphasize>Tmux</Emphasize> user, maintain my own{' '}
       <a
         target="_blank"
         className="underline text-active underline-offset-4"
         href="https://github.com/denesbeck/dotfiles"
       >
-        dotfiles
+        development environment
       </a>
-      .
+      , and build{' '}
+      <a
+        target="_blank"
+        className="underline text-active underline-offset-4"
+        href="https://github.com/denesbeck/tmux-worktree"
+      >
+        tools
+      </a>{' '}
+      that improve my daily workflow.
     </p>
     <p>
       📁 Check out{' '}
