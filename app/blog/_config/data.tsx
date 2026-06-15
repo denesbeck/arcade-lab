@@ -44,6 +44,40 @@ import { BlogEntry } from '../_interfaces/blog'
 
 const BLOG_ENTRIES: BlogEntry[] = [
   {
+    id: 30,
+    title: 'Home Lab: An AI Agent That Triages My Alerts',
+    description:
+      'Letting Claude investigate firing alerts and post the root-cause hypothesis to Discord',
+    date: '2026-06-14',
+    hidden: false,
+    tags: [
+      'home-lab',
+      'self-hosted',
+      'ai',
+      'claude',
+      'mcp',
+      'observability',
+      'prometheus',
+      'loki',
+      'alertmanager',
+      'grafana',
+      'docker',
+      'fastapi',
+      'python',
+      'sre',
+      'devops',
+    ],
+    content: 'building-my-home-server-p12',
+    cover: {
+      image: buildHomeServerSm,
+      original: buildHomeServer,
+      xImage: buildHomeServerX,
+      alt: 'build_home_server',
+      ogImage: '/blog/covers/building_home_server.png',
+      ogImageX: '/blog/covers/building_home_server_x.png',
+    },
+  },
+  {
     id: 29,
     title: 'Dev Platform: Guardrails, then Trading Flannel for eBPF',
     description:
