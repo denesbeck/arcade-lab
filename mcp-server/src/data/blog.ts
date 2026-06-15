@@ -8,6 +8,32 @@ import type { BlogPost, BlogPostMeta } from '../types'
  */
 const BLOG_ENTRIES: BlogPostMeta[] = [
   {
+    id: 30,
+    title: 'Home Lab: An AI Agent That Triages My Alerts',
+    description:
+      'Letting Claude investigate firing alerts and post the root-cause hypothesis to Discord',
+    date: '2026-06-14',
+    hidden: false,
+    tags: [
+      'home-lab',
+      'self-hosted',
+      'ai',
+      'claude',
+      'mcp',
+      'observability',
+      'prometheus',
+      'loki',
+      'alertmanager',
+      'grafana',
+      'docker',
+      'fastapi',
+      'python',
+      'sre',
+      'devops',
+    ],
+    slug: 'building-my-home-server-p12',
+  },
+  {
     id: 29,
     title: 'Dev Platform: Guardrails, then Trading Flannel for eBPF',
     description:
