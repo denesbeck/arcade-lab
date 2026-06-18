@@ -10,36 +10,33 @@ export function getPersonalInfo(): PersonalInfo {
     location: 'Budapest, Hungary',
     company: 'SEON',
     role: 'Senior Software Engineer',
-    bio: `Senior Software Engineer with ${new Date().getFullYear() - 2019} years of experience building full-stack applications, cloud-native systems, and developer tooling. My work spans frontend and backend development, cloud infrastructure, Kubernetes, CI/CD, and platform engineering, with a particular interest in developer experience, automation, and distributed systems.
+    bio: `Senior Software Engineer with ${new Date().getFullYear() - 2019} years of experience building full-stack applications and developer tooling, with a strong interest in DevOps and automation that I sharpen through hands-on personal projects.
 
-    My flagship project is Dev Platform (https://github.com/denesbeck/dev-platform), a self-hosted Internal Developer Platform on AWS featuring end-to-end Infrastructure as Code with Terraform, Kubernetes on Talos Linux, Cilium networking, GitOps workflows via Argo CD, and a complete observability stack built with Prometheus, Grafana, Loki, and Tempo.
+    My flagship project is Nexio (https://github.com/denesbeck/nexio), a Git-inspired version control system in Go. Alongside it I run my Home Lab (https://github.com/denesbeck/home-lab-infra) — a bare-metal setup managed with Ansible and Terraform.
 
-    I also maintain Nexio (https://github.com/denesbeck/nexio), a Git-inspired version control system written in Go, where I explored content-addressable storage, DAG-based history, and remote state synchronization. In addition, I operate a Home Lab environment (https://github.com/denesbeck/home-lab-infra) managed through Ansible and Terraform, running containerized services, monitoring, and infrastructure automation on bare metal.
+    More recently I started Dev Platform (https://github.com/denesbeck/dev-platform), a self-hosted Internal Developer Platform where I'm going deeper on Kubernetes, IaC, GitOps, and observability.
 
-    Outside of work, I'm passionate about developer productivity and open-source tooling. I am a long-time Neovim and Tmux user, maintain my own development environment (https://github.com/denesbeck/dotfiles), and build tools (https://github.com/denesbeck/tmux-worktree) that improve my daily workflow.`,
+    Outside of work, I'm a long-time Neovim and Tmux user who maintains a personal development environment (https://github.com/denesbeck/dotfiles) and builds tools (https://github.com/denesbeck/tmux-worktree) to improve my daily workflow.`,
     skills: [
+      'TypeScript',
+      'Node.js',
+      'React',
+      'Next.js',
+      'Tailwind CSS',
+      'Golang',
+      'Bash',
+      'Lua',
       'AWS',
-      'Terraform',
-      'Kubernetes',
-      'Talos',
       'Docker',
-      'Helm',
+      'Kubernetes',
+      'Terraform',
       'Ansible',
-      'Linux',
       'GitHub Actions',
       'Argo CD',
+      'Linux',
       'Prometheus',
       'Grafana',
       'Loki',
-      'Elastic',
-      'Golang',
-      'TypeScript',
-      'Bash',
-      'Node.js',
-      'Lua',
-      'Next.js',
-      'React',
-      'Tailwind CSS',
     ],
     certificates: [
       {

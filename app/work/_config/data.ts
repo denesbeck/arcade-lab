@@ -106,7 +106,7 @@ const PROJECTS: Project[] = [
     ],
     url: 'https://github.com/denesbeck/dev-platform',
     status: 'active',
-    priority: 'critical',
+    priority: 'high',
     blogPosts: [26, 29],
   },
   {
@@ -176,13 +176,13 @@ const PROJECTS: Project[] = [
     title: 'Nexio',
     subtitle: 'Version Control System',
     highlights: [
-      'Implemented a Git-inspired version control system written in Go, exploring core concepts such as commits, snapshots, and repository state management',
-      'Designed CLI tooling and repository structure to manage file history and version tracking',
+      'Built a Git-inspired version control system in Go, implementing content-addressable storage, commit snapshots, and DAG-based history',
+      'Designed the CLI and repository internals for staging, committing, branching, and remote state synchronization',
     ],
     tech: [{ name: 'Golang', icon: FaGolang }],
     url: 'https://github.com/denesbeck/nexio',
     status: 'active',
-    priority: 'high',
+    priority: 'critical',
     blogPosts: [8, 9, 14, 17],
   },
   {

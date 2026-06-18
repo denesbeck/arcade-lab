@@ -17,15 +17,12 @@ import {
   SiAnsible,
   SiArgo,
   SiDocker,
-  SiElastic,
   SiGithubactions,
   SiGnubash,
   SiGrafana,
-  SiHelm,
   SiKubernetes,
   SiLua,
   SiPrometheus,
-  SiTalos,
   SiTerraform,
   SiTypescript,
 } from 'react-icons/si'
@@ -49,10 +46,6 @@ export const CONNECTIONS = [
   {
     url: 'https://github.com/denesbeck',
     icon: FaGithub,
-  },
-  {
-    url: 'https://www.linkedin.com/in/denesbeck',
-    icon: FaLinkedin,
   },
 ]
 
@@ -85,28 +78,29 @@ export const CERTIFICATES: Certificate[] = [
 ]
 
 export const SKILLS = [
+  // Full-stack
+  { name: 'TypeScript', icon: SiTypescript },
+  { name: 'Node.js', icon: FaNodeJs },
+  { name: 'React', icon: FaReact },
+  { name: 'Next.js', icon: RiNextjsFill },
+  { name: 'Tailwind CSS', icon: RiTailwindCssFill },
+  // Languages
+  { name: 'Golang', icon: FaGolang },
+  { name: 'Bash', icon: SiGnubash },
+  { name: 'Lua', icon: SiLua },
+  // DevOps & cloud
   { name: 'AWS', icon: FaAws },
-  { name: 'Terraform', icon: SiTerraform },
-  { name: 'Kubernetes', icon: SiKubernetes },
-  { name: 'Talos', icon: SiTalos },
   { name: 'Docker', icon: SiDocker },
-  { name: 'Helm', icon: SiHelm },
+  { name: 'Kubernetes', icon: SiKubernetes },
+  { name: 'Terraform', icon: SiTerraform },
   { name: 'Ansible', icon: SiAnsible },
-  { name: 'Linux', icon: FaLinux },
   { name: 'GitHub Actions', icon: SiGithubactions },
   { name: 'Argo CD', icon: SiArgo },
+  { name: 'Linux', icon: FaLinux },
+  // Observability
   { name: 'Prometheus', icon: SiPrometheus },
   { name: 'Grafana', icon: SiGrafana },
   { name: 'Loki', icon: LuLogs },
-  { name: 'Elastic', icon: SiElastic },
-  { name: 'Golang', icon: FaGolang },
-  { name: 'TypeScript', icon: SiTypescript },
-  { name: 'Bash', icon: SiGnubash },
-  { name: 'Node.js', icon: FaNodeJs },
-  { name: 'Lua', icon: SiLua },
-  { name: 'Next.js', icon: RiNextjsFill },
-  { name: 'React', icon: FaReact },
-  { name: 'Tailwind CSS', icon: RiTailwindCssFill },
 ]
 
 export const BIO = (
@@ -114,28 +108,12 @@ export const BIO = (
     <p className="mb-8">
       🚀 Senior Software Engineer with{' '}
       <Emphasize>{new Date().getFullYear() - 2019} years</Emphasize> of
-      experience building full-stack applications, cloud-native systems, and
-      developer tooling. My work spans frontend and backend development, cloud
-      infrastructure, Kubernetes, CI/CD, and platform engineering, with a
-      particular interest in developer experience, automation, and distributed
-      systems.
+      experience building <Emphasize>full-stack applications</Emphasize> and
+      developer tooling, with a strong interest in DevOps and automation that I
+      sharpen through hands-on personal projects.
     </p>
     <p className="mb-8">
       🏗️ My flagship project is{' '}
-      <a
-        target="_blank"
-        className="underline text-active underline-offset-4"
-        href="https://github.com/denesbeck/dev-platform"
-      >
-        Dev Platform
-      </a>
-      , a self-hosted Internal Developer Platform on AWS featuring end-to-end
-      Infrastructure as Code with Terraform, Kubernetes on Talos Linux, Cilium
-      networking, GitOps workflows via Argo CD, and a complete observability
-      stack built with Prometheus, Grafana, Loki, and Tempo.
-    </p>
-    <p className="mb-8">
-      💼 I also maintain{' '}
       <a
         target="_blank"
         className="underline text-active underline-offset-4"
@@ -143,9 +121,7 @@ export const BIO = (
       >
         Nexio
       </a>
-      , a Git-inspired version control system written in Go, where I explored
-      content-addressable storage, DAG-based history, and remote state
-      synchronization. In addition, I operate a{' '}
+      , a Git-inspired version control system in Go. Alongside it I run my{' '}
       <a
         target="_blank"
         className="underline text-active underline-offset-4"
@@ -153,21 +129,31 @@ export const BIO = (
       >
         Home Lab
       </a>{' '}
-      environment managed through Ansible and Terraform, running containerized
-      services, monitoring, and infrastructure automation on bare metal.
+      — a bare-metal setup managed with Ansible and Terraform.
     </p>
     <p className="mb-8">
-      🛠️ Outside of work, I&apos;m passionate about developer productivity and
-      open-source tooling. I am a long-time <Emphasize>Neovim</Emphasize> and{' '}
-      <Emphasize>Tmux</Emphasize> user, maintain my own{' '}
+      🧪 More recently I started{' '}
+      <a
+        target="_blank"
+        className="underline text-active underline-offset-4"
+        href="https://github.com/denesbeck/dev-platform"
+      >
+        Dev Platform
+      </a>
+      , a self-hosted Internal Developer Platform where I&apos;m going deeper on
+      Kubernetes, IaC, GitOps, and observability.
+    </p>
+    <p className="mb-8">
+      🛠️ Outside of work, I&apos;m a long-time <Emphasize>Neovim</Emphasize> and{' '}
+      <Emphasize>Tmux</Emphasize> user who maintains a personal{' '}
       <a
         target="_blank"
         className="underline text-active underline-offset-4"
         href="https://github.com/denesbeck/dotfiles"
       >
         development environment
-      </a>
-      , and build{' '}
+      </a>{' '}
+      and builds{' '}
       <a
         target="_blank"
         className="underline text-active underline-offset-4"
@@ -175,7 +161,7 @@ export const BIO = (
       >
         tools
       </a>{' '}
-      that improve my daily workflow.
+      to improve my daily workflow.
     </p>
     <p>
       📁 Check out{' '}

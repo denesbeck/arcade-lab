@@ -43,7 +43,7 @@ const Home = () => {
           I&apos;m a {INFO.Role}.
         </div>
         <div className="mt-2 text-center animate-text-focus text-dark-200">
-          Full-Stack Applications · Backend Systems · Cloud-Native Systems
+          Full-Stack Applications · Developer Tooling · DevOps &amp; Automation
         </div>
         <Suspense>
           <ContactButton label={'Contact me'} />
