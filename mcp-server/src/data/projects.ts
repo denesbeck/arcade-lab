@@ -27,6 +27,7 @@ const PROJECTS: Project[] = [
       'Automated provisioning of a single-node Ubuntu server with Ansible — Docker services behind NGINX reverse proxy with SSL, Tailscale VPN, and hardened SSH/firewall',
       'Managed AWS infrastructure with Terraform for encrypted S3 backups and a fully automated Vaultwarden DR failover using CloudWatch, Lambda, and EC2 spot instances',
       'Built a Prometheus, Grafana, and Loki monitoring stack with alerting to Discord for host metrics, container health, and power outage detection',
+      'Built an AI-assisted alert triage system that correlates Prometheus metrics and Loki logs to generate initial root-cause hypotheses for firing alerts',
     ],
     tech: [
       'Ansible',
@@ -39,7 +40,7 @@ const PROJECTS: Project[] = [
       'Loki',
       'Bash',
     ],
-    url: 'https://github.com/denesbeck/home-lab-infra',
+    url: 'https://github.com/denesbeck?tab=repositories&q=home-lab',
     status: 'active',
     relatedBlogPostIds: [4, 5, 6, 7, 15, 16, 18, 22, 23, 24, 27, 30],
   },
