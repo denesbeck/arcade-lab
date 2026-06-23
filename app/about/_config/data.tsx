@@ -47,6 +47,10 @@ export const CONNECTIONS = [
     url: 'https://github.com/denesbeck',
     icon: FaGithub,
   },
+  {
+    url: 'https://www.linkedin.com/in/denesbeck',
+    icon: FaLinkedin,
+  },
 ]
 
 export type Certificate = {
@@ -107,32 +111,23 @@ export const BIO = (
   <div className="text-text-dark">
     <p className="mb-8">
       🚀 Senior Software Engineer with{' '}
-      <Emphasize>{new Date().getFullYear() - 2019} years</Emphasize> of
-      experience building <Emphasize>full-stack applications</Emphasize> and
-      developer tooling, with a strong interest in DevOps and automation that I
-      sharpen through hands-on personal projects.
+      <Emphasize>{new Date().getFullYear() - 2019}+ years</Emphasize> of
+      experience building <Emphasize>full-stack applications</Emphasize>,
+      cloud-native systems, and developer platforms. My work spans modern web
+      development, distributed systems, infrastructure automation, and
+      operational tooling, allowing me to contribute across both application and
+      platform layers.
     </p>
     <p className="mb-8">
-      🏗️ My flagship project is{' '}
-      <a
-        target="_blank"
-        className="underline text-active underline-offset-4"
-        href="https://github.com/denesbeck/nexio"
-      >
-        Nexio
-      </a>
-      , a Git-inspired version control system in Go. Alongside it I run my{' '}
-      <a
-        target="_blank"
-        className="underline text-active underline-offset-4"
-        href="https://github.com/denesbeck/home-lab-infra"
-      >
-        Home Lab
-      </a>{' '}
-      — a bare-metal setup managed with Ansible and Terraform.
+      🏗️ Professionally, I&apos;ve delivered full-stack products, owned
+      production services, and built CI/CD and deployment workflows used by
+      engineering teams at scale. I enjoy creating systems that improve
+      developer experience, reduce operational friction, and make software
+      easier to ship and operate.
     </p>
     <p className="mb-8">
-      🧪 More recently I started{' '}
+      🧪 Outside of work, I explore platform engineering through hands-on
+      projects. I&apos;m building{' '}
       <a
         target="_blank"
         className="underline text-active underline-offset-4"
@@ -140,8 +135,17 @@ export const BIO = (
       >
         Dev Platform
       </a>
-      , a self-hosted Internal Developer Platform where I&apos;m going deeper on
-      Kubernetes, IaC, GitOps, and observability.
+      , a self-hosted Internal Developer Platform on Kubernetes, and maintain a
+      bare-metal{' '}
+      <a
+        target="_blank"
+        className="underline text-active underline-offset-4"
+        href="https://github.com/denesbeck/home-lab-infra"
+      >
+        homelab
+      </a>{' '}
+      powered by Terraform, Ansible, GitOps workflows, and observability
+      tooling.
     </p>
     <p className="mb-8">
       🛠️ Outside of work, I&apos;m a long-time <Emphasize>Neovim</Emphasize> and{' '}

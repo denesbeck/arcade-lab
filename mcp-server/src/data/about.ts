@@ -10,13 +10,15 @@ export function getPersonalInfo(): PersonalInfo {
     location: 'Budapest, Hungary',
     company: 'SEON',
     role: 'Senior Software Engineer',
-    bio: `Senior Software Engineer with ${new Date().getFullYear() - 2019} years of experience building full-stack applications and developer tooling, with a strong interest in DevOps and automation that I sharpen through hands-on personal projects.
+    bio: `Senior Software Engineer with ${new Date().getFullYear() - 2019}+ years of experience building full-stack applications, cloud-native systems, and developer platforms. My work spans modern web development, distributed systems, infrastructure automation, and operational tooling, allowing me to contribute across both application and platform layers.
 
-    My flagship project is Nexio (https://github.com/denesbeck/nexio), a Git-inspired version control system in Go. Alongside it I run my Home Lab (https://github.com/denesbeck/home-lab-infra) — a bare-metal setup managed with Ansible and Terraform.
+    Professionally, I've delivered full-stack products, owned production services, and built CI/CD and deployment workflows used by engineering teams at scale. I enjoy creating systems that improve developer experience, reduce operational friction, and make software easier to ship and operate.
 
-    More recently I started Dev Platform (https://github.com/denesbeck/dev-platform), a self-hosted Internal Developer Platform where I'm going deeper on Kubernetes, IaC, GitOps, and observability.
+    Outside of work, I explore platform engineering through hands-on projects. I'm building Dev Platform (https://github.com/denesbeck/dev-platform), a self-hosted Internal Developer Platform on Kubernetes, and maintain a bare-metal homelab (https://github.com/denesbeck/home-lab-infra) powered by Terraform, Ansible, GitOps workflows, and observability tooling.
 
-    Outside of work, I'm a long-time Neovim and Tmux user who maintains a personal development environment (https://github.com/denesbeck/dotfiles) and builds tools (https://github.com/denesbeck/tmux-worktree) to improve my daily workflow.`,
+    Outside of work, I'm a long-time Neovim and Tmux user who maintains a personal development environment (https://github.com/denesbeck/dotfiles) and builds tools (https://github.com/denesbeck/tmux-worktree) to improve my daily workflow.
+
+    Check out my work (https://github.com/denesbeck) on GitHub.`,
     skills: [
       'TypeScript',
       'Node.js',
