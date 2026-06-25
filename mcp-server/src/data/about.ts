@@ -16,7 +16,7 @@ export function getPersonalInfo(): PersonalInfo {
 
     Outside of work, I explore platform engineering through hands-on projects. I'm building Dev Platform (https://github.com/denesbeck/dev-platform), a self-hosted Internal Developer Platform on Kubernetes, and maintain a bare-metal homelab (https://github.com/denesbeck/home-lab-infra) powered by Terraform, Ansible, GitOps workflows, and observability tooling.
 
-    Outside of work, I'm a long-time Neovim and Tmux user who maintains a personal development environment (https://github.com/denesbeck/dotfiles) and builds tools (https://github.com/denesbeck/tmux-worktree) to improve my daily workflow.
+    I'm a long-time Neovim and Tmux user who maintains a personal development environment (https://github.com/denesbeck/dotfiles) and builds tools (https://github.com/denesbeck/tmux-worktree) to improve my daily workflow.
 
     Check out my work (https://github.com/denesbeck) on GitHub.`,
     skills: [

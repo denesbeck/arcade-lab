@@ -148,7 +148,7 @@ export const BIO = (
       tooling.
     </p>
     <p className="mb-8">
-      🛠️ Outside of work, I&apos;m a long-time <Emphasize>Neovim</Emphasize> and{' '}
+      🛠️ I&apos;m a long-time <Emphasize>Neovim</Emphasize> and{' '}
       <Emphasize>Tmux</Emphasize> user who maintains a personal{' '}
       <a
         target="_blank"
