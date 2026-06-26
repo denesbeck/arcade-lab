@@ -4,7 +4,10 @@
 # locally so dev tooling (e.g. biome) keeps working.
 if git diff --cached --name-only --diff-filter=ACMR | grep -qE '^package(-lock)?\.json$'; then
   echo "📦 dependencies changed — syncing lockfile via Linux (Docker)…"
-  npm run lock:sync
+  if ! npm run lock:sync; then
+    echo "❌ lock:sync failed — is Docker running? Aborting commit." >&2
+    exit 1
+  fi
   git add package-lock.json
   echo "🍎 restoring macOS binaries for local dev…"
   npm install --no-audit --no-fund
