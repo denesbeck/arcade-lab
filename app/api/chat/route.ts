@@ -86,37 +86,24 @@ export async function POST(request: Request) {
       )
 
       if (toolUseBlocks.length === 0) {
-        // Final response — stream it back
-        const stream = client.messages.stream({
-          model: 'claude-sonnet-4-6',
-          max_tokens: 1024,
-          system: SYSTEM_PROMPT,
-          tools,
-          messages: currentMessages,
-        })
+        // Final response — we already have the full text from this call, so
+        // emit it as SSE instead of making a second (streaming) inference call.
+        const text = response.content
+          .filter((block) => block.type === 'text')
+          .map((block) => block.text)
+          .join('')
 
         const encoder = new TextEncoder()
 
         const readable = new ReadableStream({
-          async start(controller) {
-            try {
-              for await (const event of stream) {
-                if (
-                  event.type === 'content_block_delta' &&
-                  event.delta.type === 'text_delta'
-                ) {
-                  controller.enqueue(
-                    encoder.encode(
-                      `data: ${JSON.stringify({ text: event.delta.text })}\n\n`
-                    )
-                  )
-                }
-              }
-              controller.enqueue(encoder.encode('data: [DONE]\n\n'))
-              controller.close()
-            } catch (err) {
-              controller.error(err)
+          start(controller) {
+            if (text) {
+              controller.enqueue(
+                encoder.encode(`data: ${JSON.stringify({ text })}\n\n`)
+              )
             }
+            controller.enqueue(encoder.encode('data: [DONE]\n\n'))
+            controller.close()
           },
         })
 

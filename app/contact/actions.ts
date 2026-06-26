@@ -30,7 +30,25 @@ export async function contact(payload: IContactPayload) {
   const cmd = new InvokeCommand(params)
 
   try {
-    await contactLambda.send(cmd)
+    const { Payload, FunctionError } = await contactLambda.send(cmd)
+
+    // RequestResponse resolves successfully even when the handler returns a
+    // non-2xx statusCode (invalid input, failed Turnstile, SES failure), so we
+    // must inspect the payload rather than relying on send() to throw.
+    if (FunctionError) {
+      console.error('Lambda function error:', FunctionError)
+      return { success: false, message: 'Unable to send message!' }
+    }
+
+    const parsed = Payload
+      ? (JSON.parse(Buffer.from(Payload).toString()) as { statusCode?: number })
+      : undefined
+
+    if (parsed?.statusCode !== 200) {
+      console.error('Lambda returned non-success status:', parsed?.statusCode)
+      return { success: false, message: 'Unable to send message!' }
+    }
+
     return {
       success: true,
       message: 'Message sent successfully!',

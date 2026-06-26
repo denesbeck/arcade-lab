@@ -19,14 +19,15 @@ const validate = (name: string, email: string, message: string) => {
   if (!email) {
     output.messages.push('Email is required.')
     output.invalidFields.push('email')
+  } else if (!isEmail(email)) {
+    output.messages.push('Invalid email format.')
+    output.invalidFields.push('email')
   }
 
   if (!message) {
     output.messages.push('Message is required.')
     output.invalidFields.push('message')
   }
-
-  if (!isEmail(email)) output.messages.push('Invalid email format.')
 
   if (output.messages.length === 0) output.valid = true
 
