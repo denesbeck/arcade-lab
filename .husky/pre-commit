@@ -1,1 +1,13 @@
+# If the root manifest or lockfile is staged, the lockfile must be (re)generated
+# on Linux so CI's `npm ci` resolves the Linux-only transitive deps. lock:sync
+# does that inside a node:24 Docker container, then we restore the macOS binaries
+# locally so dev tooling (e.g. biome) keeps working.
+if git diff --cached --name-only --diff-filter=ACMR | grep -qE '^package(-lock)?\.json$'; then
+  echo "📦 dependencies changed — syncing lockfile via Linux (Docker)…"
+  npm run lock:sync
+  git add package-lock.json
+  echo "🍎 restoring macOS binaries for local dev…"
+  npm install --no-audit --no-fund
+fi
+
 npx lint-staged
