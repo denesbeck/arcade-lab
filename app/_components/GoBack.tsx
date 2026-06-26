@@ -11,11 +11,9 @@ const GoBack = ({ fallbackUrl }: IGoBack) => {
   const { back, push } = useRouter()
 
   const handleGoBack = useCallback(() => {
-    if (typeof window !== 'undefined' && window.history.length > 1) {
-      back()
-    } else {
-      push(fallbackUrl)
-    }
+    if (fallbackUrl) return push(fallbackUrl)
+
+    if (typeof window !== 'undefined' && window.history.length > 1) back()
   }, [back, push, fallbackUrl])
 
   return (
