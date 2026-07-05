@@ -1,5 +1,14 @@
+import path from 'node:path'
 import createMDX from '@next/mdx'
 import { NextConfig } from 'next'
+
+// Absolute path (a serializable string) to our rehype-highlight wrapper that
+// registers the HCL/Terraform grammar. Passed as a string because Turbopack
+// serializes MDX loader options and cannot carry a plugin/grammar function.
+const rehypeHighlightHcl = path.join(
+  process.cwd(),
+  'app/blog/_config/rehype-highlight-hcl.mjs'
+)
 
 const nextConfig: NextConfig = {
   images: {
@@ -15,7 +24,7 @@ const withMDX = createMDX({
   extension: /\.(md|mdx)$/,
   options: {
     remarkPlugins: [['remark-gfm', { strict: true, throwOnError: true }]],
-    rehypePlugins: ['rehype-highlight'],
+    rehypePlugins: [rehypeHighlightHcl],
   },
 })
 
