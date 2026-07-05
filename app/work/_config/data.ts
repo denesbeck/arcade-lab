@@ -107,7 +107,7 @@ const PROJECTS: Project[] = [
     url: 'https://github.com/denesbeck/dev-platform',
     status: 'active',
     priority: 'high',
-    blogPosts: [26, 29],
+    blogPosts: [26, 29, 31],
   },
   {
     title: 'Dotfiles',

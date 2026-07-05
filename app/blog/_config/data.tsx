@@ -44,6 +44,38 @@ import { BlogEntry } from '../_interfaces/blog'
 
 const BLOG_ENTRIES: BlogEntry[] = [
   {
+    id: 31,
+    title: 'Dev Platform: Teaching AWS to Trust My Cluster',
+    description:
+      'Milestone 2, part one: IRSA, OIDC from first principles, and hosting my own OpenID provider on S3',
+    date: '2026-06-27',
+    hidden: false,
+    tags: [
+      'dev-platform',
+      'kubernetes',
+      'irsa',
+      'oidc',
+      'aws',
+      'iam',
+      'sts',
+      'talos',
+      's3',
+      'terraform',
+      'gitops',
+      'devops',
+      'self-hosted',
+    ],
+    content: 'self-hosted-developer-platform-on-k8s-p3',
+    cover: {
+      image: selfHostedDevPlatformSm,
+      original: selfHostedDevPlatform,
+      xImage: selfHostedDevPlatformX,
+      alt: 'self_hosted_dev_platform',
+      ogImage: '/blog/covers/self_hosted_dev_platform.png',
+      ogImageX: '/blog/covers/self_hosted_dev_platform_x.png',
+    },
+  },
+  {
     id: 30,
     title: 'Home Lab: An AI Agent That Triages My Alerts',
     description:

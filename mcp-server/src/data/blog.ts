@@ -8,6 +8,30 @@ import type { BlogPost, BlogPostMeta } from '../types'
  */
 const BLOG_ENTRIES: BlogPostMeta[] = [
   {
+    id: 31,
+    title: 'Dev Platform: Teaching AWS to Trust My Cluster',
+    description:
+      'Milestone 2, part one: IRSA, OIDC from first principles, and hosting my own OpenID provider on S3',
+    date: '2026-06-27',
+    hidden: false,
+    tags: [
+      'dev-platform',
+      'kubernetes',
+      'irsa',
+      'oidc',
+      'aws',
+      'iam',
+      'sts',
+      'talos',
+      's3',
+      'terraform',
+      'gitops',
+      'devops',
+      'self-hosted',
+    ],
+    slug: 'self-hosted-developer-platform-on-k8s-p3',
+  },
+  {
     id: 30,
     title: 'Home Lab: An AI Agent That Triages My Alerts',
     description:
