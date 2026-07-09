@@ -18,7 +18,7 @@ const Title = ({ mr = false, ml = false }: TitleProps) => {
         alt="arcade_lab_logo"
         className="inline-block mr-2 w-16 h-16 rounded-full"
       />
-      <span className="ml-2">Arcade Lab</span>
+      <span className="ml-2 text-dark-50">Arcade Lab</span>
     </div>
   )
 }
