@@ -2,8 +2,9 @@ import 'highlight.js/styles/nord.css'
 import { redirect } from 'next/navigation'
 import { Metadata } from 'next/types'
 import { GoBack, ScrollToTop } from '@/_components'
-import { Share, Tag } from '../_components'
+import { RecommendedPosts, Share, Tag } from '../_components'
 import blogEntries from '../_config/data'
+import { getRecommendedPosts } from '../_utils/getRecommendedPosts'
 import { isPublished } from '../_utils/isPublished'
 
 interface IPost {
@@ -110,6 +111,9 @@ const Post = async ({ params }: IPost) => {
         ))}
       </div>
       <Share id={id} />
+      {post && (
+        <RecommendedPosts posts={getRecommendedPosts(post, blogEntries)} />
+      )}
     </div>
   )
 }
