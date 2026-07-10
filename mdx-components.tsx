@@ -10,63 +10,63 @@ const components: MDXComponents = {
 
   // Headings (h1 - h6)
   h1: ({ children }) => (
-    <h1 className="my-8 text-4xl font-extrabold break-words text-dark-100">
+    <h1 className="my-8 text-4xl font-extrabold wrap-break-word text-dark-100">
       {children}
     </h1>
   ),
   h2: ({ children }) => (
-    <h2 className="my-7 text-3xl font-semibold break-words text-dark-100">
+    <h2 className="my-7 text-3xl font-semibold wrap-break-word text-dark-100">
       {children}
     </h2>
   ),
   h3: ({ children }) => (
-    <h3 className="my-6 text-2xl font-medium break-words text-dark-100">
+    <h3 className="my-6 text-2xl font-medium wrap-break-word text-dark-100">
       {children}
     </h3>
   ),
   h4: ({ children }) => (
-    <h4 className="my-4 text-xl font-medium break-words text-dark-100">
+    <h4 className="my-4 text-xl font-medium wrap-break-word text-dark-100">
       {children}
     </h4>
   ),
   h5: ({ children }) => (
-    <h5 className="my-3 text-lg font-normal break-words text-dark-100">
+    <h5 className="my-3 text-lg font-normal wrap-break-word text-dark-100">
       {children}
     </h5>
   ),
   h6: ({ children }) => (
-    <h6 className="my-2 text-base font-normal break-words text-dark-100">
+    <h6 className="my-2 text-base font-normal wrap-break-word text-dark-100">
       {children}
     </h6>
   ),
 
   // Paragraphs
   p: ({ children }) => (
-    <p className="my-4 text-base leading-relaxed break-words text-dark-200">
+    <p className="my-4 text-base leading-relaxed wrap-break-word text-dark-200">
       {children}
     </p>
   ),
 
   // Lists (ordered and unordered)
   ul: ({ children }) => (
-    <ul className="pl-5 my-4 list-disc break-words text-dark-200">
+    <ul className="pl-5 my-4 list-disc wrap-break-word text-dark-200">
       {children}
     </ul>
   ),
   ol: ({ children }) => (
-    <ol className="pl-12 my-4 list-decimal break-words text-dark-200">
+    <ol className="pl-12 my-4 list-decimal wrap-break-word text-dark-200">
       {children}
     </ol>
   ),
   li: ({ children }) => (
-    <li className="my-1 text-base break-words text-dark-200">{children}</li>
+    <li className="my-1 text-base wrap-break-word text-dark-200">{children}</li>
   ),
 
   // Links
   a: ({ children, href }) => (
     <a
       href={href}
-      className="break-words hover:underline text-active"
+      className="hover:underline wrap-break-word text-active"
       target="_blank"
       rel="noopener noreferrer"
     >
@@ -76,7 +76,7 @@ const components: MDXComponents = {
 
   // Inline Code
   code: ({ children }) => (
-    <code className="inline-block py-1 px-1 max-w-full font-mono text-sm break-words rounded text-dark-200 bg-dark-700">
+    <code className="inline-block py-1 px-1 max-w-full font-mono text-sm rounded wrap-break-word text-dark-200 bg-dark-700">
       {children}
     </code>
   ),
@@ -112,7 +112,7 @@ const components: MDXComponents = {
       <pre className="relative p-5 my-6 text-sm rounded-lg text-dark-200 bg-dark-700">
         <MacOSBar size="sm" />
         <CopyButton content={codeString} />
-        <span className="whitespace-pre-wrap break-words">{children}</span>
+        <span className="whitespace-pre-wrap wrap-break-word">{children}</span>
       </pre>
     )
   },
@@ -132,7 +132,7 @@ const components: MDXComponents = {
 
   // Blockquotes
   blockquote: ({ children }) => (
-    <blockquote className="pl-5 my-6 mx-8 italic text-gray-600 break-words border-l-4 border-gray-300">
+    <blockquote className="pl-5 my-6 mx-8 italic text-gray-600 border-l-4 border-gray-300 wrap-break-word">
       {children}
     </blockquote>
   ),
@@ -142,12 +142,14 @@ const components: MDXComponents = {
 
   // Strong (bold text)
   strong: ({ children }) => (
-    <strong className="font-bold break-words text-dark-300">{children}</strong>
+    <strong className="font-bold wrap-break-word text-dark-300">
+      {children}
+    </strong>
   ),
 
   // Emphasis (italic text)
   em: ({ children }) => (
-    <em className="italic break-words text-dark-300">{children}</em>
+    <em className="italic wrap-break-word text-dark-300">{children}</em>
   ),
 
   // Tables
@@ -159,19 +161,21 @@ const components: MDXComponents = {
     </div>
   ),
   thead: ({ children }) => (
-    <thead className="break-words text-dark-100 bg-dark-900">{children}</thead>
+    <thead className="wrap-break-word text-dark-100 bg-dark-900">
+      {children}
+    </thead>
   ),
   tbody: ({ children }) => <tbody>{children}</tbody>,
   tr: ({ children }) => (
-    <tr className="break-words border-b border-dark-500">{children}</tr>
+    <tr className="border-b wrap-break-word border-dark-500">{children}</tr>
   ),
   th: ({ children }) => (
-    <th className="py-3 px-4 text-lg font-semibold break-words text-dark-100">
+    <th className="py-3 px-4 text-lg font-semibold wrap-break-word text-dark-100">
       {children}
     </th>
   ),
   td: ({ children }) => (
-    <td className="py-3 px-4 break-words text-dark-200">{children}</td>
+    <td className="py-3 px-4 wrap-break-word text-dark-200">{children}</td>
   ),
 }
 

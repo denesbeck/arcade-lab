@@ -17,7 +17,7 @@ const GoBack = ({ fallbackUrl }: IGoBack) => {
   }, [back, push, fallbackUrl])
 
   return (
-    <div className="flex justify-end py-2 px-6 w-full">
+    <div className="flex justify-end py-4 px-6 w-full">
       <button
         onClick={handleGoBack}
         className="flex items-center space-x-2 underline whitespace-nowrap cursor-pointer underline-offset-4 text-dark-100 hover:decoration-dashed"
