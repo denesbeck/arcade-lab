@@ -42,7 +42,7 @@ const PROJECTS: Project[] = [
     ],
     url: 'https://github.com/denesbeck?tab=repositories&q=home-lab',
     status: 'active',
-    relatedBlogPostIds: [4, 5, 6, 7, 15, 16, 18, 22, 23, 24, 27, 30],
+    relatedBlogPostIds: [4, 5, 6, 7, 15, 16, 18, 22, 23, 24, 27, 30, 32],
   },
   {
     title: 'Nexio',

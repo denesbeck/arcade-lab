@@ -1,0 +1,169 @@
+# 🐳 Home Lab: Self-Healing a Docker Boot Race
+
+_Why my Docker daemon stayed dead after a slow-wifi boot — and the two-layer IaC fix that recovers it without me_
+
+I sat down to check on the lab and everything was gone. Jellyfin, Vaultwarden, Pi-hole, the entire monitoring stack — all unreachable. I SSH'd into the host and the machine itself was fine: uptime in hours, load nominal, disk healthy. But `docker ps` hung, then failed. The daemon wasn't running. I rebooted the box and everything came straight back.
+
+That last sentence is the important one. **"I rebooted and it fixed itself" is never a solution — it's a symptom.** A power cycle that reliably fixes something means the bad state was *latched*, not random. So once the panic was over, I went digging for what actually happened, because I knew it would happen again.
+
+## 🔍 The symptom is not the cause
+
+The daemon being down is the symptom. The cause was hiding in the boot logs. `journalctl -b -3 -u docker.service` for the bad boot told the whole story:
+
+```text
+03:00:35  Starting docker.service...
+03:00:50  docker.service: Control process exited, code=exited, status=1/FAILURE
+03:00:52  docker.service: Scheduled restart job, restart counter is at 1.
+03:01:07  docker.service: Control process exited, code=exited, status=1/FAILURE
+03:01:10  docker.service: Scheduled restart job, restart counter is at 2.
+03:01:25  docker.service: Control process exited, code=exited, status=1/FAILURE
+03:01:27  docker.service: Scheduled restart job, restart counter is at 3.
+03:01:27  docker.service: Start request repeated too quickly.
+03:01:27  docker.service: Failed with result 'exit-code'.
+```
+
+Three failed starts, then systemd gives up: **`Start request repeated too quickly`**. After that line, `docker.service` sits in a `failed` state and *never tries again*. My host does a clean reboot every night at 03:00, and on this particular boot the network wasn't ready in time — so Docker tried, failed, tried, failed, tried, failed, and got itself permanently benched until I manually intervened hours later.
+
+## 🧨 Root cause: a self-inflicted start-limit latch
+
+Here's the trap, and it was entirely my own doing. My home server is on **wifi**, and wifi association after a reboot is slow and variable. Containers that need the network come up ugly if Docker starts before the link is up, so months ago I'd added an `ExecStartPre` guard to `docker.service` that blocks until the default gateway is pingable:
+
+```bash
+# the OLD wait_for_network.sh — fails fast, and that's the bug
+ipServerAddress=$(ip route | awk '/default/ {print $3; exit}')
+timeout=15
+
+# ...ping the gateway in a loop...
+if [ "$elapsedTime" -ge "$timeout" ]; then
+    exit 1   # give up after 15s — this is what kills us
+fi
+```
+
+Individually, every piece here is reasonable. Together they form a landmine. Docker keeps systemd's **default** start-rate limiter:
+
+```ini
+StartLimitBurst=3          # allow 3 starts...
+StartLimitIntervalSec=1min # ...within any 60-second window
+```
+
+Now do the arithmetic on a slow-wifi boot. Each attempt runs the pre-start script, waits the full **15s** for a gateway that isn't there yet, `exit 1`s, and systemd waits ~2s before the next go. That's ~17s per attempt:
+
+```text
+attempt 1  →  15s wait  →  fail
+attempt 2  →  15s wait  →  fail
+attempt 3  →  15s wait  →  fail
+────────────────────────────────
+3 × 17s ≈ 51s   <   60s window   →   "start request repeated too quickly"
+```
+
+All three retries fit inside the one-minute window, so the limiter trips and latches the unit `failed`. And here's the cruel part: **`Restart=always` is powerless once the unit is latched.** People assume `Restart=always` means "always." It doesn't — it means "always, until the start limiter says stop." The very safety net I was relying on had a hard ceiling I'd never noticed, because it only reveals itself when the network is slow enough to burn three tries in under a minute. Every boot where wifi took more than ~50 seconds was a coin flip on the whole lab.
+
+## 🛠️ Layer 1: make systemd stop giving up
+
+The real fix is to stop treating "the network is late" as a terminal failure. Three changes to the `docker.service` drop-in, all managed by Ansible so a rebuild can't silently reintroduce the old behavior:
+
+```ini
+# /etc/systemd/system/docker.service.d/override.conf
+[Unit]
+Requires=network-online.target docker.socket
+After=network-online.target tailscaled.service
+# Disable the start-rate limiter entirely, so Restart=always retries
+# FOREVER until the network is actually up. This one line would have
+# prevented the incident on its own.
+StartLimitIntervalSec=0
+
+[Service]
+ExecStartPre=/etc/systemd/system/docker.service.d/wait_for_network.sh
+Restart=always
+RestartSec=10
+```
+
+`StartLimitIntervalSec=0` removes the ceiling: no window means the burst counter never trips, so `Restart=always` finally lives up to its name. I also rewrote the wait script to *poll* for up to two minutes instead of failing fast at fifteen seconds — waiting for the default route to even appear, not just assuming it's there:
+
+```bash
+# the NEW wait_for_network.sh — polls patiently, only fails after 120s
+cycleLength=2
+timeout=120
+
+elapsed=0
+while true; do
+    gateway=$(ip route | awk '/default/ {print $3; exit}')
+    if [ -n "$gateway" ] && ping -c 1 -W 2 "$gateway" >/dev/null 2>&1; then
+        exit 0
+    fi
+    if [ "$elapsed" -ge "$timeout" ]; then
+        exit 1   # let systemd retry — with no start limiter, it will
+    fi
+    sleep "$cycleLength"
+    elapsed=$((elapsed + cycleLength))
+done
+```
+
+There's a subtle bonus here: a *longer* per-attempt timeout is paradoxically safer against the old bug too. If each attempt takes 120s, you physically can't fit three of them into a 60-second window, so even with the default limiter you'd never trip it. Belt and suspenders.
+
+## 🐕 Layer 2: a watchdog that lives outside Docker
+
+Layer 1 fixes *this* failure. But it doesn't cover the daemon dying mid-day for some other reason — a wedged socket, an OOM, a bad upgrade. I wanted a real safety net. And this is where the interesting constraint lives:
+
+> **My entire monitoring stack — Prometheus, Loki, Grafana, Alertmanager — runs in Docker. It cannot watch Docker.** A thing can't page you about its own corpse.
+
+Whatever watches the daemon has to live *outside* the daemon. So the watchdog is a plain **systemd timer on the host** — no container, no dependency on the thing it's guarding. It fires every minute and runs a small script that checks two things and, if they fail, heals them:
+
+```bash
+docker_healthy() {
+    systemctl is-active --quiet docker.service || return 1
+    timeout 10 docker info >/dev/null 2>&1     || return 1
+}
+
+# ...on failure...
+systemctl reset-failed docker.service   # clear the latched 'failed' state
+systemctl start docker.service          # the programmatic version of my reboot
+```
+
+`reset-failed` is the key line — it's exactly what my manual reboot achieved, minus the reboot: it clears the latch so the daemon can start again. The escalation ladder goes: try to restart it in place; if it's *still* down after three consecutive cycles, reboot the host as a last resort — but rate-limited to once every 30 minutes so a genuinely unrecoverable box can't fall into a reboot loop.
+
+The last piece is telling *me*. The watchdog posts to Discord by **curling the webhook directly** — deliberately not going through Alertmanager, because Alertmanager is one of the containers that would be dead in exactly the scenario I care about. Reusing the same webhook URL means the alerts land in the same channel as everything else, but the delivery path shares no failure domain with the stack it's reporting on:
+
+```bash
+notify() {
+    url="$(head -n1 "$WEBHOOK_FILE")"   # same channel, independent path
+    payload="$(python3 -c 'import json,sys; print(json.dumps({"content": sys.argv[1]}))' "$1")"
+    curl -fsS -m 10 -H 'Content-Type: application/json' -d "$payload" "$url" >/dev/null 2>&1
+}
+```
+
+The timer itself waits three minutes after boot before its first run, so it doesn't fight with Docker's own (now patient) startup sequence:
+
+```ini
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=1min
+Unit=docker-watchdog.service
+```
+
+## 🧪 Proving it
+
+A fix you haven't watched work is a hypothesis. So I stopped the daemon by hand and watched the watchdog earn its keep:
+
+```text
+$ sudo systemctl stop docker      # 15 containers go dark
+
+17:55:45Z  docker DOWN (consecutive failures=1)   → 🚨 Discord: "docker is DOWN, self-healing"
+17:56:03Z  self-healed after 1 attempt            → ✅ Discord: "docker self-healed"
+```
+
+Eighteen seconds from death to recovery, all 15 containers back, and both Discord messages delivered — **while the monitoring stack itself was down**. That's the whole point: the alert about Docker being dead arrived through a path that doesn't depend on Docker being alive.
+
+## 🧠 Lessons
+
+- **"A reboot fixed it" is a clue, not a resolution.** Reproducible recovery-by-reboot means latched state. Chase the latch.
+- **`Restart=always` is a lie you tell yourself** until you also set `StartLimitIntervalSec=0`. The default rate limiter will happily turn a transient failure into a permanent one.
+- **Your watchdog must not share a failure domain with what it watches.** Monitoring that runs inside the thing being monitored is theater. Push the last line of defense down a layer — here, from Docker to the host's own init system.
+- **Fix the root cause *and* add the safety net.** Layer 1 makes this specific bug impossible; Layer 2 catches the failures I haven't imagined yet. Neither is a substitute for the other.
+- **Commit the fix as code.** All of this is Ansible in the infra repo. The next time I rebuild the box from scratch, the patient boot logic and the watchdog come along for free — the failure can't quietly return.
+
+## 🎉 Outcome
+
+The nightly reboot no longer makes me nervous. If wifi is slow, Docker now waits it out and starts anyway. If the daemon dies for any reason, a host-level watchdog resurrects it within a minute and tells me it did — through a channel that survives the outage it's reporting. The lab went from "silently dead until I happened to notice" to "self-healing, and it shows its work."
+
+Best of all, the most satisfying kind of monitoring alert is the one that says a problem already fixed itself.

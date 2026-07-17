@@ -8,6 +8,31 @@ import type { BlogPost, BlogPostMeta } from '../types'
  */
 const BLOG_ENTRIES: BlogPostMeta[] = [
   {
+    id: 32,
+    title: 'Home Lab: Self-Healing a Docker Boot Race',
+    description:
+      'Why my Docker daemon stayed dead after a slow-wifi boot, and the two-layer IaC fix that recovers it',
+    date: '2026-07-17',
+    hidden: false,
+    tags: [
+      'home-lab',
+      'self-hosted',
+      'docker',
+      'systemd',
+      'ansible',
+      'linux',
+      'networking',
+      'wifi',
+      'watchdog',
+      'discord',
+      'observability',
+      'iac',
+      'sre',
+      'devops',
+    ],
+    slug: 'building-my-home-server-p13',
+  },
+  {
     id: 31,
     title: 'Dev Platform: Teaching AWS to Trust My Cluster',
     description:

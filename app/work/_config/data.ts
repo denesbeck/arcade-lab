@@ -149,7 +149,7 @@ const PROJECTS: Project[] = [
     url: 'https://github.com/denesbeck?tab=repositories&q=home-lab',
     status: 'active',
     priority: 'critical',
-    blogPosts: [4, 5, 6, 7, 15, 16, 18, 22, 23, 24, 27, 30],
+    blogPosts: [4, 5, 6, 7, 15, 16, 18, 22, 23, 24, 27, 30, 32],
   },
   {
     title: 'Lost in Dusk',

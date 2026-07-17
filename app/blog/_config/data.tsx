@@ -44,6 +44,39 @@ import { BlogEntry } from '../_interfaces/blog'
 
 const BLOG_ENTRIES: BlogEntry[] = [
   {
+    id: 32,
+    title: 'Home Lab: Self-Healing a Docker Boot Race',
+    description:
+      'Why my Docker daemon stayed dead after a slow-wifi boot, and the two-layer IaC fix that recovers it',
+    date: '2026-07-17',
+    hidden: false,
+    tags: [
+      'home-lab',
+      'self-hosted',
+      'docker',
+      'systemd',
+      'ansible',
+      'linux',
+      'networking',
+      'wifi',
+      'watchdog',
+      'discord',
+      'observability',
+      'iac',
+      'sre',
+      'devops',
+    ],
+    content: 'building-my-home-server-p13',
+    cover: {
+      image: buildHomeServerSm,
+      original: buildHomeServer,
+      xImage: buildHomeServerX,
+      alt: 'build_home_server',
+      ogImage: '/blog/covers/building_home_server.png',
+      ogImageX: '/blog/covers/building_home_server_x.png',
+    },
+  },
+  {
     id: 31,
     title: 'Dev Platform: Teaching AWS to Trust My Cluster',
     description:
