@@ -1,11 +1,10 @@
 'use client'
 
-import mermaid from 'mermaid'
 import { useEffect, useRef, useState } from 'react'
 
-mermaid.initialize({
+const themeConfig = {
   startOnLoad: false,
-  theme: 'dark',
+  theme: 'dark' as const,
   themeVariables: {
     darkMode: true,
     background: '#1a1a2e',
@@ -21,7 +20,9 @@ mermaid.initialize({
     fontFamily: 'ui-monospace, monospace',
     fontSize: '14px',
   },
-})
+}
+
+let initialized = false
 
 interface MermaidProps {
   chart: string
@@ -32,12 +33,27 @@ const Mermaid = ({ chart }: MermaidProps) => {
   const [svg, setSvg] = useState<string>('')
 
   useEffect(() => {
+    let cancelled = false
+
     const render = async () => {
+      // Lazy-load mermaid so the (large) library is only fetched on pages that
+      // actually contain a diagram, instead of every blog post.
+      const { default: mermaid } = await import('mermaid')
+
+      if (!initialized) {
+        mermaid.initialize(themeConfig)
+        initialized = true
+      }
+
       const id = `mermaid-${Math.random().toString(36).slice(2, 9)}`
       const { svg } = await mermaid.render(id, chart)
-      setSvg(svg)
+      if (!cancelled) setSvg(svg)
     }
     render()
+
+    return () => {
+      cancelled = true
+    }
   }, [chart])
 
   return (
