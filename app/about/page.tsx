@@ -27,6 +27,9 @@ export const metadata: Metadata = {
     'Budapest',
     'SEON',
   ],
+  alternates: {
+    canonical: '/about',
+  },
   openGraph: {
     title: `About ${INFO.Name} - ${INFO.Role}`,
     description: `Self-taught full-stack ${INFO.Role} with ${new Date().getFullYear() - 2019} years of experience. AWS & Terraform certified. Specializing in scalable applications and infrastructure automation.`,

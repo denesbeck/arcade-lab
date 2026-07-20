@@ -11,11 +11,14 @@ const domain = process.env.NEXT_PUBLIC_DOMAIN || 'arcade-lab.vercel.app'
 export const metadata: Metadata = {
   metadataBase: new URL(`https://${domain}`),
   title: {
-    default: 'Arcade Lab | Denes Beck - Software Engineer',
+    default: 'Arcade Lab | Denes Beck - Senior Software Engineer',
     template: '%s | Arcade Lab',
   },
   description:
-    'Personal portfolio and technical blog of Denes Beck, a Software Engineer specializing in full-stack development, DevOps, and cloud infrastructure.',
+    'Personal portfolio and technical blog of Denes Beck, a Senior Software Engineer specializing in full-stack development, DevOps, and cloud infrastructure.',
+  alternates: {
+    canonical: '/',
+  },
   keywords: [
     'Denes Beck',
     'Software Engineer',
@@ -43,9 +46,9 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: `https://${domain}`,
     siteName: 'Arcade Lab',
-    title: 'Arcade Lab | Denes Beck - Software Engineer',
+    title: 'Arcade Lab | Denes Beck - Senior Software Engineer',
     description:
-      'Personal portfolio and technical blog of Denes Beck, a Software Engineer specializing in full-stack development, DevOps, and cloud infrastructure.',
+      'Personal portfolio and technical blog of Denes Beck, a Senior Software Engineer specializing in full-stack development, DevOps, and cloud infrastructure.',
     images: [
       {
         url: `/logo/arcade_lab_logo.png`,
@@ -57,9 +60,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Arcade Lab | Denes Beck - Software Engineer',
+    title: 'Arcade Lab | Denes Beck - Senior Software Engineer',
     description:
-      'Personal portfolio and technical blog of Denes Beck, a Software Engineer specializing in full-stack development, DevOps, and cloud infrastructure.',
+      'Personal portfolio and technical blog of Denes Beck, a Senior Software Engineer specializing in full-stack development, DevOps, and cloud infrastructure.',
     creator: '@DenesBeck',
     images: [`/logo/arcade_lab_logo.png`],
   },
@@ -87,7 +90,7 @@ export default function RootLayout({
     name: 'Denes Beck',
     url: `https://${domain}`,
     image: `https://${domain}/logo/arcade_lab_logo.png`,
-    jobTitle: 'Software Engineer',
+    jobTitle: 'Senior Software Engineer',
     worksFor: {
       '@type': 'Organization',
       name: 'SEON',

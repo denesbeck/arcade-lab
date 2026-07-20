@@ -10,6 +10,9 @@ const domain = process.env.NEXT_PUBLIC_DOMAIN || 'arcade-lab.vercel.app'
 export const metadata: Metadata = {
   title: 'Home',
   description: `Hi, I'm ${INFO.Name}. I'm a ${INFO.Role} at ${INFO.Company} based in ${INFO.Location}. Specializing in full-stack development, DevOps, and cloud infrastructure.`,
+  alternates: {
+    canonical: '/',
+  },
   openGraph: {
     title: `${INFO.Name} - ${INFO.Role}`,
     description: `${INFO.Role} at ${INFO.Company} specializing in full-stack development, DevOps, and cloud infrastructure.`,

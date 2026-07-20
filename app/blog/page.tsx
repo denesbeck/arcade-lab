@@ -27,6 +27,9 @@ export const metadata: Metadata = {
     'Next.js',
     'Technical Writing',
   ],
+  alternates: {
+    canonical: '/blog',
+  },
   openGraph: {
     title: 'Technical Blog - Arcade Lab',
     description:

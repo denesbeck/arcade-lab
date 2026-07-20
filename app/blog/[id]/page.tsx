@@ -11,7 +11,7 @@ interface IPost {
   params: Promise<{ id: string }>
 }
 
-const domain = process.env.NEXT_PUBLIC_DOMAIN
+const domain = process.env.NEXT_PUBLIC_DOMAIN || 'arcade-lab.vercel.app'
 
 // Generate static params for all blog posts at build time
 export async function generateStaticParams() {
@@ -32,11 +32,14 @@ export async function generateMetadata({ params }: IPost): Promise<Metadata> {
   const { title, description, cover, tags, date } = post || {}
 
   return {
-    metadataBase: new URL(`https://${domain}/`),
+    metadataBase: new URL(`https://${domain}`),
     title: title,
     description: description,
     keywords: tags,
     authors: [{ name: 'Denes Beck' }],
+    alternates: {
+      canonical: `/blog/${id}`,
+    },
     openGraph: {
       title: title,
       description: description,
