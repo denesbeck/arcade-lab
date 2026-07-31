@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { useCallback, useState } from 'react'
 import { TbArticle, TbChevronDown } from 'react-icons/tb'
 import BLOG_ENTRIES from '@/blog/_config/data'
+import { BlogEntry } from '@/blog/_interfaces/blog'
 import { isPublished } from '@/blog/_utils/isPublished'
 import { BlogPostReference } from '../_config/data'
 
@@ -14,14 +15,18 @@ interface IBlogPosts {
 
 const BlogPosts = ({ blogPostReferences }: IBlogPosts) => {
   const [expanded, setExpanded] = useState(false)
-  const hasOverflow = blogPostReferences.length > MAX_VISIBLE
 
-  const visiblePosts = (
-    expanded ? blogPostReferences : blogPostReferences.slice(0, MAX_VISIBLE)
-  ).filter((reference) => {
-    const entry = BLOG_ENTRIES.find(({ id }) => id === reference)
-    return entry ? isPublished(entry) : false
-  })
+  // Resolve references to published entries *before* slicing, so a hidden post
+  // in the first MAX_VISIBLE doesn't shrink the collapsed row or skew the
+  // "show more" count.
+  const publishedPosts = blogPostReferences
+    .map((reference) => BLOG_ENTRIES.find(({ id }) => id === reference))
+    .filter((entry): entry is BlogEntry => !!entry && isPublished(entry))
+
+  const hasOverflow = publishedPosts.length > MAX_VISIBLE
+  const visiblePosts = expanded
+    ? publishedPosts
+    : publishedPosts.slice(0, MAX_VISIBLE)
 
   const toggle = useCallback(() => setExpanded((prev) => !prev), [])
 
@@ -34,13 +39,13 @@ const BlogPosts = ({ blogPostReferences }: IBlogPosts) => {
         <span>Related posts</span>
       </div>
       <div className="flex flex-wrap gap-2">
-        {visiblePosts.map((postId) => (
+        {visiblePosts.map(({ id, title }) => (
           <Link
-            key={postId}
-            href={`/blog/${postId}`}
+            key={id}
+            href={`/blog/${id}`}
             className="py-1 px-2 max-w-full text-xs ring-1 transition-all duration-200 ring-dark-500 text-dark-200 truncate hover:ring-primary hover:text-primary"
           >
-            {BLOG_ENTRIES.find(({ id }) => id === postId)?.title}
+            {title}
           </Link>
         ))}
       </div>
@@ -56,7 +61,7 @@ const BlogPosts = ({ blogPostReferences }: IBlogPosts) => {
           <span>
             {expanded
               ? 'Show less'
-              : `Show ${blogPostReferences.length - MAX_VISIBLE} more`}
+              : `Show ${publishedPosts.length - MAX_VISIBLE} more`}
           </span>
         </button>
       )}

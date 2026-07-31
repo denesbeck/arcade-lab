@@ -864,7 +864,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
     title: 'IBM Tech 2024 Conference',
     description: 'Insights and takeaways from the IBM Tech 2024 conference.',
     date: '2024-03-22',
-    hidden: false,
+    hidden: true,
     tags: ['ibm', 'red-hat', 'openshift', 'ansible', 'security', 'watsonx'],
     content: 'ibm-tech-2024-conference',
     cover: {
@@ -882,7 +882,7 @@ const BLOG_ENTRIES: BlogEntry[] = [
     description:
       'This blog post is about my experience migrating from Travis CI to Tekton.',
     date: '2023-12-13',
-    hidden: false,
+    hidden: true,
     tags: [
       'cicd',
       'tekton',
