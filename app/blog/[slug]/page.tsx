@@ -4,6 +4,7 @@ import { Metadata } from 'next/types'
 import { GoBack, ScrollToTop } from '@/_components'
 import { RecommendedPosts, Share, Tag } from '../_components'
 import blogEntries from '../_config/data'
+import { BLOG_REDIRECTS } from '../_config/redirects'
 import { getRecommendedPosts } from '../_utils/getRecommendedPosts'
 import { isPublished } from '../_utils/isPublished'
 
@@ -17,14 +18,25 @@ const domain = process.env.NEXT_PUBLIC_DOMAIN || 'arcade-lab.vercel.app'
 const LEGACY_MAX_ID = 32
 
 export async function generateStaticParams() {
-  return blogEntries.flatMap((entry) =>
-    entry.id <= LEGACY_MAX_ID
-      ? [{ slug: entry.slug }, { slug: entry.id.toString() }]
-      : [{ slug: entry.slug }]
-  )
+  const seen = new Set<string>()
+  const params: { slug: string }[] = []
+  const add = (slug: string) => {
+    if (seen.has(slug)) return
+    seen.add(slug)
+    params.push({ slug })
+  }
+
+  for (const entry of blogEntries) {
+    add(entry.slug)
+    if (entry.id <= LEGACY_MAX_ID) add(entry.id.toString())
+  }
+  // Retired URLs (old slugs, numeric ids of removed posts) still resolve.
+  for (const from of Object.keys(BLOG_REDIRECTS)) add(from)
+
+  return params
 }
 
-// Only allow pre-generated slugs (and the legacy numeric ids)
+// Only allow pre-generated slugs, legacy numeric ids, and retired urls
 export const dynamicParams = false
 
 // Enable static generation with revalidation every hour
@@ -38,13 +50,18 @@ const findLegacyEntry = (slug: string) =>
     ? blogEntries.find((entry) => entry.id.toString() === slug)
     : undefined
 
+// Slug to redirect this param at, if any — an explicit retirement or a legacy
+// numeric id that still maps to a live post. Resolves in a single hop.
+const redirectTarget = (slug: string): string | undefined =>
+  BLOG_REDIRECTS[slug] ?? findLegacyEntry(slug)?.slug
+
 export async function generateMetadata({ params }: IPost): Promise<Metadata> {
   const { slug } = await params
   const post = findEntry(slug)
 
   if (!post) {
-    const legacy = findLegacyEntry(slug)
-    return legacy ? { alternates: { canonical: `/blog/${legacy.slug}` } } : {}
+    const target = redirectTarget(slug)
+    return target ? { alternates: { canonical: `/blog/${target}` } } : {}
   }
 
   const { title, description, cover, tags, date } = post
@@ -83,8 +100,8 @@ const Post = async ({ params }: IPost) => {
   const post = findEntry(slug)
 
   if (!post) {
-    const legacy = findLegacyEntry(slug)
-    if (legacy) permanentRedirect(`/blog/${legacy.slug}`)
+    const target = redirectTarget(slug)
+    if (target) permanentRedirect(`/blog/${target}`)
     redirect('/blog')
   }
 
