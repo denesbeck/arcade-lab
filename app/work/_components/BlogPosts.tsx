@@ -40,7 +40,7 @@ const BlogPosts = ({ blogPostReferences }: IBlogPosts) => {
         {visiblePosts.map(({ id, slug, title }) => (
           <Link
             key={id}
-            href={`/blog/`}
+            href={`/blog/${slug}`}
             className="py-1 px-2 max-w-full text-xs ring-1 transition-all duration-200 ring-dark-500 text-dark-200 truncate hover:ring-primary hover:text-primary"
           >
             {title}
