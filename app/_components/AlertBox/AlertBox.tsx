@@ -23,8 +23,8 @@ const AlertBox = ({ maxAlert = 5, context = '' }: IAlertBox) => {
   const [alerts, setAlerts] = useState<IAlertPayload[]>([])
 
   const handleAlert = useCallback(
-    (event: CustomEvent) => {
-      const alertEventDetail = event.detail as IAlertPayload
+    (event: Event) => {
+      const alertEventDetail = (event as CustomEvent<IAlertPayload>).detail
       setAlerts((prev) => {
         // Check for duplicates using the current state
         if (prev.find((alert) => alert.id === alertEventDetail.id)) return prev
@@ -34,8 +34,8 @@ const AlertBox = ({ maxAlert = 5, context = '' }: IAlertBox) => {
     [maxAlert]
   )
 
-  const handleCloseAlert = useCallback((event: CustomEvent) => {
-    const alertEventDetail = event.detail as IAlertPayload
+  const handleCloseAlert = useCallback((event: Event) => {
+    const alertEventDetail = (event as CustomEvent<IAlertPayload>).detail
     setAlerts((prev) =>
       prev.filter((alert) => alert.id !== alertEventDetail.id)
     )
@@ -50,41 +50,20 @@ const AlertBox = ({ maxAlert = 5, context = '' }: IAlertBox) => {
   }, [])
 
   useEffect(() => {
-    // @ts-expect-error: https://github.com/microsoft/TypeScript/issues/28357
-    window.addEventListener(
-      `${context.length ? context + '/' : ''}alert-event`,
-      handleAlert
-    )
-    // @ts-expect-error: https://github.com/microsoft/TypeScript/issues/28357
-    window.addEventListener(
-      `${context.length ? context + '/' : ''}close-alert`,
-      handleCloseAlert
-    )
-    window.addEventListener(
-      `${context.length ? context + '/' : ''}purge-alerts`,
-      handlePurgeAlerts
-    )
+    const prefix = context.length ? context + '/' : ''
+    window.addEventListener(`${prefix}alert-event`, handleAlert)
+    window.addEventListener(`${prefix}close-alert`, handleCloseAlert)
+    window.addEventListener(`${prefix}purge-alerts`, handlePurgeAlerts)
     return () => {
-      // @ts-expect-error: https://github.com/microsoft/TypeScript/issues/28357
-      window.removeEventListener(
-        `${context.length ? context + '/' : ''}alert-event`,
-        handleAlert
-      )
-      // @ts-expect-error: https://github.com/microsoft/TypeScript/issues/28357
-      window.removeEventListener(
-        `${context.length ? context + '/' : ''}close-alert`,
-        handleCloseAlert
-      )
-      window.removeEventListener(
-        `${context.length ? context + '/' : ''}purge-alerts`,
-        handlePurgeAlerts
-      )
+      window.removeEventListener(`${prefix}alert-event`, handleAlert)
+      window.removeEventListener(`${prefix}close-alert`, handleCloseAlert)
+      window.removeEventListener(`${prefix}purge-alerts`, handlePurgeAlerts)
     }
   }, [context, handleAlert, handleCloseAlert, handlePurgeAlerts])
 
   return (
     <Portal>
-      <div className="flex fixed top-2 right-2 flex-col space-y-2 w-max z-[999]">
+      <div className="fixed top-2 right-2 z-999 flex w-max flex-col space-y-2">
         {alerts.map((el) => {
           return (
             <Alert
