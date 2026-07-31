@@ -7,15 +7,9 @@ import blobStorageOptimizationX from '@/../public/blog/covers/blob_storage_optim
 import buildHomeServer from '@/../public/blog/covers/building_home_server.png'
 import buildHomeServerSm from '@/../public/blog/covers/building_home_server_sm.png'
 import buildHomeServerX from '@/../public/blog/covers/building_home_server_x.png'
-import beanstalkSecrets from '@/../public/blog/covers/cloudgoat__beanstalk_secrets.png'
-import beanstalkSecretsSm from '@/../public/blog/covers/cloudgoat__beanstalk_secrets_sm.png'
-import beanstalkSecretsX from '@/../public/blog/covers/cloudgoat__beanstalk_secrets_x.png'
-import dataSecrets from '@/../public/blog/covers/cloudgoat__data_secrets.png'
-import dataSecretsSm from '@/../public/blog/covers/cloudgoat__data_secrets_sm.png'
-import dataSecretsX from '@/../public/blog/covers/cloudgoat__data_secrets_x.png'
-import snsSecrets from '@/../public/blog/covers/cloudgoat__sns_secrets.png'
-import snsSecretsSm from '@/../public/blog/covers/cloudgoat__sns_secrets_sm.png'
-import snsSecretsX from '@/../public/blog/covers/cloudgoat__sns_secrets_x.png'
+import cloudgoat from '@/../public/blog/covers/cloudgoat_aws.png'
+import cloudgoatSm from '@/../public/blog/covers/cloudgoat_aws_sm.png'
+import cloudgoatX from '@/../public/blog/covers/cloudgoat_aws_x.png'
 import developingMyOwnVcs from '@/../public/blog/covers/developing_my_own_vcs.png'
 import developingMyOwnVcsSm from '@/../public/blog/covers/developing_my_own_vcs_sm.png'
 import developingMyOwnVcsX from '@/../public/blog/covers/developing_my_own_vcs_x.png'
@@ -197,28 +191,28 @@ const COVERS: Record<number, BlogCover> = {
     ogImageX: '/blog/covers/from_json_to_sqlite_x.png',
   },
   13: {
-    image: dataSecretsSm,
-    original: dataSecrets,
-    xImage: dataSecretsX,
-    alt: 'cloudgoat__data-secrets',
-    ogImage: '/blog/covers/cloudgoat__data_secrets.png',
-    ogImageX: '/blog/covers/cloudgoat__data_secrets_x.png',
+    image: cloudgoatSm,
+    original: cloudgoat,
+    xImage: cloudgoatX,
+    alt: 'cloudgoat_aws',
+    ogImage: '/blog/covers/cloudgoat_aws.png',
+    ogImageX: '/blog/covers/cloudgoat_aws_x.png',
   },
   12: {
-    image: snsSecretsSm,
-    original: snsSecrets,
-    xImage: snsSecretsX,
-    alt: 'cloudgoat__sns-secrets',
-    ogImage: '/blog/covers/cloudgoat__sns_secrets.png',
-    ogImageX: '/blog/covers/cloudgoat__sns_secrets_x.png',
+    image: cloudgoatSm,
+    original: cloudgoat,
+    xImage: cloudgoatX,
+    alt: 'cloudgoat_aws',
+    ogImage: '/blog/covers/cloudgoat_aws.png',
+    ogImageX: '/blog/covers/cloudgoat_aws_x.png',
   },
   10: {
-    image: beanstalkSecretsSm,
-    original: beanstalkSecrets,
-    xImage: beanstalkSecretsX,
-    alt: 'cloudgoat__beanstalk-secrets',
-    ogImage: '/blog/covers/cloudgoat__beanstalk_secrets.png',
-    ogImageX: '/blog/covers/cloudgoat__beanstalk_secrets_x.png',
+    image: cloudgoatSm,
+    original: cloudgoat,
+    xImage: cloudgoatX,
+    alt: 'cloudgoat_aws',
+    ogImage: '/blog/covers/cloudgoat_aws.png',
+    ogImageX: '/blog/covers/cloudgoat_aws_x.png',
   },
   9: {
     image: blobStorageOptimizationSm,
