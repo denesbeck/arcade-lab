@@ -139,7 +139,7 @@ const Post = async ({ params }: IPost) => {
   }
 
   return (
-    <div className="flex flex-col items-center pb-4 w-dvw">
+    <div className="flex w-dvw flex-col items-center pb-4">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -147,7 +147,7 @@ const Post = async ({ params }: IPost) => {
       <GoBack fallbackUrl="/blog" />
       <ScrollToTop />
       {Post()}
-      <div className="flex flex-wrap items-start px-6 mt-8 space-x-4 max-w-screen w-4xl">
+      <div className="mt-8 flex w-4xl max-w-screen flex-wrap items-start space-x-4 px-6">
         {post.tags.map((tag) => (
           <Tag key={tag} name={tag} />
         ))}
