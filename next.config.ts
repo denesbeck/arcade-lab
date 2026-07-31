@@ -11,6 +11,9 @@ const rehypeHighlightHcl = path.join(
 )
 
 const nextConfig: NextConfig = {
+  experimental: {
+    useTypeScriptCli: true,
+  },
   images: {
     remotePatterns: [new URL('https://images.credly.com/**')],
     minimumCacheTTL: 5184000, // 60d
