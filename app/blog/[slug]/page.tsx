@@ -1,5 +1,5 @@
 import 'highlight.js/styles/nord.css'
-import { redirect } from 'next/navigation'
+import { permanentRedirect, redirect } from 'next/navigation'
 import { Metadata } from 'next/types'
 import { GoBack, ScrollToTop } from '@/_components'
 import { RecommendedPosts, Share, Tag } from '../_components'
@@ -8,28 +8,46 @@ import { getRecommendedPosts } from '../_utils/getRecommendedPosts'
 import { isPublished } from '../_utils/isPublished'
 
 interface IPost {
-  params: Promise<{ id: string }>
+  params: Promise<{ slug: string }>
 }
 
 const domain = process.env.NEXT_PUBLIC_DOMAIN || 'arcade-lab.vercel.app'
 
-// Generate static params for all blog posts at build time
+// Ids 1-32 predate the slug migration; their numeric URLs still redirect.
+const LEGACY_MAX_ID = 32
+
 export async function generateStaticParams() {
-  return blogEntries.map((entry) => ({
-    id: entry.id.toString(),
-  }))
+  return blogEntries.flatMap((entry) =>
+    entry.id <= LEGACY_MAX_ID
+      ? [{ slug: entry.slug }, { slug: entry.id.toString() }]
+      : [{ slug: entry.slug }]
+  )
 }
 
-// Only allow pre-generated blog post IDs
+// Only allow pre-generated slugs (and the legacy numeric ids)
 export const dynamicParams = false
 
 // Enable static generation with revalidation every hour
 export const revalidate = 3600
 
+const findEntry = (slug: string) =>
+  blogEntries.find((entry) => entry.slug === slug)
+
+const findLegacyEntry = (slug: string) =>
+  /^\d+$/.test(slug)
+    ? blogEntries.find((entry) => entry.id.toString() === slug)
+    : undefined
+
 export async function generateMetadata({ params }: IPost): Promise<Metadata> {
-  const id = (await params).id
-  const post = blogEntries.find((entry) => entry.id.toString() === id)
-  const { title, description, cover, tags, date } = post || {}
+  const { slug } = await params
+  const post = findEntry(slug)
+
+  if (!post) {
+    const legacy = findLegacyEntry(slug)
+    return legacy ? { alternates: { canonical: `/blog/${legacy.slug}` } } : {}
+  }
+
+  const { title, description, cover, tags, date } = post
 
   return {
     metadataBase: new URL(`https://${domain}`),
@@ -38,12 +56,12 @@ export async function generateMetadata({ params }: IPost): Promise<Metadata> {
     keywords: tags,
     authors: [{ name: 'Denes Beck' }],
     alternates: {
-      canonical: `/blog/${id}`,
+      canonical: `/blog/${post.slug}`,
     },
     openGraph: {
       title: title,
       description: description,
-      url: `https://${domain}/blog/${id}`,
+      url: `https://${domain}/blog/${post.slug}`,
       images: cover?.ogImage ? [{ url: cover.ogImage }] : [],
       type: 'article',
       siteName: 'Arcade Lab',
@@ -61,24 +79,28 @@ export async function generateMetadata({ params }: IPost): Promise<Metadata> {
 }
 
 const Post = async ({ params }: IPost) => {
-  const { id } = await params
-  const post = blogEntries.find((entry) => entry.id.toString() === id)
+  const { slug } = await params
+  const post = findEntry(slug)
 
-  if (post && !isPublished(post)) redirect('/blog')
+  if (!post) {
+    const legacy = findLegacyEntry(slug)
+    if (legacy) permanentRedirect(`/blog/${legacy.slug}`)
+    redirect('/blog')
+  }
 
-  const { default: Post } = await import(
-    `../_config/markdown/${post?.content}.mdx`
-  )
+  if (!isPublished(post)) redirect('/blog')
+
+  const { default: Post } = await import(`../_config/markdown/${post.file}.mdx`)
 
   // JSON-LD structured data for blog post
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
-    headline: post?.title,
-    description: post?.description,
-    image: post?.cover?.ogImage ? `https://${domain}${post.cover.ogImage}` : '',
-    datePublished: post?.date,
-    dateModified: post?.date,
+    headline: post.title,
+    description: post.description,
+    image: post.cover?.ogImage ? `https://${domain}${post.cover.ogImage}` : '',
+    datePublished: post.date,
+    dateModified: post.date,
     author: {
       '@type': 'Person',
       name: 'Denes Beck',
@@ -92,10 +114,10 @@ const Post = async ({ params }: IPost) => {
         url: `https://${domain}/logo/arcade_lab_logo.png`,
       },
     },
-    keywords: post?.tags.join(', '),
+    keywords: post.tags.join(', '),
     mainEntityOfPage: {
       '@type': 'WebPage',
-      '@id': `https://${domain}/blog/${id}`,
+      '@id': `https://${domain}/blog/${post.slug}`,
     },
   }
 
@@ -109,14 +131,12 @@ const Post = async ({ params }: IPost) => {
       <ScrollToTop />
       {Post()}
       <div className="flex flex-wrap items-start px-6 mt-8 space-x-4 max-w-screen w-4xl">
-        {(post?.tags || []).map((tag) => (
+        {post.tags.map((tag) => (
           <Tag key={tag} name={tag} />
         ))}
       </div>
-      <Share id={id} />
-      {post && (
-        <RecommendedPosts posts={getRecommendedPosts(post, blogEntries)} />
-      )}
+      <Share slug={post.slug} />
+      <RecommendedPosts posts={getRecommendedPosts(post, blogEntries)} />
     </div>
   )
 }

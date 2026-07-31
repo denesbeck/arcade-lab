@@ -4,7 +4,7 @@ _How a Simple Benchmark Convinced Me to Rewrite Nexio's Storage Layer_
 
 ## 🧭 Introduction
 
-In my [previous posts](/blog/8), I shared how I built Nexio from scratch, and then [optimized its blob storage](/blog/9) with content-addressable deduplication and compression. But there was still a major bottleneck hiding in plain sight: the metadata layer. Every staging operation, commit lookup, and branch query was reading and writing JSON files. For small repositories, this was fine. For anything beyond a few hundred files, it was painfully slow.
+In my [previous posts](/blog/build-your-own-git-in-go), I shared how I built Nexio from scratch, and then [optimized its blob storage](/blog/content-addressable-storage-blake3) with content-addressable deduplication and compression. But there was still a major bottleneck hiding in plain sight: the metadata layer. Every staging operation, commit lookup, and branch query was reading and writing JSON files. For small repositories, this was fine. For anything beyond a few hundred files, it was painfully slow.
 
 In this post, I'll walk through how I benchmarked the problem, designed a SQLite-based replacement, and navigated the tricky parts of the migration — including a subtle branching model issue that forced me to rethink how commits relate to branches entirely.
 
@@ -67,7 +67,7 @@ JSON has no indexes. Every lookup is a linear scan. SQLite uses B-tree indexes, 
 
 ## 🏗️ The New Architecture
 
-With blob storage already handled by the `objects/` directory (see [blob storage optimization](/blog/blob-storage-optimization)), and `config.json` being rarely accessed and human-editable, the migration target was focused: replace all the JSON metadata files with a single SQLite database.
+With blob storage already handled by the `objects/` directory (see [blob storage optimization](/blog/content-addressable-storage-blake3)), and `config.json` being rarely accessed and human-editable, the migration target was focused: replace all the JSON metadata files with a single SQLite database.
 
 ```
 .nexio/
@@ -202,7 +202,7 @@ Since tests call helper functions directly instead of going through Cobra's comm
 
 ### File-Based Locking Is Gone
 
-The old `lock.go` implemented a file-based mutex using `O_CREATE|O_EXCL` flags (which I actually [wrote about](/blog/developing-my-own-vcs) as a learning exercise). With SQLite handling concurrency through WAL mode and its own internal locking, the file-based lock became redundant and was deleted.
+The old `lock.go` implemented a file-based mutex using `O_CREATE|O_EXCL` flags (which I actually [wrote about](/blog/build-your-own-git-in-go) as a learning exercise). With SQLite handling concurrency through WAL mode and its own internal locking, the file-based lock became redundant and was deleted.
 
 ## 🧮 The Numbers
 

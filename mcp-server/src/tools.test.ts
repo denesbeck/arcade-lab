@@ -31,11 +31,11 @@ describe('executeTool', () => {
   })
 
   describe('search_blog_posts', () => {
-    it('formats matches with the ID and /blog/<id> URL', () => {
+    it('formats matches with the ID and /blog/<slug> URL', () => {
       // The system prompt relies on this URL format to build markdown links.
       const text = run('search_blog_posts', { query: 'lambda' })
       expect(text).toMatch(/\[ID: \d+\]/)
-      expect(text).toMatch(/URL: \/blog\/\d+/)
+      expect(text).toMatch(/URL: \/blog\/[a-z0-9]+(-[a-z0-9]+)*$/m)
     })
 
     it('reports no results for a query that cannot match', () => {
@@ -55,7 +55,7 @@ describe('executeTool', () => {
       const entry = getBlogEntries()[0]
       const text = run('get_blog_post', { id: entry.id })
       expect(text).toContain(entry.title)
-      expect(text).toContain(`/blog/${entry.id}`)
+      expect(text).toContain(`/blog/${entry.slug}`)
       // Content is appended after the metadata separator.
       expect(text).toContain('---')
     })

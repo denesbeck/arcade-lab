@@ -2,36 +2,36 @@ import Link from 'next/link'
 import { FaFacebook, FaLinkedin, FaXTwitter } from 'react-icons/fa6'
 
 interface IShare {
-  id: string
+  slug: string
 }
 
 const domain = process.env.NEXT_PUBLIC_DOMAIN
 
 const SHARE_OPTIONS = [
   {
-    getId: (id: string) => `${id}_linkedin`,
-    getHref: (id: string) =>
-      `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(`https://${domain}/blog/${id}`)}`,
+    getId: (slug: string) => `${slug}_linkedin`,
+    getHref: (slug: string) =>
+      `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(`https://${domain}/blog/${slug}`)}`,
     icon: FaLinkedin,
   },
   {
-    getId: (id: string) => `${id}_facebook`,
-    getHref: (id: string) =>
-      `https://www.facebook.com/sharer.php?u=${encodeURIComponent(`https://${domain}/blog/${id}`)}`,
+    getId: (slug: string) => `${slug}_facebook`,
+    getHref: (slug: string) =>
+      `https://www.facebook.com/sharer.php?u=${encodeURIComponent(`https://${domain}/blog/${slug}`)}`,
     icon: FaFacebook,
   },
   {
-    getId: (id: string) => `${id}_twitter`,
-    getHref: (id: string) =>
-      `https://twitter.com/intent/tweet?url=${encodeURIComponent(`https://${domain}/blog/${id}`)}`,
+    getId: (slug: string) => `${slug}_twitter`,
+    getHref: (slug: string) =>
+      `https://twitter.com/intent/tweet?url=${encodeURIComponent(`https://${domain}/blog/${slug}`)}`,
     icon: FaXTwitter,
   },
 ]
 
-const Share = ({ id }: IShare) => {
+const Share = ({ slug }: IShare) => {
   const shareLinks = SHARE_OPTIONS.map((option) => ({
-    id: option.getId(id),
-    href: option.getHref(id),
+    id: option.getId(slug),
+    href: option.getHref(slug),
     icon: option.icon,
   }))
 

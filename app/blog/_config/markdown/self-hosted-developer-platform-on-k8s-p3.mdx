@@ -4,7 +4,7 @@ _Milestone 2, part one: IRSA without the magic — OIDC from first principles, a
 
 ## 🎯 What I was trying to do
 
-[Part 2](/blog/29) ended with a quiet, correct foundation: encrypted secrets, CI gates, and Cilium doing the networking. Nothing on the cluster yet that needs to reach out of it.
+[Part 2](/blog/cilium-ebpf-on-talos) ended with a quiet, correct foundation: encrypted secrets, CI gates, and Cilium doing the networking. Nothing on the cluster yet that needs to reach out of it.
 
 That changes now. The platform services I'm about to install — the EBS CSI driver, the AWS Load Balancer Controller, Velero — all need to call the **AWS API**. The EBS driver creates volumes, the LB controller spins up NLBs, Velero writes backups to S3. And AWS only authenticates **IAM identities**; it has no idea what a "Kubernetes pod" is.
 

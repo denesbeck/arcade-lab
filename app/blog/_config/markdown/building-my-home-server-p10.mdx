@@ -24,7 +24,7 @@ For a home lab, the killer feature is the combination of passive monitoring and 
 
 I considered a few alternatives. [Fing](https://www.fing.com/) is the popular consumer option, but it's a phone app tied to proprietary hardware for advanced features. [NetBox](https://netboxlabs.com/) is the gold standard for network source of truth in enterprise environments, but it's overkill for a single-server home lab — it's designed for documenting infrastructure, not discovering it. [Zabbix](https://www.zabbix.com/) and [Nagios](https://www.nagios.org/) are powerful monitoring platforms, but they're focused on uptime and performance metrics, not asset discovery.
 
-NetAlertX sits in a sweet spot: it's self-hosted, lightweight, Docker-native, and purpose-built for answering the question "what's on my network right now?" It also integrates directly with Pi-hole (which I set up in [Part 5](/blog/building-my-home-server-p5)), so it can import device data from DNS queries without any additional scanning.
+NetAlertX sits in a sweet spot: it's self-hosted, lightweight, Docker-native, and purpose-built for answering the question "what's on my network right now?" It also integrates directly with Pi-hole (which I set up in [Part 5](/blog/pihole-docker-local-dns)), so it can import device data from DNS queries without any additional scanning.
 
 ## 🐳 Running NetAlertX in Docker
 

@@ -16,9 +16,7 @@ interface IBlogPosts {
 const BlogPosts = ({ blogPostReferences }: IBlogPosts) => {
   const [expanded, setExpanded] = useState(false)
 
-  // Resolve references to published entries *before* slicing, so a hidden post
-  // in the first MAX_VISIBLE doesn't shrink the collapsed row or skew the
-  // "show more" count.
+  // Filter before slicing, so a hidden post doesn't shrink the collapsed row.
   const publishedPosts = blogPostReferences
     .map((reference) => BLOG_ENTRIES.find(({ id }) => id === reference))
     .filter((entry): entry is BlogEntry => !!entry && isPublished(entry))
@@ -39,10 +37,10 @@ const BlogPosts = ({ blogPostReferences }: IBlogPosts) => {
         <span>Related posts</span>
       </div>
       <div className="flex flex-wrap gap-2">
-        {visiblePosts.map(({ id, title }) => (
+        {visiblePosts.map(({ id, slug, title }) => (
           <Link
             key={id}
-            href={`/blog/${id}`}
+            href={`/blog/`}
             className="py-1 px-2 max-w-full text-xs ring-1 transition-all duration-200 ring-dark-500 text-dark-200 truncate hover:ring-primary hover:text-primary"
           >
             {title}

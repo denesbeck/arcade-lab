@@ -8,15 +8,14 @@ import { FaRegCalendarAlt } from 'react-icons/fa'
 import { darkTheme } from '@/theme'
 
 interface BlogCardProps {
-  id: number
+  slug: string
   title: string
   description: string
   date: string
-  content: string
   cover: { image: StaticImageData; alt: string }
 }
 
-const BlogCard = ({ id, title, description, date, cover }: BlogCardProps) => {
+const BlogCard = ({ slug, title, description, date, cover }: BlogCardProps) => {
   const searchParams = useSearchParams()
   const [loading, setLoading] = useState(false)
 
@@ -30,7 +29,7 @@ const BlogCard = ({ id, title, description, date, cover }: BlogCardProps) => {
 
   return (
     <Link
-      href={`/blog/${id}?${searchParams.toString()}`}
+      href={`/blog/${slug}?${searchParams.toString()}`}
       className="flex overflow-hidden relative max-h-44 border-b-2 transition-all duration-200 ease-in-out cursor-pointer sm:border-b-0 sm:ring-2 last:border-b-0 backdrop-blur-md ring-offset-root border-secondary ring-secondary group animate-text-focus min-h-44 sm:hover:ring-primary sm:active:ring-active sm:hover:ring-offset-4"
     >
       {loading && (

@@ -17,7 +17,7 @@ const RecommendedPosts = ({ posts }: IRecommendedPosts) => {
         {posts.map((post) => (
           <Link
             key={post.id}
-            href={`/blog/${post.id}`}
+            href={`/blog/${post.slug}`}
             className="flex overflow-hidden flex-col transition-all duration-200 ease-in-out cursor-pointer ring-2 ring-offset-root backdrop-blur-md border-secondary ring-secondary group animate-text-focus sm:hover:ring-primary sm:active:ring-active sm:hover:ring-offset-4"
           >
             <Image

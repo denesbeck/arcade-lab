@@ -8,11 +8,12 @@ function entry(
 ): BlogEntry {
   return {
     id: 1,
+    slug: 'test',
     title: 'Test',
     description: 'Test',
     date: '2025-06-15',
     hidden: false,
-    content: '',
+    file: '',
     tags: [],
     cover: {} as BlogEntry['cover'],
     ...overrides,

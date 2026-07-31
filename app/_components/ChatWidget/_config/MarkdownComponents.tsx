@@ -61,7 +61,7 @@ const chatMarkdownComponents: Components = {
     <li className="my-0.5 text-sm break-words text-dark-200">{children}</li>
   ),
 
-  // Links — internal links (e.g., /blog/18) use Next.js Link for client-side navigation
+  // Links — internal links (e.g., /blog/pihole-docker-local-dns) use Next.js Link for client-side navigation
   // (preserves chat state), external links open in a new tab
   a: ({ children, href }) => {
     const isInternal = href?.startsWith('/')

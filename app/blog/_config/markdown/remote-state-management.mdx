@@ -4,7 +4,7 @@ _Taking Nexio from Local-Only to Collaborative_
 
 ## 🧭 Introduction
 
-In my previous posts, I covered how I built Nexio from scratch as a [local VCS](/blog/developing-my-own-vcs), then [optimized storage with content-addressable blobs](/blog/blob-storage-optimization), and most recently [migrated metadata from JSON to SQLite](/blog/from-json-to-sqlite). Through all of that, Nexio had one glaring limitation printed right in the README: **"No remote repository support."**
+In my previous posts, I covered how I built Nexio from scratch as a [local VCS](/blog/build-your-own-git-in-go), then [optimized storage with content-addressable blobs](/blog/content-addressable-storage-blake3), and most recently [migrated metadata from JSON to SQLite](/blog/json-to-sqlite-2000x-faster). Through all of that, Nexio had one glaring limitation printed right in the README: **"No remote repository support."**
 
 A version control system that can't sync between machines isn't very useful beyond a personal backup tool. In this post, I'll walk through how I added remote state management to Nexio using AWS S3, enabling push, pull, and clone operations — the three pillars of collaborative version control.
 
@@ -245,7 +245,7 @@ nexio pull
 
 ## 💡 Lessons Learned
 
-1. **Content-addressable storage makes sync easy.** The blob deduplication from the [previous optimization](/blog/blob-storage-optimization) wasn't just about saving disk space — it made remote sync almost trivial. Same hash means same content, so a `HeadObject` check is all you need to know whether to transfer a blob.
+1. **Content-addressable storage makes sync easy.** The blob deduplication from the [previous optimization](/blog/content-addressable-storage-blake3) wasn't just about saving disk space — it made remote sync almost trivial. Same hash means same content, so a `HeadObject` check is all you need to know whether to transfer a blob.
 
 2. **SQLite's ATTACH is powerful.** The ability to open two databases and merge them in a single transaction eliminated an entire class of merge complexity. No custom diff algorithms, no conflict tracking — just `INSERT OR IGNORE`.
 

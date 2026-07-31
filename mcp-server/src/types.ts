@@ -1,14 +1,8 @@
-export interface BlogPostMeta {
-  id: number
-  title: string
-  description: string
-  date: string
-  hidden: boolean
-  tags: string[]
-  slug: string
-}
+import type { BlogMeta } from '../../app/blog/_config/metadata'
 
-export interface BlogPost extends BlogPostMeta {
+export type BlogPostMeta = BlogMeta
+
+export interface BlogPost extends BlogMeta {
   content: string
 }
 

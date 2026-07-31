@@ -4,7 +4,7 @@ _Milestones 0 and 1: SOPS-encrypted secrets, CI gates that run before the cluste
 
 ## 🎯 What I was trying to do
 
-[Part 1](/blog/26) ended with three nodes `Ready` and Flannel — Talos's default CNI — quietly doing its job. A working cluster, and nothing on it.
+[Part 1](/blog/talos-kubernetes-on-aws-terraform) ended with three nodes `Ready` and Flannel — Talos's default CNI — quietly doing its job. A working cluster, and nothing on it.
 
 The temptation at that point is to start deploying things. I didn't, because everything I'm about to build is GitOps: Argo CD reconciling the cluster from a repo. That only works if the repo can hold secrets safely and if bad manifests get stopped *before* they're merged. So before any workloads, two unglamorous milestones:
 

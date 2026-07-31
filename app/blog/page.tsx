@@ -89,11 +89,10 @@ const Blog = async ({
             {entries.filter(isPublished).map((entry) => (
               <BlogCard
                 key={entry.id}
-                id={entry.id}
+                slug={entry.slug}
                 title={entry.title}
                 description={entry.description}
                 date={entry.date}
-                content={entry.content}
                 cover={entry.cover}
               />
             ))}

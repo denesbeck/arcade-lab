@@ -128,7 +128,7 @@ export function executeTool(
       const text = results
         .map(
           (r) =>
-            `[ID: ${r.id}] ${r.title}\n  URL: /blog/${r.id}\n  Description: ${r.description}\n  Date: ${r.date}\n  Tags: ${r.tags.join(', ')}\n  Relevance score: ${r.score}`
+            `[ID: ${r.id}] ${r.title}\n  URL: /blog/${r.slug}\n  Description: ${r.description}\n  Date: ${r.date}\n  Tags: ${r.tags.join(', ')}\n  Relevance score: ${r.score}`
         )
         .join('\n\n')
 
@@ -169,7 +169,7 @@ export function executeTool(
         content: [
           {
             type: 'text',
-            text: `# ${post.title}\n\nURL: /blog/${post.id}\nDate: ${post.date}\nTags: ${post.tags.join(', ')}\n\n${post.description}\n\n---\n\n${post.content}\n\n---\nWhen referencing this blog post in your response, include a markdown link: [${post.title}](/blog/${post.id})`,
+            text: `# ${post.title}\n\nURL: /blog/${post.slug}\nDate: ${post.date}\nTags: ${post.tags.join(', ')}\n\n${post.description}\n\n---\n\n${post.content}\n\n---\nWhen referencing this blog post in your response, include a markdown link: [${post.title}](/blog/${post.slug})`,
           },
         ],
       }
@@ -203,7 +203,7 @@ export function executeTool(
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
         .map(
           (e) =>
-            `[ID: ${e.id}] ${e.title} (${e.date})\n  URL: /blog/${e.id}\n  ${e.description}\n  Tags: ${e.tags.join(', ')}`
+            `[ID: ${e.id}] ${e.title} (${e.date})\n  URL: /blog/${e.slug}\n  ${e.description}\n  Tags: ${e.tags.join(', ')}`
         )
         .join('\n\n')
 
