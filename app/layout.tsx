@@ -125,6 +125,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        {/* Not via metadata.alternates.types — pages that set their own
+            canonical replace the whole alternates object and drop it. */}
+        <link
+          rel="alternate"
+          type="application/rss+xml"
+          title="Arcade Lab"
+          href="/feed.xml"
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
