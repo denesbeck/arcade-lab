@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { FaRegCalendarAlt } from 'react-icons/fa'
+import { AnimatedUnderline } from '@/_components'
 import { BlogEntry } from '../_interfaces/blog'
 
 interface IRecommendedPosts {
@@ -18,18 +19,18 @@ const RecommendedPosts = ({ posts }: IRecommendedPosts) => {
           <Link
             key={post.id}
             href={`/blog/${post.slug}`}
-            className="ring-offset-root border-secondary ring-secondary group sm:hover:ring-primary sm:active:ring-active flex animate-text-focus cursor-pointer flex-col overflow-hidden ring-2 backdrop-blur-md transition-all duration-200 ease-in-out sm:hover:ring-offset-4"
+            className="ring-offset-root border-secondary ring-secondary group sm:hover:ring-primary sm:active:ring-active relative flex animate-text-focus cursor-pointer flex-col overflow-hidden ring-2 backdrop-blur-md transition-all duration-200 ease-in-out sm:hover:ring-offset-4"
           >
             <Image
               quality={100}
               src={post.cover.original}
               alt={post.cover.alt}
               sizes="(min-width: 1024px) 300px, (min-width: 640px) 50vw, 100vw"
-              className="h-32 w-full object-cover transition-all duration-200 ease-in-out group-hover:h-full"
+              className="absolute top-0 left-0 h-32 w-full object-cover transition-all duration-200 ease-in-out group-hover:h-full group-hover:brightness-40"
             />
-            <div className="flex flex-1 flex-col space-y-2 px-4 py-3">
-              <h2 className="after:bg-primary relative text-left text-base transition-all duration-200 ease-in-out after:absolute after:-bottom-0.5 after:left-0 after:h-0.5 after:w-0 after:transition-all after:duration-200 after:ease-in-out after:content-[''] group-hover:after:w-full">
-                {post.title}
+            <div className="mt-32 flex flex-1 flex-col space-y-2 px-4 py-3">
+              <h2 className="group-hover:text-dark-50 relative z-10 text-left text-base transition-all duration-200 ease-in-out group-hover:font-bold">
+                <AnimatedUnderline>{post.title}</AnimatedUnderline>
               </h2>
               <p className="flex-1 text-left text-sm">{post.description}</p>
               <div className="flex items-center space-x-2">

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useCallback, useState } from 'react'
 import { FaRegCalendarAlt } from 'react-icons/fa'
+import { AnimatedUnderline } from '@/_components'
 import { darkTheme } from '@/theme'
 
 interface BlogCardProps {
@@ -52,8 +53,8 @@ const BlogCard = ({ slug, title, description, date, cover }: BlogCardProps) => {
         onLoad={handleLoad}
       />
       <div className="flex overflow-auto flex-col py-3 px-6 space-y-2">
-        <h1 className="relative text-lg text-left transition-all duration-200 ease-in-out after:bg-primary after:absolute after:-bottom-0.5 after:left-0 after:h-0.5 after:w-0 after:transition-all after:duration-200 after:ease-in-out after:content-[''] group-hover:after:w-full">
-          {title}
+        <h1 className="relative text-lg text-left transition-all duration-200 ease-in-out">
+          <AnimatedUnderline>{title}</AnimatedUnderline>
         </h1>
         <p className="flex-1 text-sm text-left md:w-full">{description}</p>
         <div className="flex gap-4 justify-start items-center w-full xs:justify-between">

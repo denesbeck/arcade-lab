@@ -1,4 +1,5 @@
 import AnimatedBorder from './AnimatedBorder'
+import AnimatedUnderline from './AnimatedUnderline'
 import Button from './Button'
 import ChatWidget from './ChatWidget'
 import CopyButton from './CopyButton'
@@ -23,6 +24,7 @@ import Tooltip from './Tooltip'
 
 export {
   AnimatedBorder,
+  AnimatedUnderline,
   Button,
   ChatWidget,
   CopyButton,
