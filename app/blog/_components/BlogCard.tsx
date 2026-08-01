@@ -53,7 +53,7 @@ const BlogCard = ({ slug, title, description, date, cover }: BlogCardProps) => {
         onLoad={handleLoad}
       />
       <div className="flex overflow-auto flex-col py-3 px-6 space-y-2">
-        <h1 className="relative text-lg text-left transition-all duration-200 ease-in-out">
+        <h1 className="text-lg text-left transition-all duration-200 ease-in-out">
           <AnimatedUnderline>{title}</AnimatedUnderline>
         </h1>
         <p className="flex-1 text-sm text-left md:w-full">{description}</p>
