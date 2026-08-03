@@ -1,11 +1,11 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { FaRegCalendarAlt } from 'react-icons/fa'
+import { FaRegCalendarAlt, FaRegClock } from 'react-icons/fa'
 import { AnimatedUnderline } from '@/_components'
-import { BlogEntry } from '../_interfaces/blog'
+import { BlogEntryWithReadTime } from '../_interfaces/blog'
 
 interface IRecommendedPosts {
-  posts: BlogEntry[]
+  posts: BlogEntryWithReadTime[]
 }
 
 const RecommendedPosts = ({ posts }: IRecommendedPosts) => {
@@ -33,9 +33,19 @@ const RecommendedPosts = ({ posts }: IRecommendedPosts) => {
                 <AnimatedUnderline>{post.title}</AnimatedUnderline>
               </h2>
               <p className="flex-1 text-left text-sm">{post.description}</p>
-              <div className="flex items-center space-x-2">
-                <FaRegCalendarAlt />
-                <div className="text-sm whitespace-nowrap">{post.date}</div>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                <div className="flex items-center space-x-2">
+                  <FaRegCalendarAlt />
+                  <div className="text-sm whitespace-nowrap">{post.date}</div>
+                </div>
+                {post.readTime !== null && (
+                  <div className="group-hover:text-dark-50 z-10 flex items-center space-x-2 transition-all duration-200 ease-in-out group-hover:font-bold">
+                    <FaRegClock />
+                    <div className="text-sm whitespace-nowrap">
+                      {post.readTime} min read
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </Link>

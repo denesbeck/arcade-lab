@@ -4,7 +4,7 @@ import Image, { StaticImageData } from 'next/image'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useCallback, useState } from 'react'
-import { FaRegCalendarAlt } from 'react-icons/fa'
+import { FaRegCalendarAlt, FaRegClock } from 'react-icons/fa'
 import { AnimatedUnderline } from '@/_components'
 import { darkTheme } from '@/theme'
 
@@ -13,10 +13,18 @@ interface BlogCardProps {
   title: string
   description: string
   date: string
+  readTime: number | null
   cover: { image: StaticImageData; alt: string }
 }
 
-const BlogCard = ({ slug, title, description, date, cover }: BlogCardProps) => {
+const BlogCard = ({
+  slug,
+  title,
+  description,
+  date,
+  readTime,
+  cover,
+}: BlogCardProps) => {
   const searchParams = useSearchParams()
   const [loading, setLoading] = useState(false)
 
@@ -62,6 +70,14 @@ const BlogCard = ({ slug, title, description, date, cover }: BlogCardProps) => {
             <FaRegCalendarAlt />
             <div className="text-sm whitespace-nowrap">{date}</div>
           </div>
+          {readTime !== null && (
+            <div className="flex items-center space-x-2">
+              <FaRegClock />
+              <div className="text-sm whitespace-nowrap">
+                {readTime} min read
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </Link>

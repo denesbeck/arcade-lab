@@ -13,3 +13,7 @@ export interface BlogCover {
 export interface BlogEntry extends BlogMeta {
   cover: BlogCover
 }
+
+export interface BlogEntryWithReadTime extends BlogEntry {
+  readTime: number | null // minutes, null when the MDX source is unreadable
+}

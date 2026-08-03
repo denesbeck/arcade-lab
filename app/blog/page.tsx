@@ -3,6 +3,7 @@ import { PageHeader } from '@/_components'
 import { BlogCard, FilterTags, NoRecords } from './_components'
 import blogEntries from './_config/data'
 import { isPublished } from './_utils/isPublished'
+import { getReadTime } from './_utils/readTime'
 
 export const revalidate = 3600 // Revalidate every 1h
 
@@ -93,6 +94,7 @@ const Blog = async ({
                 title={entry.title}
                 description={entry.description}
                 date={entry.date}
+                readTime={getReadTime(entry.file)}
                 cover={entry.cover}
               />
             ))}

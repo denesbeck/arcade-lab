@@ -1,12 +1,14 @@
 import 'highlight.js/styles/nord.css'
 import { permanentRedirect, redirect } from 'next/navigation'
 import { Metadata } from 'next/types'
+import { FaRegClock } from 'react-icons/fa'
 import { GoBack, ScrollToTop } from '@/_components'
 import { RecommendedPosts, Share, Tag } from '../_components'
 import blogEntries from '../_config/data'
 import { BLOG_REDIRECTS } from '../_config/redirects'
 import { getRecommendedPosts } from '../_utils/getRecommendedPosts'
 import { isPublished } from '../_utils/isPublished'
+import { getReadTime, withReadTime } from '../_utils/readTime'
 
 interface IPost {
   params: Promise<{ slug: string }>
@@ -108,6 +110,7 @@ const Post = async ({ params }: IPost) => {
   if (!isPublished(post)) redirect('/blog')
 
   const { default: Post } = await import(`../_config/markdown/${post.file}.mdx`)
+  const readTime = getReadTime(post.file)
 
   // JSON-LD structured data for blog post
   const jsonLd = {
@@ -118,6 +121,7 @@ const Post = async ({ params }: IPost) => {
     image: post.cover?.ogImage ? `https://${domain}${post.cover.ogImage}` : '',
     datePublished: post.date,
     dateModified: post.date,
+    ...(readTime !== null && { timeRequired: `PT${readTime}M` }),
     author: {
       '@type': 'Person',
       name: 'Denes Beck',
@@ -146,6 +150,12 @@ const Post = async ({ params }: IPost) => {
       />
       <GoBack fallbackUrl="/blog" />
       <ScrollToTop />
+      {readTime !== null && (
+        <div className="text-dark-300 flex w-4xl max-w-screen items-center space-x-2 px-6 pt-4 text-sm">
+          <FaRegClock />
+          <span>{readTime} min read</span>
+        </div>
+      )}
       {Post()}
       <div className="mt-8 flex w-4xl max-w-screen flex-wrap items-start space-x-4 px-6">
         {post.tags.map((tag) => (
@@ -153,7 +163,9 @@ const Post = async ({ params }: IPost) => {
         ))}
       </div>
       <Share slug={post.slug} />
-      <RecommendedPosts posts={getRecommendedPosts(post, blogEntries)} />
+      <RecommendedPosts
+        posts={getRecommendedPosts(post, blogEntries).map(withReadTime)}
+      />
     </div>
   )
 }
