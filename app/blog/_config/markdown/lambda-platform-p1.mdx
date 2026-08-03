@@ -1,0 +1,225 @@
+# 🧩 Lambda Platform: From Pipeline to Platform
+
+_Part 1: why I stopped improving a deployment pipeline, and what a golden path has to promise instead_
+
+## 🧭 Introduction
+
+I've written about Lambda deployments three times already: [building the original GitHub Actions + OIDC pipeline](/blog/lambda-deployments-github-actions-oidc), [evolving it from an MVP into a production-ready deployment pipeline](/blog/lambda-deployment-pipeline-testing), and [consolidating three repositories into one](/blog/terraform-oidc-aws-vercel-github-actions).
+
+Those posts document the evolution of a deployment pipeline built around GitHub Actions, a handful of Bash scripts, and the AWS SDK. It used GitHub Environments to support multi-region deployments, environment-specific configuration, and production approval gates. The implementation was intentionally simple, and the results were surprisingly good.
+
+The pipeline assumed the required infrastructure already existed. Terraform, running in a dedicated infrastructure repository, provisioned the AWS resources — Lambda function placeholders, IAM roles, networking, and everything supporting them. The deployment pipeline focused solely on packaging and shipping code while managing Lambda-specific resources such as layers and aliases. Smart caching combined with S3-backed hash tracking meant deployments only ran when code or configuration had actually changed, which made the pipeline both fast and cheap to operate.
+
+Even after more than a year, I still consider that approach practical and scalable. It required relatively little engineering effort, yet it proved reliable enough to run production workloads.
+
+Its limitations weren't technical. They were architectural.
+
+Terraform remained the source of truth for infrastructure, which had one major advantage: the entire environment could be recreated or removed cleanly with a single `terraform apply` or `terraform destroy`. But infrastructure ownership was split. Terraform created the resources; the deployment pipeline managed the functions running on top of them.
+
+Although the pipeline automated deployments, developers still needed to understand and modify Terraform whenever infrastructure changed. It reduced operational complexity, but it still exposed infrastructure concepts that application developers shouldn't have to think about.
+
+Around the same time, I experimented with moving from a Lambda monorepo to a multi-repository model. That experiment reinforced another lesson: neither repository structure is universally better. A monorepo simplifies some workflows; separate repositories often align better with application boundaries. The deployment platform shouldn't care which model a team chooses.
+
+At some point I realised I wasn't trying to improve a deployment pipeline anymore.
+
+I was trying to build a developer platform.
+
+Instead of maintaining a deployment pipeline and a separate Terraform repository, I wanted developers to describe what they needed: an HTTP endpoint, a scheduled job, read access to a DynamoDB table, a shared Lambda layer. The platform would own everything else — from provisioning infrastructure with Terraform to deploying code safely into production.
+
+That realisation became the foundation for the next iteration. This post is the first in a series about building it.
+
+---
+
+## 📐 Constraints
+
+Before writing any code, I defined a set of design principles. Every architectural decision had to satisfy them.
+
+- **Developers should only write Lambda code and declare intent in a single `lambda.yaml` file.** Instead of describing infrastructure, they declare what they need — _"I want an API trigger and read access to the orders table."_ The platform translates that intent into infrastructure, deployment workflows, and runtime configuration.
+- **Developers should never have to interact with Terraform.** Terraform remains an implementation detail of the platform. Nobody outside it should need to understand Terraform configuration, state files, outputs, IAM policies, or event source mappings.
+- **The platform should not enforce a repository structure.** Monorepo or multi-repo is an application-level decision. The deployment experience should be identical either way.
+- **Adoption should be frictionless.** A lightweight scaffolding script should bootstrap a new project in roughly fifteen minutes, without requiring developers to study platform documentation or infrastructure concepts.
+- **Terraform should remain the source of truth for every AWS resource.** Infrastructure stays fully declarative, so the entire platform can be recreated or removed with a single `terraform apply` or `terraform destroy`, leaving no orphaned resources behind.
+- **Shared Lambda layers should remain centrally managed.** Common dependencies live in one place, instead of duplicated packages and drifting versions across dozens of functions.
+- **Production deployments should support safe traffic shifting and rollbacks.** Aliases make blue/green-style deployments straightforward for code, but infrastructure changes are harder. Permissions, triggers, and event source mappings have to stay consistent throughout a rollout, or an otherwise safe deploy becomes an outage.
+
+These principles intentionally blur the line between infrastructure and application deployment. The platform owns infrastructure, deployments, and operational concerns. Developers own application code and describe the capabilities they need. Everything else becomes an implementation detail.
+
+---
+
+## 🏗️ Architecture
+
+I wanted to keep the architecture clean and simple: intent goes in one side, AWS resources come out the other, and every step in between belongs to the platform.
+
+![360_200+Lambda Platform Architecture](/blog/images/lambda_platform_arch.svg)
+
+**Client.** The client side is the application repository, where the Lambda functions live alongside the `lambda.yaml` config file. It talks to the platform over HTTPS, authenticating with an OIDC token minted by CI — the app repo holds no AWS credentials at all. (I wrote up how OIDC federation actually works, from first principles, in [Teaching AWS to Trust My Cluster](/blog/irsa-without-eks-self-hosted-oidc); the same handshake applies here.) The front door for the platform is API Gateway.
+
+**Validator.** First, the intent expressed in the config file is validated inside the platform. At this point the platform checks that the input is correct and can be translated into a valid, allowed Terraform configuration. Critically, this is the _same_ package a developer runs on their laptop, so local feedback and server-side enforcement cannot disagree.
+
+**Translator.** Validated intent becomes tfvars. This is where the interesting decisions live: a capability becomes an IAM statement, a trigger becomes an API Gateway route or an event source mapping, a network profile name becomes subnets and security groups for the target stage and region.
+
+**Executor.** Deployments land on a FIFO queue keyed by app, so two merges to the same repo apply in order instead of racing, and a merge storm queues up instead of melting something. The worker then runs `terraform plan` and `terraform apply` with credentials assumed into the target account. It's the only component with real provisioning power, and it lives in its own account, out of the production blast radius.
+
+Three properties of this shape are worth stating plainly, because they're the reason it's built this way rather than as a smarter pipeline.
+
+**Terraform is internal, including its plan output.** Developers get an intent-level diff on their pull request — "this adds `dynamodb-read` on `orders`, and replaces the schedule" — not a wall of resource addresses. Terraform plan is _how_ the platform computes that diff, not something a developer is asked to read.
+
+**Identity is derived, not declared.** The app name comes from the verified `sub` claim of the OIDC token, not from a field in the request. A repo cannot claim to be an app it isn't, and — just as importantly — the stage-to-account mapping lives platform-side, so a repo cannot aim a deploy at production by editing its own config.
+
+**Errors follow the ownership boundary.** The line falls in one specific place: everything up to and including the artifact build is the developer's to fix, and everything from `plan` onwards is the platform's.
+
+![660_200+Error ownership boundary across the deployment pipeline](/blog/images/lambda_platform_error_ownership.svg)
+
+Validation, translation, guardrail violations, and build failures all come back raw — the exact message, the offending line, the field. Executor, Terraform, and AWS failures come back as a generic message plus the deployment id to quote. Leaking a Terraform error into a developer's terminal re-teaches them exactly the concept the platform is trying to hide.
+
+The asymmetry is deliberate. A developer who can act on an error should get everything; a developer who can't should get a reference they can hand to whoever can.
+
+---
+
+## ⚖️ Build vs buy
+
+Building a platform is the kind of decision that deserves a serious attempt to avoid it. So before starting, I went looking for something to buy instead.
+
+Three categories of product get suggested, and each misses in a different way:
+
+| Category | Examples | Why it's not this |
+|---|---|---|
+| **Serverless deploy frameworks** | Serverless Framework, AWS SAM, SST, CDK, Pulumi | Every one of them runs **in the app repo**, holds AWS credentials, and shows the developer the infrastructure. That's the thing being moved away from — adopting one is a step backwards from the security boundary. |
+| **Terraform automation (TACOS)** | HCP Terraform, Spacelift, env0, Atlantis | Genuinely overlaps the executor: plan/apply, state, locking, policy, RBAC. But they're built to _show_ plans, which fights the "hide Terraform" requirement head-on. |
+| **IDP / abstraction platforms** | Humanitec + Score, Crossplane, Backstage, Port | Overlap the contract or portal layer. Humanitec and Crossplane are a much bigger paradigm shift and a misfit for a pure-Lambda golden path; Backstage and Port are portals, not provisioners. |
+
+Only the second category is a genuine contender, and it's worth being precise about what it would actually replace: the executor. Plan, apply, state, locking. That's the plumbing at the very end of the pipeline — not the contract, not the translation layer, not the IAM model, not the deployment lifecycle.
+
+Which is the whole argument, really:
+
+1. **The differentiated layer gets built either way.** No product provides capability-scoped IAM, the intent diff, or the publish-version / flip-alias model. Buying never removes the contract or the translation layer — it only changes who runs the last step.
+2. **The one thing a vendor offloads is the cheapest thing to run.** For the workload this platform is sized against, the executor is a near-idle, scale-to-zero Lambda that wakes up, runs Terraform, and goes back to sleep. There isn't much operational burden to hand over.
+3. **The features that justify the higher tiers are ones the platform owns anyway.** Policy, RBAC, and scoping are enforced in its own API by design, so a bought executor would only ever be used for raw plan/apply/state/locking — a fraction of what those products are for.
+4. **No third-party vendor in the critical path of every deployment.**
+
+So: build. Worth being honest about how that decision arrived, though — my first pass argued it on cost, and the cost argument didn't survive contact with the real numbers. What's left is ownership and critical-path control, which is a thinner and more interesting margin than "the alternatives are unaffordable." If a team had no appetite at all for operating an executor, buying that one piece would be perfectly defensible.
+
+---
+
+## 🧰 The stack
+
+TypeScript everywhere, zod for the schema, Terraform for provisioning. Go and Python were both real candidates, and neither lost on capability.
+
+Go was the stronger one, for the CLI and the executor. A static binary is nice, and HashiCorp's `terraform-exec` is a genuine advantage for the component that shells out to Terraform. I picked TypeScript anyway, for one reason: **the core of this platform is a versioned, discriminated schema, and Go has no sum types.**
+
+A discriminated union is a type that is _one of_ several shapes, where one field — the discriminant — says which shape applies. A trigger is an API trigger or a schedule or a queue consumer, never a blend, and `type` is what tells them apart; a spec is v1 or v2, and `platformVersion` is what tells those apart. The payoff is error messages: the validator reads the discriminant, checks that one shape, and complains about the cron expression alone instead of listing everything a scheduled trigger fails to be as an API trigger.
+
+`platformVersion: v1 | v2` in Go becomes a hand-rolled type field, a switch, separate structs, validation in struct tags, and error messages written by hand — and nothing stops you constructing a scheduled trigger that also carries an HTTP path. The illegal state stays representable. In zod it's one line:
+
+```ts
+export const LambdaSpec = z.discriminatedUnion('platformVersion', [LambdaSpecV1])
+```
+
+zod also gives three things from a single definition — runtime validation, inferred TypeScript types, and a JSON Schema for editor autocomplete — and the resulting package is imported by the CLI, the API, and the executor alike. Splitting Go for the executor and TypeScript for the API would have meant one person maintaining two toolchains for the rest of the project's life.
+
+Python was the closer call, because Pydantic does the same three jobs zod does, discriminated unions included. It lost on where the code has to run rather than on the schema. The validator isn't only a server-side component — it's a CLI that has to run on every developer's laptop and in every app repo's CI, and shipping that as a Python tool means a virtualenv or a `pipx` install standing between a developer and their first validation. Everything else being equal, the language with the lower barrier to _"just run it"_ wins a developer-tooling argument, and the same package still has to be importable by the API and the executor.
+
+Terraform stays, but changes job. It's no longer something a developer edits; it's the executor's implementation detail, driven by `for_each` from validated intent instead of hand-authored per function.
+
+---
+
+## 🧪 M0 — the contract
+
+The first milestone builds none of the infrastructure. No AWS, no Terraform, no network calls — just the schema, the vocabulary it accepts, and a CLI that validates a file in milliseconds on a laptop.
+
+It is the least impressive milestone in the plan and it holds nearly all of the design risk, because every decision in it is one you cannot walk back once apps depend on it.
+
+> **A schema is a promise about what is impossible.** Everything after M0 — translation, IAM boundaries, the deploy API — is built on the assumption that anything reaching it has already been made safe. If the contract's guarantees are softer than they look, nothing downstream knows.
+
+Here's what a developer actually writes:
+
+```yaml
+platformVersion: v1
+
+name: order-created
+runtime: nodejs24.x
+handler: index.handler
+
+memory: 512
+timeout: 30
+
+regions:
+  - eu-west-1
+
+network: rds:orders-primary
+
+triggers:
+  - type: api
+    method: POST
+    path: /orders
+  - type: queue-consumer
+    queue: order-events
+    batchSize: 10
+
+permissions:
+  - capability: dynamodb-read
+    resources: [orders, order-items]
+  - capability: secrets-read
+    resources: [stripe-api-key]
+
+alerting:
+  severity: 2
+
+stages:
+  dev:
+    environment:
+      LOG_LEVEL: DEBUG
+  prod:
+    memory: 1024
+    regions: [eu-west-1, us-east-1]
+```
+
+A few of those fields are doing more work than they look like they are.
+
+**`permissions` is a capability plus its resources — never just a verb.** The obvious design, `permissions: [dynamodb-read]`, is under-specified, and translating it literally produces `Resource: "*"`. A platform that hands out wildcard IAM is worse than no platform, because it launders the wildcard through a guardrail-shaped abstraction. So a capability is a verb _and_ the logical resource names it applies to. There is deliberately no syntax for "all tables", and ARNs are rejected on the same path, since constructing ARNs is the platform's job.
+
+**`triggers` is a discriminated union, not a list of names.** `triggers: [api]` isn't enough to build anything — an API trigger needs a method and a path, a schedule needs a cron expression, a queue consumer needs a queue and a batch size. Each variant validates its own shape, which is how a bad EventBridge cron becomes a message on line 14 instead of an opaque AWS error five minutes into an apply.
+
+**`network` is a profile name, never a subnet ID.** `rds:orders-primary` means "put this function where it can reach that database" and the platform resolves it to subnets and security groups for the target stage and region. Passing `subnet-0a1b2c3d` is rejected with a message explaining what to write instead — and because an AWS resource ID is also a well-formed logical name, that check needs an explicit lookahead rather than a permissive character class.
+
+**Unknown keys are errors.** A typo'd `timout: 30` must fail loudly rather than be ignored while the real `timeout` quietly keeps its default.
+
+**`stages` overrides are deep-merged and re-validated after merging.** Maps merge by key, arrays and scalars replace, and `runtime` and `handler` cannot be overridden at all — the same artifact promotes across stages. Base and override can each be individually legal while their merge is not, so validation runs on the merged result for every stage, not just the document as written.
+
+The milestone shipped as an npm workspaces monorepo — a `contract` package holding the schemas, types, and JSON Schema emitter, and a `cli` package with `platform validate` — plus one example spec that passes every rule and one that breaks every rule at once, which is what the tests assert against. It's currently 195 tests, all of which run in under a second because nothing in M0 touches a network.
+
+The CLI walks for `lambda.yaml` files below the working directory whatever the repo's layout, accepts a spec on stdin for editors and pre-commit hooks, and — the part I care about most — refuses to report success if there's any directory it could not search. A validator that prints `✓ 1 file valid` while a broken spec sits unread somewhere below is worse than no validator at all.
+
+The same zod models emit a JSON Schema, so pointing `yaml-language-server` at it gives autocomplete and inline errors inside `lambda.yaml`. Developers discover the capability, layer, and network vocabularies with ctrl-space instead of by reading documentation. It's the cheapest DX win in the whole plan.
+
+### What isn't settled
+
+Worth naming, because the milestone being "done" doesn't mean it's right:
+
+- **The capability vocabulary is an opening guess.** Seven capabilities today. It hasn't been sized against the full set of hand-authored IAM policies it eventually has to express, and `kms:Decrypt` is already known-missing for anything touching a CMK-encrypted resource. It is far easier to add a capability than to remove one once an app depends on it, which is why it starts this small.
+- **The name budget binds harder than expected.** IAM role names cap at 64 characters, and the role name is `<app>-<function>-<stage>-<region-code>` — so the developer-facing name limit is a _derived_ quantity, computed in code so that adding a stage or a longer region code fails a test rather than overflowing at deploy time. Some existing repository names already violate it.
+
+---
+
+## 🎯 What "done" looks like
+
+The metrics I'll judge this against, so the goalposts are written down before the build makes them convenient:
+
+| Metric | Target |
+|---|---|
+| Time to first deploy (empty repo → production) | **< 15 minutes** |
+| Platform-team touches per onboarded repo | **0** |
+| Wildcard IAM policies or unsigned artifacts | **0** — structurally guaranteed |
+| Resources not in Terraform state | **0** — the destroyability guarantee |
+
+And the top risk, named up front: **the capability vocabulary is too narrow.** The first team that needs something not in it either matures the platform or routes around it, and if they route around it once, the guarantees in the table above stop being guarantees. The answer — add the capability, or provide a documented platform-owned escape hatch with an expiry — has to be decided before it happens, not after.
+
+---
+
+## 💭 Where this leaves me
+
+M0 is built: the contract, the vocabulary, the validator, and a JSON Schema that editors can consume. No AWS in it, which makes it feel like nothing was accomplished, and it's the milestone I'd least like to get wrong.
+
+Next up is the part where intent turns into infrastructure — a resolved spec becomes tfvars, tfvars become a `terraform apply`, and a `lambda.yaml` on my laptop produces a real Lambda with a real IAM role scoped to exactly the two tables it asked for. That's the milestone that proves the whole premise, or doesn't.
+
+To be continued.

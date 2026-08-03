@@ -60,12 +60,14 @@ const BlogCard = ({
         onLoadStart={startLoad}
         onLoad={handleLoad}
       />
-      <div className="flex overflow-auto flex-col py-3 px-6 space-y-2">
-        <h1 className="text-lg text-left transition-all duration-200 ease-in-out">
+      <div className="flex overflow-hidden flex-col py-3 px-6 space-y-2">
+        <h1 className="text-lg text-left transition-all duration-200 ease-in-out line-clamp-2">
           <AnimatedUnderline>{title}</AnimatedUnderline>
         </h1>
-        <p className="flex-1 text-sm text-left md:w-full">{description}</p>
-        <div className="flex gap-4 justify-start items-center w-full xs:justify-between">
+        <p className="flex-1 min-h-0 text-sm text-left md:w-full line-clamp-3">
+          {description}
+        </p>
+        <div className="flex flex-shrink-0 gap-4 justify-start items-center w-full xs:justify-between">
           <div className="flex items-center space-x-2">
             <FaRegCalendarAlt />
             <div className="text-sm whitespace-nowrap">{date}</div>

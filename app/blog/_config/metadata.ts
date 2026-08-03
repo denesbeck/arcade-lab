@@ -12,6 +12,30 @@ export interface BlogMeta {
 
 const BLOG_METADATA: BlogMeta[] = [
   {
+    id: 33,
+    slug: 'lambda-developer-platform-golden-path',
+    title: 'Lambda Platform: From Pipeline to Platform',
+    description:
+      'Part 1: constraints, architecture, build vs buy, and the contract that developers declare their intent in',
+    date: '2026-08-03',
+    hidden: true,
+    tags: [
+      'lambda-platform',
+      'aws',
+      'lambda',
+      'platform-engineering',
+      'developer-experience',
+      'terraform',
+      'typescript',
+      'zod',
+      'iam',
+      'oidc',
+      'architecture',
+      'devops',
+    ],
+    file: 'lambda-platform-p1',
+  },
+  {
     id: 32,
     slug: 'docker-restart-always-start-limit',
     title: 'Home Lab: Self-Healing a Docker Boot Race',
@@ -42,7 +66,7 @@ const BLOG_METADATA: BlogMeta[] = [
     slug: 'irsa-without-eks-self-hosted-oidc',
     title: 'Dev Platform: Teaching AWS to Trust My Cluster',
     description:
-      'Milestone 2, part one: IRSA, OIDC from first principles, and hosting my own OpenID provider on S3',
+      'Milestone 2, part one: IRSA without the magic — OIDC from first principles, and hosting my own OpenID provider on an S3 bucket',
     date: '2026-06-27',
     hidden: false,
     tags: [

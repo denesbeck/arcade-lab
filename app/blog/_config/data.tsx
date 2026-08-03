@@ -26,6 +26,14 @@ import { BlogCover, BlogEntry } from '../_interfaces/blog'
 import BLOG_METADATA from './metadata'
 
 const COVERS: Record<number, BlogCover> = {
+  33: {
+    image: lambdaDeploy,
+    original: lambdaDeploy,
+    xImage: lambdaDeployX,
+    alt: 'lambda_deploy',
+    ogImage: '/blog/covers/lambda_deploy.png',
+    ogImageX: '/blog/covers/lambda_deploy_x.png',
+  },
   32: {
     image: buildHomeServer,
     original: buildHomeServer,

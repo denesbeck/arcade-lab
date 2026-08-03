@@ -56,10 +56,13 @@ const Mermaid = ({ chart }: MermaidProps) => {
     }
   }, [chart])
 
+  // Mermaid emits an inline svg capped at its natural width, so anything
+  // narrower than the prose column sits left. block + auto margins centres it,
+  // and collapses to zero on the wide ones so they still scroll from the left.
   return (
     <div
       ref={containerRef}
-      className="my-6 overflow-x-auto rounded-lg bg-dark-700 p-5"
+      className="my-6 overflow-x-auto rounded-lg bg-dark-700 p-5 [&>svg]:mx-auto [&>svg]:block"
       dangerouslySetInnerHTML={{ __html: svg }}
     />
   )
