@@ -12,6 +12,8 @@ import fromJsonToSqlite from '@/../public/blog/covers/from_json_to_sqlite.png'
 import fromJsonToSqliteX from '@/../public/blog/covers/from_json_to_sqlite_x.png'
 import lambdaDeploy from '@/../public/blog/covers/lambda_deploy.png'
 import lambdaDeployX from '@/../public/blog/covers/lambda_deploy_x.png'
+import lambdaPlatform from '@/../public/blog/covers/lambda_platform.png'
+import lambdaPlatformX from '@/../public/blog/covers/lambda_platform_x.png'
 import remoteStateManagement from '@/../public/blog/covers/remote_state_management.png'
 import remoteStateManagementX from '@/../public/blog/covers/remote_state_management_x.png'
 import selfHostedDevPlatform from '@/../public/blog/covers/self_hosted_dev_platform.png'
@@ -27,12 +29,12 @@ import BLOG_METADATA from './metadata'
 
 const COVERS: Record<number, BlogCover> = {
   33: {
-    image: lambdaDeploy,
-    original: lambdaDeploy,
-    xImage: lambdaDeployX,
-    alt: 'lambda_deploy',
-    ogImage: '/blog/covers/lambda_deploy.png',
-    ogImageX: '/blog/covers/lambda_deploy_x.png',
+    image: lambdaPlatform,
+    original: lambdaPlatform,
+    xImage: lambdaPlatformX,
+    alt: 'lambda_platform',
+    ogImage: '/blog/covers/lambda_platform.png',
+    ogImageX: '/blog/covers/lambda_platform_x.png',
   },
   32: {
     image: buildHomeServer,

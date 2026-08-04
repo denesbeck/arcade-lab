@@ -18,9 +18,9 @@ Terraform remained the source of truth for infrastructure, which had one major a
 
 Although the pipeline automated deployments, developers still needed to understand and modify Terraform whenever infrastructure changed. It reduced operational complexity, but it still exposed infrastructure concepts that application developers shouldn't have to think about.
 
-Around the same time, I experimented with moving from a Lambda monorepo to a multi-repository model. That experiment reinforced another lesson: neither repository structure is universally better. A monorepo simplifies some workflows; separate repositories often align better with application boundaries. The deployment platform shouldn't care which model a team chooses.
+Around the same time, I experimented with moving from a Lambda monorepo to a multi-repository model. That experiment reinforced another lesson: neither repository structure is universally better. A monorepo simplifies some workflows; separate repositories often align better with application boundaries. The solution shouldn't care which model a team chooses.
 
-At some point I realised I wasn't trying to improve a deployment pipeline anymore.
+At this point I realised I wasn't trying to improve a deployment pipeline anymore.
 
 I was trying to build a developer platform.
 
@@ -103,23 +103,21 @@ So: build. Worth being honest about how that decision arrived, though — my fir
 
 ## 🧰 The stack
 
-TypeScript everywhere, zod for the schema, Terraform for provisioning. Go and Python were both real candidates, and neither lost on capability.
+The technology choices followed from one architectural decision more than any other: the contract is shared.
 
-Go was the stronger one, for the CLI and the executor. A static binary is nice, and HashiCorp's `terraform-exec` is a genuine advantage for the component that shells out to Terraform. I picked TypeScript anyway, for one reason: **the core of this platform is a versioned, discriminated schema, and Go has no sum types.**
+The local validator, the deployment API, and the executor all consume exactly the same versioned schema. Validation, types, documentation, and editor support all come from a single source, so there is only one interpretation of `lambda.yaml`.
 
-A discriminated union is a type that is _one of_ several shapes, where one field — the discriminant — says which shape applies. A trigger is an API trigger or a schedule or a queue consumer, never a blend, and `type` is what tells them apart; a spec is v1 or v2, and `platformVersion` is what tells those apart. The payoff is error messages: the validator reads the discriminant, checks that one shape, and complains about the cron expression alone instead of listing everything a scheduled trigger fails to be as an API trigger.
+TypeScript and zod make that straightforward. A single discriminated schema defines what a valid platform specification looks like:
 
-`platformVersion: v1 | v2` in Go becomes a hand-rolled type field, a switch, separate structs, validation in struct tags, and error messages written by hand — and nothing stops you constructing a scheduled trigger that also carries an HTTP path. The illegal state stays representable. In zod it's one line:
-
-```ts
-export const LambdaSpec = z.discriminatedUnion('platformVersion', [LambdaSpecV1])
+```typescript
+export const LambdaSpec = z.discriminatedUnion('platformVersion', [LambdaSpecV1]);
 ```
 
-zod also gives three things from a single definition — runtime validation, inferred TypeScript types, and a JSON Schema for editor autocomplete — and the resulting package is imported by the CLI, the API, and the executor alike. Splitting Go for the executor and TypeScript for the API would have meant one person maintaining two toolchains for the rest of the project's life.
+From that definition the platform gets runtime validation, inferred TypeScript types, and a JSON Schema that powers editor autocomplete. The same package is imported by every component, so validation behaves identically on a developer's laptop, in CI, and inside the platform.
 
-Python was the closer call, because Pydantic does the same three jobs zod does, discriminated unions included. It lost on where the code has to run rather than on the schema. The validator isn't only a server-side component — it's a CLI that has to run on every developer's laptop and in every app repo's CI, and shipping that as a Python tool means a virtualenv or a `pipx` install standing between a developer and their first validation. Everything else being equal, the language with the lower barrier to _"just run it"_ wins a developer-tooling argument, and the same package still has to be importable by the API and the executor.
+Terraform stays, but changes job. Developers never edit it directly; it becomes the platform's provisioning engine, generating infrastructure from validated intent rather than hand-authored configuration.
 
-Terraform stays, but changes job. It's no longer something a developer edits; it's the executor's implementation detail, driven by `for_each` from validated intent instead of hand-authored per function.
+Go was the strongest alternative, particularly for the executor, while Python offered a similarly strong validation story through Pydantic. Both were viable, but TypeScript kept the shared contract, the CLI, and the platform in one ecosystem with the lowest barrier for developers. The language matters less than the architecture: one contract, one interpretation, everywhere.
 
 ---
 
@@ -194,10 +192,11 @@ The same zod models emit a JSON Schema, so pointing `yaml-language-server` at it
 
 ### What isn't settled
 
-Worth naming, because the milestone being "done" doesn't mean it's right:
+Shipping M0 doesn't mean every design decision is finished. Two areas are deliberately conservative because they're much easier to expand later than to undo.
 
-- **The capability vocabulary is an opening guess.** Seven capabilities today. It hasn't been sized against the full set of hand-authored IAM policies it eventually has to express, and `kms:Decrypt` is already known-missing for anything touching a CMK-encrypted resource. It is far easier to add a capability than to remove one once an app depends on it, which is why it starts this small.
-- **The name budget binds harder than expected.** IAM role names cap at 64 characters, and the role name is `<app>-<function>-<stage>-<region-code>` — so the developer-facing name limit is a _derived_ quantity, computed in code so that adding a stage or a longer region code fails a test rather than overflowing at deploy time. Some existing repository names already violate it.
+* **The capability vocabulary is only a starting point.** There are seven capabilities today, but they haven't yet been tested against the full range of IAM policies the platform will eventually need to express. `kms:Decrypt` is already an obvious omission for workloads using customer-managed KMS keys. Adding a capability is easy; removing or redefining one after applications depend on it is much harder.
+
+* **The name budget is tighter than it first appears.** IAM role names are limited to 64 characters, and the role name is derived from the application, function, stage, and region. That means the maximum application name is itself a derived constraint, enforced in code so changes to naming conventions fail tests instead of failing at deployment time. Some existing repository names already exceed that limit.
 
 ---
 

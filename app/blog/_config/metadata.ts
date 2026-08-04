@@ -16,9 +16,9 @@ const BLOG_METADATA: BlogMeta[] = [
     slug: 'lambda-developer-platform-golden-path',
     title: 'Lambda Platform: From Pipeline to Platform',
     description:
-      'Part 1: constraints, architecture, build vs buy, and the contract that developers declare their intent in',
+      'Part 1: why I stopped improving a deployment pipeline, and what a golden path has to promise instead',
     date: '2026-08-03',
-    hidden: true,
+    hidden: false,
     tags: [
       'lambda-platform',
       'aws',
@@ -40,7 +40,7 @@ const BLOG_METADATA: BlogMeta[] = [
     slug: 'docker-restart-always-start-limit',
     title: 'Home Lab: Self-Healing a Docker Boot Race',
     description:
-      'Why my Docker daemon stayed dead after a slow-wifi boot, and the two-layer IaC fix that recovers it',
+      'Why my Docker daemon stayed dead after a slow-wifi boot — and the two-layer IaC fix that recovers it without me',
     date: '2026-07-17',
     hidden: false,
     tags: [
@@ -118,7 +118,7 @@ const BLOG_METADATA: BlogMeta[] = [
     slug: 'cilium-ebpf-on-talos',
     title: 'Dev Platform: Guardrails, then Trading Flannel for eBPF',
     description:
-      'Milestones 0 and 1: SOPS-encrypted secrets, CI gates, and swapping the CNI for Cilium on Talos',
+      'Milestones 0 and 1: SOPS-encrypted secrets, CI gates that run before the cluster, and swapping the CNI for Cilium on Talos',
     date: '2026-05-31',
     hidden: false,
     tags: [
@@ -145,7 +145,7 @@ const BLOG_METADATA: BlogMeta[] = [
     slug: 'terraform-oidc-aws-vercel-github-actions',
     title: 'Consolidating Lambda Infrastructure',
     description:
-      'Bringing the contact Lambda, layers, and Terraform into one repo with end-to-end OIDC',
+      'Bringing the contact Lambda, layers, and Terraform into one repo — with end-to-end OIDC and a single apply',
     date: '2026-05-28',
     hidden: false,
     tags: [
@@ -219,8 +219,9 @@ const BLOG_METADATA: BlogMeta[] = [
   {
     id: 25,
     slug: 'tmux-pane-layouts-yaml',
-    title: 'tmux-pane-controller',
-    description: 'Declarative pane layouts for tmux',
+    title: 'tmux-pane-controller: Declarative Pane Layouts for tmux',
+    description:
+      'A CLI tool and tmux plugin for defining, capturing, and restoring pane layouts',
     date: '2026-04-24',
     hidden: false,
     tags: ['tmux', 'bash', 'cli', 'productivity'],
@@ -294,8 +295,9 @@ const BLOG_METADATA: BlogMeta[] = [
   {
     id: 21,
     slug: 'tmux-git-worktree-plugin',
-    title: 'tmux-worktree',
-    description: 'A tmux plugin for managing git worktrees in the age of AI',
+    title: 'tmux-worktree: A Tmux Plugin for Git Worktrees',
+    description:
+      'Why I built a tmux plugin to manage git worktrees in the age of AI coding tools',
     date: '2026-03-27',
     hidden: false,
     tags: [
@@ -476,7 +478,7 @@ const BLOG_METADATA: BlogMeta[] = [
     slug: 'cloudgoat-beanstalk-secrets',
     title: 'CloudGoat: Beanstalk Secrets',
     description:
-      'Write-up: low-privilege user to admin via secrets in Beanstalk env vars and iam:CreateAccessKey — with the AWS CLI and Pacu',
+      'Write-up: from a low-privilege user to admin — the same privilege-escalation chain, done two ways: raw AWS CLI and Pacu',
     date: '2026-01-11',
     hidden: false,
     tags: [
@@ -497,7 +499,7 @@ const BLOG_METADATA: BlogMeta[] = [
   {
     id: 9,
     slug: 'content-addressable-storage-blake3',
-    title: 'Nexio: Storage Optimization',
+    title: 'Nexio: Blob-Based Storage Optimization',
     description: 'Transforming Nexio with Content-Addressable Storage',
     date: '2025-12-21',
     hidden: false,
@@ -605,7 +607,7 @@ const BLOG_METADATA: BlogMeta[] = [
     id: 2,
     slug: 'ibm-tech-2024-conference',
     title: 'IBM Tech 2024 Conference',
-    description: 'Insights and takeaways from the IBM Tech 2024 conference.',
+    description: 'Insights and takeaways from the IBM Tech 2024 conference',
     date: '2024-03-22',
     hidden: true,
     tags: ['ibm', 'red-hat', 'openshift', 'ansible', 'security', 'watsonx'],
@@ -614,7 +616,7 @@ const BLOG_METADATA: BlogMeta[] = [
   {
     id: 1,
     slug: 'travis-ci-to-tekton-migration',
-    title: 'Migrating to Tekton',
+    title: 'Migrating from Travis CI to Tekton',
     description:
       'This blog post is about my experience migrating from Travis CI to Tekton.',
     date: '2023-12-13',
