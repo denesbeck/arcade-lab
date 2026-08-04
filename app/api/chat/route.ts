@@ -65,85 +65,104 @@ export async function POST(request: Request) {
       input_schema: t.input_schema as Tool['input_schema'],
     }))
 
-    // Run tool rounds (non-streaming) until we get a final text response
-    let currentMessages = [...messages]
-    let rounds = 0
+    const encoder = new TextEncoder()
 
-    while (rounds < MAX_TOOL_ROUNDS) {
-      rounds++
-
-      // For the potential final round, check if we should stream
-      const response = await client.messages.create({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1024,
-        system: SYSTEM_PROMPT,
-        tools,
-        messages: currentMessages,
-      })
-
-      const toolUseBlocks = response.content.filter(
-        (block): block is ToolUseBlock => block.type === 'tool_use'
-      )
-
-      if (toolUseBlocks.length === 0) {
-        // Final response — we already have the full text from this call, so
-        // emit it as SSE instead of making a second (streaming) inference call.
-        const text = response.content
-          .filter((block) => block.type === 'text')
-          .map((block) => block.text)
-          .join('')
-
-        const encoder = new TextEncoder()
-
-        const readable = new ReadableStream({
-          start(controller) {
-            if (text) {
-              controller.enqueue(
-                encoder.encode(`data: ${JSON.stringify({ text })}\n\n`)
-              )
-            }
-            controller.enqueue(encoder.encode('data: [DONE]\n\n'))
-            controller.close()
-          },
-        })
-
-        return new Response(readable, {
-          headers: {
-            'Content-Type': 'text/event-stream',
-            'Cache-Control': 'no-cache',
-            Connection: 'keep-alive',
-          },
-        })
-      }
-
-      // Execute tool calls and continue loop
-      const toolResults: ToolResultBlockParam[] = toolUseBlocks.map(
-        (toolUse) => {
-          const result = executeTool(
-            toolUse.name,
-            toolUse.input as Record<string, unknown>
+    // The tool loop runs inside the stream so text deltas reach the client as
+    // they are produced, rather than after the whole answer is assembled.
+    const readable = new ReadableStream({
+      async start(controller) {
+        const send = (payload: { text: string }) =>
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify(payload)}\n\n`)
           )
-          return {
-            type: 'tool_result' as const,
-            tool_use_id: toolUse.id,
-            content: result.content.map((c) => ({
-              type: 'text' as const,
-              text: c.text,
-            })),
-          }
+        const done = () => {
+          controller.enqueue(encoder.encode('data: [DONE]\n\n'))
+          controller.close()
         }
-      )
 
-      currentMessages = [
-        ...currentMessages,
-        { role: 'assistant' as const, content: response.content },
-        { role: 'user' as const, content: toolResults },
-      ]
-    }
+        try {
+          let currentMessages = [...messages]
+          let rounds = 0
 
-    return Response.json({
-      response:
-        "I wasn't able to find a complete answer. Please try rephrasing your question.",
+          while (rounds < MAX_TOOL_ROUNDS) {
+            rounds++
+
+            // Streaming every round keeps this at one inference call per round:
+            // the same call yields both the text deltas and any tool_use blocks.
+            const stream = client.messages.stream({
+              model: 'claude-sonnet-4-6',
+              max_tokens: 1024,
+              system: SYSTEM_PROMPT,
+              tools,
+              messages: currentMessages,
+            })
+
+            for await (const event of stream) {
+              if (
+                event.type === 'content_block_delta' &&
+                event.delta.type === 'text_delta'
+              ) {
+                send({ text: event.delta.text })
+              }
+            }
+
+            const response = await stream.finalMessage()
+
+            const toolUseBlocks = response.content.filter(
+              (block): block is ToolUseBlock => block.type === 'tool_use'
+            )
+
+            // Final response — its text has already been streamed above.
+            if (toolUseBlocks.length === 0) {
+              done()
+              return
+            }
+
+            // Execute tool calls and continue loop
+            const toolResults: ToolResultBlockParam[] = toolUseBlocks.map(
+              (toolUse) => {
+                const result = executeTool(
+                  toolUse.name,
+                  toolUse.input as Record<string, unknown>
+                )
+                return {
+                  type: 'tool_result' as const,
+                  tool_use_id: toolUse.id,
+                  content: result.content.map((c) => ({
+                    type: 'text' as const,
+                    text: c.text,
+                  })),
+                }
+              }
+            )
+
+            currentMessages = [
+              ...currentMessages,
+              { role: 'assistant' as const, content: response.content },
+              { role: 'user' as const, content: toolResults },
+            ]
+          }
+
+          send({
+            text: "I wasn't able to find a complete answer. Please try rephrasing your question.",
+          })
+          done()
+        } catch (error) {
+          // Headers are already sent, so surface the failure as stream content
+          // instead of a status code — closing cleanly keeps any partial answer.
+          console.error('Chat API error:', error)
+          send({ text: 'Sorry, something went wrong. Please try again.' })
+          done()
+        }
+      },
+    })
+
+    return new Response(readable, {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        Connection: 'keep-alive',
+      },
     })
   } catch (error) {
     console.error('Chat API error:', error)

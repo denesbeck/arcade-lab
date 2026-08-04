@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { ImSpinner8 } from 'react-icons/im'
 import { IoChatbubbleEllipses, IoClose, IoSend } from 'react-icons/io5'
 import Markdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import CopyButton from './_components/CopyButton'
 import chatMarkdownComponents from './_config/MarkdownComponents'
 import useChatWidgetMessages from './_hooks/useChatWidgetMessages'
@@ -97,7 +98,10 @@ const ChatWidget = () => {
                 >
                   {message.role === 'assistant' ? (
                     <>
-                      <Markdown components={chatMarkdownComponents}>
+                      <Markdown
+                        components={chatMarkdownComponents}
+                        remarkPlugins={[remarkGfm]}
+                      >
                         {message.content}
                       </Markdown>
                       <CopyButton content={message.content} />
@@ -115,7 +119,10 @@ const ChatWidget = () => {
             {streamingContent && (
               <div className="flex justify-start">
                 <div className="max-w-[85%] rounded-lg px-3 py-2 text-sm leading-relaxed bg-dark-700 text-text-dark">
-                  <Markdown components={chatMarkdownComponents}>
+                  <Markdown
+                    components={chatMarkdownComponents}
+                    remarkPlugins={[remarkGfm]}
+                  >
                     {streamingContent}
                   </Markdown>
                 </div>
