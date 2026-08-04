@@ -17,7 +17,7 @@ const BLOG_METADATA: BlogMeta[] = [
     title: 'Lambda Platform: From Pipeline to Platform',
     description:
       'Part 1: why I stopped improving a deployment pipeline, and what a golden path has to promise instead',
-    date: '2026-08-03',
+    date: '2026-08-04',
     hidden: false,
     tags: [
       'lambda-platform',
