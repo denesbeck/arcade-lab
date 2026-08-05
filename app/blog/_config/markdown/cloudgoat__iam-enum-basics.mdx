@@ -1,0 +1,408 @@
+# 🥷 CloudGoat: IAM Enumeration Basics
+
+_Write-up: Hunting hidden flags across IAM resource metadata with the AWS CLI_
+
+## 🧭 Overview
+
+**Scenario:** `iam_enum_basics` \
+**Platform:** [CloudGoat (Rhino Security Labs)](https://github.com/RhinoSecurityLabs/cloudgoat) \
+**Tools:** AWS CLI + `jq` \
+**Objective:** Enumerate managed policies, inline policies, group memberships, and assumable roles to recover five flags hidden in IAM resource metadata.
+
+## ⚔️ Attack Path Summary
+
+Low-Priv User (Bob) → Verify Identity → Attached Managed Policies → Inline Policies → Group Membership → Assumable Roles → Managed Policy Document → 5 Flags
+
+## 🔑 Phase 1: Initial Access
+
+#### Configure Profile
+
+```bash
+aws configure --profile cg-bob
+# Access Key: AKIA****************
+# Secret Key: OMi34W8CbOVPH02dF0Vl********************
+```
+
+#### Validate Credentials
+
+```bash
+aws sts get-caller-identity --profile cg-bob
+```
+
+```json
+{
+  "UserId": "AIDA****************",
+  "Account": "7912********",
+  "Arn": "arn:aws:iam::7912********:user/cg-bob-cgidakxfbielr6"
+}
+```
+
+#### Fingerprint the User
+
+```bash
+aws iam get-user --user-name cg-bob-cgidakxfbielr6 --profile cg-bob
+```
+
+```json
+{
+  "User": {
+    "Path": "/",
+    "UserName": "cg-bob-cgidakxfbielr6",
+    "UserId": "AIDA****************",
+    "Arn": "arn:aws:iam::7912********:user/cg-bob-cgidakxfbielr6",
+    "CreateDate": "2026-08-05T18:33:49+00:00",
+    "Tags": [
+      { "Key": "Message", "Value": "Enumerate me" },
+      { "Key": "Scenario", "Value": "scenario_template" },
+      { "Key": "Stack", "Value": "CloudGoat" }
+    ]
+  }
+}
+```
+
+#### Key Finding
+
+The user carries a `Message: Enumerate me` tag and the attached `IAMReadOnlyAccess` policy (confirmed below). Read-only IAM access is exactly enough to walk the entire identity graph — the metadata itself is the treasure map.
+
+## 📜 Phase 2: Attached Managed Policies → Flag 1
+
+#### List Attached Managed Policies
+
+```bash
+aws iam list-attached-user-policies --user-name cg-bob-cgidakxfbielr6 --profile cg-bob
+```
+
+```json
+{
+  "AttachedPolicies": [
+    {
+      "PolicyName": "cg-flag1-managed-policy-cgidakxfbielr6",
+      "PolicyArn": "arn:aws:iam::7912********:policy/cg-flag1-managed-policy-cgidakxfbielr6"
+    },
+    {
+      "PolicyName": "IAMReadOnlyAccess",
+      "PolicyArn": "arn:aws:iam::aws:policy/IAMReadOnlyAccess"
+    }
+  ]
+}
+```
+
+#### Read the Policy Metadata
+
+```bash
+aws iam get-policy \
+  --policy-arn arn:aws:iam::7912********:policy/cg-flag1-managed-policy-cgidakxfbielr6 \
+  --profile cg-bob
+```
+
+```json
+{
+  "Policy": {
+    "PolicyName": "cg-flag1-managed-policy-cgidakxfbielr6",
+    "PolicyId": "ANPA****************",
+    "Arn": "arn:aws:iam::7912********:policy/cg-flag1-managed-policy-cgidakxfbielr6",
+    "Path": "/",
+    "DefaultVersionId": "v1",
+    "Description": "HSM{m4n4g3d_p0l1cy_m4st3r}",
+    "IsAttachable": true,
+    "CreateDate": "2026-08-05T18:33:49+00:00"
+  }
+}
+```
+
+🚩 **Flag 1** (managed policy `Description`): `HSM{m4n4g3d_p0l1cy_m4st3r}`
+
+## 📝 Phase 3: Inline User Policies → Flag 2
+
+#### List Inline Policies
+
+```bash
+aws iam list-user-policies --user-name cg-bob-cgidakxfbielr6 --profile cg-bob
+```
+
+```json
+{
+  "PolicyNames": ["cg-flag2-inline-policy-cgidakxfbielr6"]
+}
+```
+
+#### Read the Inline Policy Document
+
+```bash
+aws iam get-user-policy \
+  --user-name cg-bob-cgidakxfbielr6 \
+  --policy-name cg-flag2-inline-policy-cgidakxfbielr6 \
+  --profile cg-bob
+```
+
+```json
+{
+  "UserName": "cg-bob-cgidakxfbielr6",
+  "PolicyName": "cg-flag2-inline-policy-cgidakxfbielr6",
+  "PolicyDocument": {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Sid": "HSM1nl1n3p0l1cyd1sc0v3r3d",
+        "Action": "ec2:DescribeInstances",
+        "Effect": "Allow",
+        "Resource": "*"
+      }
+    ]
+  }
+}
+```
+
+🚩 **Flag 2** (inline policy `Sid`): `HSM1nl1n3p0l1cyd1sc0v3r3d`
+
+## 👥 Phase 4: Group Membership → Flag 3
+
+#### List Bob's Groups
+
+```bash
+aws iam list-groups-for-user --user-name cg-bob-cgidakxfbielr6 --profile cg-bob
+```
+
+```json
+{
+  "Groups": [
+    {
+      "Path": "/HSM_gr0up_m3mb3rsh1p_f0und/",
+      "GroupName": "cg-flag3-group-cgidakxfbielr6",
+      "GroupId": "AGPA****************",
+      "Arn": "arn:aws:iam::7912********:group/HSM_gr0up_m3mb3rsh1p_f0und/cg-flag3-group-cgidakxfbielr6",
+      "CreateDate": "2026-08-05T18:33:49+00:00"
+    }
+  ]
+}
+```
+
+The group carries no policies (`list-group-policies` returns an empty list) — the flag is hidden in the organizational **Path**, an attribute most people never think to read.
+
+🚩 **Flag 3** (group `Path`): `HSM_gr0up_m3mb3rsh1p_f0und`
+
+## 🎭 Phase 5: Assumable Roles → Flag 4
+
+#### List Roles in the Account
+
+```bash
+aws iam list-roles --profile cg-bob \
+  | jq '.Roles[] | select(.RoleName | startswith("cg-flag"))'
+```
+
+```json
+{
+  "Path": "/",
+  "RoleName": "cg-flag4-role-cgidakxfbielr6",
+  "RoleId": "AROA****************",
+  "Arn": "arn:aws:iam::7912********:role/cg-flag4-role-cgidakxfbielr6",
+  "AssumeRolePolicyDocument": {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Principal": { "AWS": "arn:aws:iam::7912********:user/cg-bob-cgidakxfbielr6" },
+        "Action": "sts:AssumeRole"
+      }
+    ]
+  },
+  "MaxSessionDuration": 3600
+}
+```
+
+The trust policy names Bob directly as a principal — this role is assumable by us. Inspect its metadata:
+
+#### Read the Role Tags
+
+```bash
+aws iam get-role --role-name cg-flag4-role-cgidakxfbielr6 --profile cg-bob
+```
+
+```json
+{
+  "Role": {
+    "RoleName": "cg-flag4-role-cgidakxfbielr6",
+    "Arn": "arn:aws:iam::7912********:role/cg-flag4-role-cgidakxfbielr6",
+    "MaxSessionDuration": 3600,
+    "Tags": [
+      { "Key": "Stack", "Value": "CloudGoat" },
+      { "Key": "Flag", "Value": "HSM-r0l3_trus1_f0und" },
+      { "Key": "Scenario", "Value": "scenario_template" }
+    ]
+  }
+}
+```
+
+🚩 **Flag 4** (role `Tags`, key `Flag`): `HSM-r0l3_trus1_f0und`
+
+## 🚩 Phase 6: Managed Policy Document → Flag 5
+
+The final flag lives inside the **document** of the managed policy from Phase 2 — its metadata gave us Flag 1, but the JSON statements themselves hide Flag 5. Fetch the default version.
+
+#### List Policy Versions
+
+```bash
+aws iam list-policy-versions \
+  --policy-arn arn:aws:iam::7912********:policy/cg-flag1-managed-policy-cgidakxfbielr6 \
+  --profile cg-bob
+```
+
+```json
+{
+  "Versions": [
+    { "VersionId": "v1", "IsDefaultVersion": true, "CreateDate": "2026-08-05T18:33:49+00:00" }
+  ]
+}
+```
+
+#### Retrieve the Default Version Document
+
+```bash
+aws iam get-policy-version \
+  --policy-arn arn:aws:iam::7912********:policy/cg-flag1-managed-policy-cgidakxfbielr6 \
+  --version-id v1 \
+  --profile cg-bob
+```
+
+```json
+{
+  "PolicyVersion": {
+    "Document": {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Effect": "Allow",
+          "Action": ["s3:ListBucket", "s3:GetObject"],
+          "Resource": "arn:aws:s3:::HSM{s3cr3t_js0n_str1ng}"
+        }
+      ]
+    },
+    "VersionId": "v1",
+    "IsDefaultVersion": true,
+    "CreateDate": "2026-08-05T18:33:49+00:00"
+  }
+}
+```
+
+🚩 **Flag 5** (managed policy document `Resource` ARN): `HSM{s3cr3t_js0n_str1ng}`
+
+## 🏁 Flags Recovered
+
+| # | Location | Flag |
+|---|----------|------|
+| 1 | Managed policy `Description` | `HSM{m4n4g3d_p0l1cy_m4st3r}` |
+| 2 | Inline policy `Sid` | `HSM1nl1n3p0l1cyd1sc0v3r3d` |
+| 3 | Group `Path` | `HSM_gr0up_m3mb3rsh1p_f0und` |
+| 4 | Role `Tags` (key `Flag`) | `HSM-r0l3_trus1_f0und` |
+| 5 | Managed policy document `Resource` ARN | `HSM{s3cr3t_js0n_str1ng}` |
+
+## 📐 Attack Chain Diagram
+
+```
+┌──────────────────────┐
+│  Low-Priv User (Bob) │
+│   IAMReadOnlyAccess  │
+└──────────┬───────────┘
+           │ list-attached-user-policies
+           │ get-policy
+           ▼
+┌──────────────────────┐
+│  Managed Policy      │
+│  Description → FLAG 1 │
+└──────────┬───────────┘
+           │ list-user-policies
+           │ get-user-policy
+           ▼
+┌──────────────────────┐
+│  Inline Policy       │
+│  Sid → FLAG 2        │
+└──────────┬───────────┘
+           │ list-groups-for-user
+           ▼
+┌──────────────────────┐
+│  Group Membership    │
+│  Path → FLAG 3       │
+└──────────┬───────────┘
+           │ list-roles
+           │ get-role
+           ▼
+┌──────────────────────┐
+│  Assumable Role      │
+│  Tags → FLAG 4       │
+└──────────┬───────────┘
+           │ list-policy-versions
+           │ get-policy-version
+           ▼
+┌──────────────────────┐
+│  Policy Document     │
+│  Resource → FLAG 5   │
+└──────────────────────┘
+```
+
+## 🚨 Weaknesses Demonstrated
+
+| # | Weakness | CWE |
+|---|----------|-----|
+| 1 | Sensitive data placed in IAM metadata (descriptions, Sids, paths, tags) | CWE-200 |
+| 2 | Overly broad read access (`IAMReadOnlyAccess`) granted to a low-priv user | CWE-732 |
+| 3 | Role trust policy names a low-priv user as an assumable principal | CWE-269 |
+| 4 | Secret-looking resource identifiers stored in policy documents | CWE-540 |
+
+## 💡 Remediation
+
+1. **Treat IAM metadata as public.** Descriptions, `Sid`s, paths, and tags are readable by anyone with `iam:Get*`/`iam:List*`. Never store secrets, hostnames, or bucket names there.
+2. **Scope IAM read access.** `IAMReadOnlyAccess` exposes the entire identity graph. Grant `iam:Get*`/`iam:List*` only on the specific resources a principal needs, or gate it behind conditions.
+3. **Tighten role trust policies.** Only trust the specific principals that genuinely need `sts:AssumeRole`, and add conditions (e.g. `aws:PrincipalOrgID`, external ID, MFA) rather than naming individual users.
+4. **Prune stale policy versions.** Old `list-policy-versions` entries can leak resource names and intent — keep only the versions you need.
+5. **Alert on enumeration bursts.** A single principal firing many `iam:List*`/`iam:Get*` calls in a short window is a classic recon signal.
+
+## 🎯 MITRE ATT&CK Mapping
+
+| Tactic | Technique | ID |
+|--------|-----------|-----|
+| Initial Access | Valid Accounts: Cloud Accounts | T1078.004 |
+| Discovery | Cloud Infrastructure Discovery | T1580 |
+| Discovery | Permission Groups Discovery: Cloud Groups | T1069.003 |
+| Discovery | Account Discovery: Cloud Account | T1087.004 |
+| Collection | Data from Cloud Storage / Metadata | T1530 |
+
+## 🛠️ Commands Reference
+
+```bash
+# Identity
+aws configure --profile cg-bob
+aws sts get-caller-identity --profile cg-bob
+aws iam get-user --user-name <user> --profile cg-bob
+
+# Managed policies (Flag 1 + Flag 5)
+aws iam list-attached-user-policies --user-name <user> --profile cg-bob
+aws iam get-policy --policy-arn <arn> --profile cg-bob
+aws iam list-policy-versions --policy-arn <arn> --profile cg-bob
+aws iam get-policy-version --policy-arn <arn> --version-id v1 --profile cg-bob
+
+# Inline policies (Flag 2)
+aws iam list-user-policies --user-name <user> --profile cg-bob
+aws iam get-user-policy --user-name <user> --policy-name <name> --profile cg-bob
+
+# Groups (Flag 3)
+aws iam list-groups-for-user --user-name <user> --profile cg-bob
+aws iam list-group-policies --group-name <group> --profile cg-bob
+
+# Roles (Flag 4)
+aws iam list-roles --profile cg-bob
+aws iam get-role --role-name <role> --profile cg-bob
+aws iam list-role-policies --role-name <role> --profile cg-bob
+```
+
+## 📚 Additional Resources
+
+- [AWS IAM CLI Reference](https://docs.aws.amazon.com/cli/latest/reference/iam/)
+- [IAM Best Practices](https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html)
+- [CloudGoat iam_enum_basics scenario](https://github.com/RhinoSecurityLabs/cloudgoat/tree/master/cloudgoat/scenarios/aws/iam_enum_basics)
+
+## 🎓 Key Takeaways
+
+1. **Metadata is not a hiding place.** Every descriptive field on an IAM object is legible to any principal with read access — descriptions, Sids, paths, and tags are all fair game for an attacker.
+2. **Read-only is still powerful.** No write, no privilege escalation, no exploitation was needed — pure enumeration walked the identity graph and recovered every secret.
+3. **Enumerate systematically.** User → attached policies → inline policies → groups → roles → policy documents is a repeatable recon checklist for any AWS account you land in.
+4. **A policy has two surfaces.** Its *metadata* (Phase 2) and its *document* (Phase 6) are separate reads — always pull both.

@@ -12,6 +12,27 @@ export interface BlogMeta {
 
 const BLOG_METADATA: BlogMeta[] = [
   {
+    id: 34,
+    slug: 'cloudgoat-iam-enum-basics',
+    title: 'CloudGoat: IAM Enumeration Basics',
+    description:
+      'Write-up: Hunting hidden flags across IAM resource metadata with the AWS CLI',
+    date: '2026-08-05',
+    hidden: false,
+    tags: [
+      'hacking',
+      'write-up',
+      'cloudgoat',
+      'aws',
+      'awscli',
+      'iam',
+      'enumeration',
+      'exploit',
+      'vulnerability',
+    ],
+    file: 'cloudgoat__iam-enum-basics',
+  },
+  {
     id: 33,
     slug: 'lambda-developer-platform-golden-path',
     title: 'Lambda Platform: From Pipeline to Platform',
