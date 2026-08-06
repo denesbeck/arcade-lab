@@ -8,6 +8,7 @@ import {
 import { Tooltip } from '@/_components'
 import type { Priority, Project } from '../_config/data'
 import BlogPosts from './BlogPosts'
+import Highlights from './Highlights'
 
 const PRIORITY_CONFIG: Record<
   Priority,
@@ -78,16 +79,7 @@ const ProjectCard = ({
             {subtitle}
           </span>
         </div>
-        <ul className="flex flex-col gap-2 mt-1">
-          {highlights.map((point) => (
-            <li
-              key={point}
-              className="relative pl-4 text-sm leading-relaxed text-dark-200 before:content-[''] before:absolute before:left-0 before:top-[0.55rem] before:w-1.5 before:h-1.5 before:bg-primary/40 before:rounded-full"
-            >
-              {point}
-            </li>
-          ))}
-        </ul>
+        <Highlights highlights={highlights} />
       </div>
 
       {/* blog post references */}

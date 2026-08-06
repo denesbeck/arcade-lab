@@ -187,11 +187,13 @@ const PROJECTS: Project[] = [
     blogPosts: [8, 9, 14, 17],
   },
   {
-    title: 'Serverless Deploy',
+    title: 'Lambda Deploy Pipeline',
     subtitle: 'Deployment Automation',
     highlights: [
-      'Developed automation scripts and GitHub Actions workflows to deploy AWS Lambda functions',
-      'Implemented CI/CD pipeline for serverless infrastructure using shell scripting and Infrastructure-as-Code practices',
+      'Built a GitHub Actions pipeline that deploys AWS Lambda functions and layers across multiple regions, using SHA-256 change detection to skip unchanged functions and keyless OIDC federation for AWS access',
+      'Implemented branch-to-alias environment isolation with a published Lambda version on every deploy, tracking code and configuration changes independently so a config-only edit skips the code redeploy',
+      'Hardened the pipeline from MVP to production-ready — split a monolithic job into validate, layer, and function stages gated by ShellCheck linting and 24 unit tests across Vitest and pytest',
+      'Provisioned the supporting infrastructure as code with Terraform on HCP — S3 artifact and hash buckets, IAM roles, and an EventBridge-scheduled Lambda that prunes stale layer versions',
     ],
     tech: [
       { name: 'GitHub Actions', icon: SiGithubactions },
@@ -200,8 +202,8 @@ const PROJECTS: Project[] = [
       { name: 'AWS', icon: FaAws },
     ],
     url: 'https://github.com/denesbeck/lambda-functions',
-    status: 'archived',
-    priority: 'low',
+    status: 'active',
+    priority: 'high',
     blogPosts: [3, 19],
   },
   {
