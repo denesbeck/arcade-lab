@@ -12,6 +12,29 @@ export interface BlogMeta {
 
 const BLOG_METADATA: BlogMeta[] = [
   {
+    id: 35,
+    slug: 'cloudgoat-iam-privesc-by-key-rotation',
+    title: 'CloudGoat: IAM Privesc by Key Rotation',
+    description:
+      "Write-up: escalating from a low-priv manager to Secrets Manager by rotating another user's access keys and self-enrolling MFA",
+    date: '2026-08-11',
+    hidden: false,
+    tags: [
+      'hacking',
+      'write-up',
+      'cloudgoat',
+      'aws',
+      'awscli',
+      'iam',
+      'privesc',
+      'sts',
+      'secrets-manager',
+      'exploit',
+      'vulnerability',
+    ],
+    file: 'cloudgoat__iam-privesc-by-key-rotation',
+  },
+  {
     id: 34,
     slug: 'cloudgoat-iam-enum-basics',
     title: 'CloudGoat: IAM Enumeration Basics',

