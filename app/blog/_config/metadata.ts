@@ -12,6 +12,28 @@ export interface BlogMeta {
 
 const BLOG_METADATA: BlogMeta[] = [
   {
+    id: 36,
+    slug: 'cloudgoat-iam-privesc-by-rollback',
+    title: 'CloudGoat: IAM Privesc by Rollback',
+    description:
+      'Write-up: escalating to full admin by rolling an IAM managed policy back to an old Allow *:* version',
+    date: '2026-08-11',
+    hidden: false,
+    tags: [
+      'hacking',
+      'write-up',
+      'cloudgoat',
+      'aws',
+      'awscli',
+      'pacu',
+      'iam',
+      'privesc',
+      'exploit',
+      'vulnerability',
+    ],
+    file: 'cloudgoat__iam-privesc-by-rollback',
+  },
+  {
     id: 35,
     slug: 'cloudgoat-iam-privesc-by-key-rotation',
     title: 'CloudGoat: IAM Privesc by Key Rotation',

