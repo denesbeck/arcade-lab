@@ -12,6 +12,29 @@ export interface BlogMeta {
 
 const BLOG_METADATA: BlogMeta[] = [
   {
+    id: 37,
+    slug: 'cloudgoat-lambda-privesc-passrole',
+    title: 'CloudGoat: Lambda Privesc',
+    description:
+      'Write-up: escalating a low-priv user to full admin by passing an over-powered execution role to a Lambda via iam:PassRole',
+    date: '2026-08-13',
+    hidden: false,
+    tags: [
+      'hacking',
+      'write-up',
+      'cloudgoat',
+      'aws',
+      'awscli',
+      'iam',
+      'privesc',
+      'lambda',
+      'sts',
+      'exploit',
+      'vulnerability',
+    ],
+    file: 'cloudgoat__lambda-privesc',
+  },
+  {
     id: 36,
     slug: 'cloudgoat-iam-privesc-by-rollback',
     title: 'CloudGoat: IAM Privesc by Rollback',

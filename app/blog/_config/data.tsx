@@ -28,6 +28,14 @@ import { BlogCover, BlogEntry } from '../_interfaces/blog'
 import BLOG_METADATA from './metadata'
 
 const COVERS: Record<number, BlogCover> = {
+  37: {
+    image: cloudgoat,
+    original: cloudgoat,
+    xImage: cloudgoatX,
+    alt: 'cloudgoat_aws',
+    ogImage: '/blog/covers/cloudgoat_aws.png',
+    ogImageX: '/blog/covers/cloudgoat_aws_x.png',
+  },
   36: {
     image: cloudgoat,
     original: cloudgoat,
