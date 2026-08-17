@@ -39,7 +39,7 @@ const BlogCard = ({
   return (
     <Link
       href={`/blog/${slug}?${searchParams.toString()}`}
-      className="flex overflow-hidden relative max-h-44 border-b-2 transition-all duration-200 ease-in-out cursor-pointer sm:border-b-0 sm:ring-2 last:border-b-0 backdrop-blur-md ring-offset-root border-secondary ring-secondary group animate-text-focus min-h-44 sm:hover:ring-primary sm:active:ring-active sm:hover:ring-offset-4"
+      className="ring-offset-root border-secondary ring-secondary group sm:hover:ring-primary sm:active:ring-active relative flex max-h-44 min-h-44 animate-text-focus cursor-pointer overflow-hidden border-b-2 backdrop-blur-md transition-all duration-200 ease-in-out last:border-b-0 sm:border-b-0 sm:ring-2 sm:hover:ring-offset-4"
     >
       {loading && (
         <ThemeProvider theme={darkTheme}>
@@ -48,7 +48,7 @@ const BlogCard = ({
             animation="wave"
             width={160}
             height={160}
-            className="min-w-40 min-h-40 !bg-dark-800"
+            className="bg-dark-800! min-h-40 min-w-40"
           />
         </ThemeProvider>
       )}
@@ -56,18 +56,18 @@ const BlogCard = ({
         quality={100}
         src={cover.image}
         alt={cover.alt}
-        className="hidden h-full max-h-44 min-w-44 min-h-44 xs:block animate-text-focus max-w-44"
+        className="hidden h-full max-h-44 min-h-44 max-w-44 min-w-44 animate-text-focus xs:block"
         onLoadStart={startLoad}
         onLoad={handleLoad}
       />
-      <div className="flex overflow-hidden flex-col py-3 px-6 space-y-2">
-        <h1 className="text-lg text-left transition-all duration-200 ease-in-out line-clamp-2">
+      <div className="flex flex-col space-y-2 overflow-hidden px-6 py-3">
+        <h1 className="line-clamp-2 text-left text-lg transition-all duration-200 ease-in-out">
           <AnimatedUnderline>{title}</AnimatedUnderline>
         </h1>
-        <p className="flex-1 min-h-0 text-sm text-left md:w-full line-clamp-3">
+        <p className="line-clamp-3 max-h-16 min-h-0 flex-1 text-left text-sm md:w-full">
           {description}
         </p>
-        <div className="flex flex-shrink-0 gap-4 justify-start items-center w-full xs:justify-between">
+        <div className="mt-auto flex w-full shrink-0 items-center justify-start gap-4 xs:justify-between">
           <div className="flex items-center space-x-2">
             <FaRegCalendarAlt />
             <div className="text-sm whitespace-nowrap">{date}</div>
