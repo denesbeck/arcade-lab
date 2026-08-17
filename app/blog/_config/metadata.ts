@@ -12,6 +12,29 @@ export interface BlogMeta {
 
 const BLOG_METADATA: BlogMeta[] = [
   {
+    id: 38,
+    slug: 'cloudgoat-sqs-flag-shop',
+    title: 'CloudGoat: SQS Flag Shop',
+    description:
+      "Write-up: buying a flag priced out of reach by injecting an arbitrary charge straight into the SQS queue, bypassing the web app's price check",
+    date: '2026-08-16',
+    hidden: false,
+    tags: [
+      'hacking',
+      'write-up',
+      'cloudgoat',
+      'aws',
+      'awscli',
+      'iam',
+      'sts',
+      'sqs',
+      'lambda',
+      'exploit',
+      'vulnerability',
+    ],
+    file: 'cloudgoat__sqs-flag-shop',
+  },
+  {
     id: 37,
     slug: 'cloudgoat-lambda-privesc-passrole',
     title: 'CloudGoat: Lambda Privesc',

