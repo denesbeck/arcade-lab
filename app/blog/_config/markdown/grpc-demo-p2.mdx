@@ -1,0 +1,297 @@
+# 🔌 gRPC: The Interceptor That Never Ran
+
+_JWTs, per-method roles, and all four kinds of streaming_
+
+In [part one](/blog/grpc-whats-actually-on-the-wire) I built the smallest gRPC service I could — one method, one message — put TLS underneath it and a static bearer token in front of it. It worked, and it had a ceiling I could describe precisely: **the token authenticated the connection, not the caller.** Every client held the same secret, nothing could be revoked, and the handler had no idea who was calling.
+
+Which meant `codes.PermissionDenied` — the "I know exactly who you are, and no" code — was unreachable. There was no identity to deny. And everything was unary, so the capability gRPC is actually sold on was entirely unexercised.
+
+**Fixing both turned out to be the same problem wearing two hats**, and it produced the two most interesting bugs of the whole exercise — one that compiled cleanly, and one that left an entire class of methods unguarded without a single warning.
+
+## 🎟️ A token that knows who you are
+
+The static token worked, and it had a ceiling I could describe precisely: **it authenticated the connection, not the caller.** Every client held the same secret, nothing could be revoked, and the handler had no idea who was on the other end. Which meant `codes.PermissionDenied` — the "I know exactly who you are, and no" code — was unreachable. There was no identity to deny.
+
+So: a second service with a `Login` method that mints a short-lived signed JWT carrying a role.
+
+```proto
+service AuthService {
+  rpc Login(LoginRequest) returns (LoginResponse);
+}
+```
+
+Two things about this immediately became interesting.
+
+**Login cannot require a token to get a token.** The interceptor has to skip exactly one method, and that's finally what `info.FullMethod` is for — the field I'd been ignoring since part one:
+
+```go
+if fullMethod == loginMethod {
+    return ctx, nil
+}
+```
+
+**The client's token doesn't exist at dial time any more.** In the first version it was a fixed string baked into the credentials. Now it arrives from a call made *over the same connection those credentials are attached to*. So the credentials read from a mutex-guarded store, and return nothing while it's empty:
+
+```go
+func (c tokenCreds) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
+    token := c.store.Get()
+    if token == "" {
+        return nil, nil
+    }
+    return map[string]string{authHeader: bearerPrefix + token}, nil
+}
+```
+
+Which retroactively justifies something that looked like pointless indirection earlier. `GetRequestMetadata` being called before *every* RPC seemed wasteful for a constant string. It's the entire mechanism once the token is dynamic — and it's the same hook a real implementation uses to refresh a token nearing expiry.
+
+Verification is where the security actually lives:
+
+```go
+jwt.ParseWithClaims(tokenString, &Claims{}, keyFunc,
+    jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}),
+    jwt.WithExpirationRequired(),
+)
+```
+
+`WithValidMethods` is the one I'd have skipped, and I want to be precise about why it matters, because I initially overstated it. Without it, the algorithm used for verification is chosen by the `alg` header **in the token the caller sent you** — that's the setup for algorithm-confusion attacks, where a token declares `none`, or arrives signed with HMAC at a service expecting RSA so the public key gets used as a shared secret.
+
+golang-jwt actually blocks both of those specific cases on its own: `alg: none` demands a magic constant as the key, and HMAC verification type-asserts the key to `[]byte`, so an RSA public key is rejected outright. I checked the library source rather than assume, and the defences are there.
+
+What it does *not* block is a swap within the same key type. Issue HS256, and nothing stops a token arriving as HS512 — both take `[]byte`, so the type assertion passes. More to the point, without `WithValidMethods` your algorithm policy is an emergent property of what Go type your key happens to be, rather than something you stated. `WithExpirationRequired` closes a separate hole: a token with no `exp` at all is otherwise valid forever.
+
+Then a role table keyed by the same method string:
+
+```go
+var methodRoles = map[string]string{
+    "/user.UserService/GetUser":     "reader",
+    "/user.UserService/ListUsers":   "reader",
+    "/user.UserService/CreateUsers": "admin",
+    "/user.UserService/DeleteUsers": "admin",
+    "/user.UserService/Chat":        "reader",
+}
+```
+
+A method absent from that table is denied, not allowed. Defaulting to open is how you ship an unprotected endpoint by forgetting a line.
+
+And here, at last, are two different failures that are genuinely different things. Alice is an admin, Bob is a reader:
+
+```text
+$ go run ./client -user=bob -password=bob-pw
+Login       -> bob, expires 3:59PM
+GetUser     -> id=42 name=John Doe
+ListUsers   -> id=1 name=User 1
+CreateUsers -> rpc error: code = PermissionDenied desc = role "reader" cannot call /user.UserService/CreateUsers
+DeleteUsers -> rpc error: code = PermissionDenied desc = role "reader" cannot call /user.UserService/DeleteUsers
+Chat        -> server: echo: hello
+
+$ go run ./client -user=alice -password=wrong
+Login       -> rpc error: code = Unauthenticated desc = Invalid username or password
+```
+
+**`Unauthenticated` means I don't know who you are. `PermissionDenied` means I know precisely who you are.** Bob's token is perfectly valid. That's the distinction I'd read about and never actually produced.
+
+The interceptor also injects the verified claims into the context, so handlers can see the caller:
+
+```text
+GetUser id=42 caller=alice/admin
+ListUsers limit=3 caller=bob/reader
+```
+
+## ⏱️ The password check that leaks by being fast
+
+Checking a password looks like a one-liner, and the obvious one-liner is wrong:
+
+```go
+if password == acct.password { ... }
+```
+
+String comparison exits at the first differing byte. That's a sensible optimization and a **timing side channel** — the runtime depends on how much of the secret you guessed correctly. Given a real value of `s3cr3t`:
+
+```text
+guess "a....."  → differs at byte 0     → 1 byte compared  → fastest
+guess "s....."  → matches 0, differs 1  → 2 bytes compared → slower
+guess "s3...."  → matches 0-1, differs 2 → 3 bytes compared → slower still
+```
+
+The slowest guess is the one with the most correct leading bytes, which turns "guess the whole secret" into "guess one byte at a time":
+
+```text
+32-byte token, brute force:   256^32   ≈  10^77 attempts
+32-byte token, timed:         32 × 256  =  8,192 attempts
+```
+
+Exponential collapses to linear. Over the open internet this is genuinely hard — the differences are nanoseconds against milliseconds of jitter — but jitter is noise, and noise averages out over enough samples. It gets much easier from the same datacenter. The defence costs one function call, so you just pay it:
+
+```go
+subtle.ConstantTimeCompare([]byte(password), []byte(acct.password)) != 1
+```
+
+No early exit, no branch on the data — every byte is examined every time, so the duration depends only on the length.
+
+**Then I tried to close the second leak and got it wrong.** There are two different things timing can reveal here, and only one of them is about comparison:
+
+```go
+acct, ok := accounts[username]
+if !ok {
+    return "", false          // unknown user: returns immediately
+}
+// known user: does the full comparison    ← measurably slower
+```
+
+That difference leaks *which usernames exist*, which is what an attacker wants before spending effort on passwords. So I added a dummy comparison on the unknown-user path to burn equivalent time.
+
+Reading the standard library's own documentation is what showed me it doesn't work: **"If the lengths of x and y do not match it returns 0 immediately."**
+
+My dummy compares the supplied password against itself, so the lengths always match and the full loop runs. The real path compares the supplied password against the stored one — usually *different* lengths, so it bails instantly. The call I added to equalize the two paths is frequently the slower of them. It doesn't erase the signal, it inverts it.
+
+The actual fix isn't a dummy comparison at all, it's a dummy *hash*. In any real implementation the expensive part is the key derivation, so both paths must run one:
+
+```go
+hash := dummyHash            // a genuine bcrypt hash of a throwaway value
+if ok {
+    hash = acct.passwordHash
+}
+err := bcrypt.CompareHashAndPassword(hash, []byte(password))
+if !ok || err != nil {
+    return "", false
+}
+```
+
+Identical, dominant cost on both branches. That's a mitigation; mine was a gesture.
+
+I left the gesture in the demo, because the accounts are hardcoded in a file that the README also lists in a table — you cannot enumerate usernames that are already documentation. But it's a good illustration of how easily security code becomes decorative: it compiles, it uses the right-sounding function, and it protects nothing.
+
+## 🌊 The four shapes of an RPC
+
+Streaming is the thing gRPC is sold on, and it turns out to be one keyword:
+
+```proto
+rpc GetUser     (GetUserRequest)     returns (User);                 // unary
+rpc ListUsers   (ListUsersRequest)   returns (stream User);          // server-streaming
+rpc CreateUsers (stream NewUser)     returns (UserOpSummary);        // client-streaming
+rpc Chat        (stream ChatMessage) returns (stream ChatMessage);   // bidirectional
+```
+
+`stream` on the request side, the response side, or both. Four combinations, and the generated Go signatures diverge completely:
+
+```go
+GetUser(context.Context, *GetUserRequest) (*User, error)
+ListUsers(*ListUsersRequest, grpc.ServerStreamingServer[User]) error
+CreateUsers(grpc.ClientStreamingServer[NewUser, UserOpSummary]) error
+Chat(grpc.BidiStreamingServer[ChatMessage, ChatMessage]) error
+```
+
+Notice what disappears. The server-streaming handler has no `context.Context` parameter — the stream carries it, via `stream.Context()`. The client-streaming handler has no request parameter at all, because there isn't *a* request; there's a sequence of them. And none of the streaming handlers return a value, only an error — results go out through `Send`.
+
+The rule that governs all of it: **`io.EOF` is not an error.** It's how a stream says "I'm done," on both sides:
+
+```go
+for {
+    newUser, err := stream.Recv()
+    if errors.Is(err, io.EOF) {
+        return stream.SendAndClose(&pb.UserOpSummary{...})
+    }
+    if err != nil {
+        return err
+    }
+    ...
+}
+```
+
+Treat that as a failure and a perfectly healthy stream looks broken.
+
+The two directions signal completion differently, which is worth separating: **you observe `io.EOF` from `Recv`, and you cause it with `CloseSend`.** A client calling `CloseSend()` is what makes the server's `Recv` return `io.EOF` — half-closing the stream while still reading replies.
+
+Bidirectional is the one that needs actual concurrency. You cannot send-then-receive in one sequential loop — both ends end up waiting on the other. The client needs a receiving goroutine and a `CloseSend()` to signal it's finished writing while it's still reading:
+
+```go
+done := make(chan struct{})
+go func() {
+    defer close(done)
+    for {
+        msg, err := stream.Recv()
+        if errors.Is(err, io.EOF) { return }
+        ...
+    }
+}()
+
+for _, text := range lines {
+    stream.Send(&pb.ChatMessage{From: "client", Message: text})
+}
+stream.CloseSend()
+<-done
+```
+
+One more thing that catches people: **a deadline covers the whole stream, not each message.** My client's context timeout now bounds an entire `Chat` session, not one round trip.
+
+## 🕸️ Every stream was wide open
+
+Here's the part I would not have predicted, and it's the reason I'd add streaming to any auth demo.
+
+`grpc.ChainUnaryInterceptor` does not run for streaming methods. Not partially — **not at all.** They're separate registrations:
+
+```go
+grpc.NewServer(
+    grpc.Creds(creds),
+    grpc.ChainUnaryInterceptor(auth.UnaryServerInterceptor(issuer)),
+    grpc.ChainStreamInterceptor(auth.StreamServerInterceptor(issuer)),
+)
+```
+
+Delete that last line and every streaming method on the server becomes completely unauthenticated, while the unary ones stay locked down. So I deleted it, rebuilt, and ran Bob — a reader, forbidden from both admin methods:
+
+```text
+$ go run ./client -user=bob -password=bob-pw
+GetUser     -> id=42 name=John Doe
+CreateUsers -> op=create x3 ok=true last=Alan
+DeleteUsers -> op=delete x2 ok=true
+```
+
+Both admin-only calls succeeded. The server's own log shows why:
+
+```text
+CreateUsers created=3 caller=unknown
+DeleteUsers deleted=2 caller=unknown
+```
+
+**`caller=unknown`** — no claims in the context, because nothing ever put them there. No error, no warning, no log line anywhere saying a method was left unguarded. The unary path was still perfectly protected the entire time, which is exactly what makes it dangerous: everything you'd think to test by hand still passes.
+
+The stream interceptor also has one genuine trap of its own. The unary version swaps the context by handing a new one to `handler(ctx, req)`. `grpc.ServerStream` has a `Context()` getter and no setter, so there's nowhere to put the enriched context — the claims would silently vanish. You embed the interface and override the single method:
+
+```go
+type wrappedStream struct {
+    grpc.ServerStream
+    ctx context.Context
+}
+
+func (w *wrappedStream) Context() context.Context { return w.ctx }
+```
+
+Embedding forwards `Send`, `Recv`, and everything else untouched. It's the same trick that makes `jwt.RegisteredClaims` work inside a custom claims struct — inherit an interface implementation, override the one piece you care about.
+
+## 🚧 What I deliberately didn't build
+
+No mTLS, no refresh tokens, no revocation. Tokens live fifteen minutes and there is no way to kill one early — that's the trade JWTs make, and the mitigation is the short expiry rather than a denylist.
+
+The passwords are plaintext strings in a map. Swapping in bcrypt is three lines and it is deliberately not done, because this demo is about gRPC's auth plumbing rather than password storage. It should not be read as a pattern.
+
+One limitation is worth naming precisely, because it isn't obvious: **the interceptor runs once, when the stream opens.** A fifteen-minute token authorizes a `Chat` session that could last hours. Nothing re-checks expiry mid-stream. Fixing that means polling the claims inside the handler loop against `stream.Context()` — I know where it goes, I just haven't needed it.
+
+## 🧠 Lessons
+
+- **`Unauthenticated` and `PermissionDenied` are different questions.** The first is "who are you", the second is "and are you allowed" — and you can only ask the second once a credential carries an identity.
+- **Unary and stream interceptors are separate registrations.** Protecting one does nothing for the other, and a missing `ChainStreamInterceptor` fails open silently — every streaming method unauthenticated while the unary ones look fine.
+- **`io.EOF` is how a stream says goodbye.** On both sides. Treating it as an error makes a healthy stream look broken.
+- **Pin your JWT algorithm.** Without `WithValidMethods` your algorithm policy is an emergent property of what Go type your key happens to be, rather than something you stated.
+- **Default the policy table to deny.** A method missing from the role map should be refused, not waved through. Open-by-default means one forgotten line ships an unguarded endpoint.
+- **Security code can be decorative.** A dummy `ConstantTimeCompare` that burns the wrong amount of time looks exactly like one that works. Read the function's own documentation before trusting the shape of the call.
+
+## 🎉 Outcome
+
+The service now has all four RPC shapes, TLS, a login endpoint issuing short-lived signed tokens, per-method role checks, and the caller's identity available inside every handler — unary and streaming alike.
+
+Two bugs across both halves of this stand out, and they have the same shape. The first would have let an anonymous caller panic the server, in the function whose entire job was keeping them out. The second left every streaming method wide open while the unary ones stayed locked, so nothing I would have thought to test by hand would have caught it.
+
+Neither produced a compiler error, a vet warning, or a single line in a log. **The dangerous failures here weren't the ones that broke something — they were the ones where the wrong thing worked perfectly.**
+
+💻 The demo is on [GitHub](https://github.com/denesbeck/grpc-demo).

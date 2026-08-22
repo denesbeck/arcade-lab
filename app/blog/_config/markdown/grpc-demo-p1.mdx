@@ -1,0 +1,310 @@
+# 🔌 gRPC: What's Actually on the Wire
+
+_Building the smallest possible service in Go, then trying to put a lock on it_
+
+I keep running into gRPC in the Kubernetes world. The kubelet talks to the container runtime over it. etcd speaks it. Half the things I read about the control plane mention it in passing, as if everyone already knows. And every time, I nodded along and moved on — I'd read the word a hundred times and could not have told you what was actually on the wire.
+
+So I stopped nodding and built one. It started as one method and one message, in Go, small enough to hold in my head. It did not stay that way — by the end it had two services, four kinds of RPC, and an auth system I'd thrown away and rebuilt, which is the [second half of this story](/blog/grpc-jwt-roles-and-streaming). This post is the first half: what gRPC actually is, and what happened when I tried to put a lock on it.
+
+**gRPC turned out to be a code generator and a calling convention sitting on top of HTTP/2 — and once you see that, most of the mystery evaporates.** But I only really believed it after I tried to secure the thing. Adding authentication is what forced me to look at what gRPC actually puts on the wire, because you can't protect a thing you can't picture.
+
+## ❓ The questions I actually had
+
+Before writing any code, I wrote down what I didn't know. These are the questions verbatim:
+
+- Why not just use REST?
+- What's the benefit of gRPC?
+- When should I use it?
+- How is this different from GraphQL?
+- Is this just services talking to each other using SDKs?
+
+That last one turned out to be the closest to right.
+
+## 🧭 REST, GraphQL, gRPC
+
+All three are ways of defining how a client talks to a server. The shapes differ:
+
+```text
+REST       → resources + HTTP verbs
+GraphQL    → schema + queries/mutations
+gRPC       → services + RPC methods
+```
+
+The same conceptual operation — *"give me user 42"* — in each:
+
+```http
+GET /users/42
+```
+
+```graphql
+query {
+  user(id: 42) {
+    id
+    name
+  }
+}
+```
+
+```go
+client.GetUser(ctx, &pb.GetUserRequest{Id: 42})
+```
+
+That third one is the tell. It doesn't look like a network call at all. It looks like a function.
+
+|                       | REST               | GraphQL       | gRPC              |
+| --------------------- | ------------------ | ------------- | ----------------- |
+| Main abstraction      | Resources          | Data graph    | Services/methods  |
+| Schema                | Optional (OpenAPI) | Central       | `.proto`          |
+| Client chooses fields | Limited            | **Yes**       | Usually no        |
+| Transport             | HTTP               | Usually HTTP  | HTTP/2            |
+| Typical format        | JSON               | JSON          | Protobuf          |
+| Streaming             | Limited            | Possible      | **Excellent**     |
+| Browser friendliness  | Excellent          | Excellent     | Weaker            |
+| Internal services     | Good               | Good          | **Excellent**     |
+
+My instinct going in was that gRPC and GraphQL were philosophically related, and that holds up — both put far more weight on a formal contract than REST typically does. But they optimize for different questions.
+
+**GraphQL asks:** *"What data do you want?"*
+
+**gRPC asks:** *"What operation do you want me to perform?"*
+
+That's why gRPC feels more like calling a strongly typed function, while GraphQL feels more like querying a strongly typed data model. Which also answers *when should I use it*: internal service-to-service traffic where both ends are yours, the contract is stable, and you'd rather call a method than assemble a request. Not browser-facing work — that's where it's weakest.
+
+## 📝 The contract comes first
+
+Everything starts with the `.proto` file. It's the contract, and it's the only place the shape of the API is written down:
+
+```proto
+syntax = "proto3";
+
+package user;
+
+option go_package = "grpc-demo/proto";
+
+service UserService {
+  rpc GetUser(GetUserRequest) returns (User);
+}
+
+message GetUserRequest {
+  int32 id = 1;
+}
+
+message User {
+  int32 id = 1;
+  string name = 2;
+}
+```
+
+Then you compile it. `protoc` plus two Go plugins:
+
+```bash
+brew install protobuf
+go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+
+protoc --go_out=. --go_opt=paths=source_relative \
+       --go-grpc_out=. --go-grpc_opt=paths=source_relative \
+       proto/user.proto
+```
+
+Without `paths=source_relative` the generated files land somewhere you didn't ask for — in my case a nested `grpc-demo/proto/` under the repo root rather than next to the source.
+
+That produces two files, and the split is worth knowing:
+
+- `user.pb.go` — the data definitions
+- `user_grpc.pb.go` — the service API
+
+And there's the answer to my "is this just SDKs?" question. **The codegen *is* the SDK.** `protoc` reads the contract and writes you a typed client and a server interface in your language, which is why calling a remote method looks like calling a local one. That's the whole trick.
+
+## 🔓 Then I noticed there was no security at all
+
+The working demo dialled like this:
+
+```go
+grpc.WithTransportCredentials(insecure.NewCredentials())
+```
+
+And the server was created like this:
+
+```go
+server := grpc.NewServer()
+```
+
+Zero options. No credentials, no interceptors. Anything that could reach port `:50051` could call `GetUser`, in plaintext. Fine for a demo on localhost, and exactly the thing worth fixing if I wanted to understand the protocol — because authentication is where you find out what a protocol actually carries.
+
+## 🎫 Where the credential actually goes
+
+Here's the concept I was missing, and it's the one that made everything else click: **gRPC metadata is HTTP/2 headers.** That's it. That's the whole idea.
+
+```text
+gRPC metadata
+
+authorization: Bearer eyJ...
+x-request-id: 12345
+```
+
+The client attaches key/value pairs to a call, they travel as headers, the server reads them off the context. So authentication is nothing more exotic than putting a token in a header and checking it on the other side — conceptually identical to what you'd do with REST.
+
+On the HTTP/2 transport this runs over, that isn't an analogy: initial metadata is the HEADERS frame that opens the call, trailing metadata the one that closes it.
+
+There are two independent places to put security, and they do different jobs:
+
+```text
+client.GetUser(ctx, req)
+  └─ per-RPC credentials  →  "authorization: Bearer <token>"
+       └─ sent as an HTTP/2 header, over TLS
+            └─ server: interceptor runs FIRST
+                 ├─ missing / malformed / mismatched → Unauthenticated
+                 └─ valid → handler(ctx, req) → GetUser runs
+```
+
+TLS is the transport layer: encryption, and proof the server is who it claims. The token is the call layer: identity per request. I wired both, because they answer different questions and neither substitutes for the other.
+
+On the client, that's two dial options:
+
+```go
+creds, err := credentials.NewClientTLSFromFile("certs/server.crt", "")
+// ...
+conn, err := grpc.NewClient(
+    "localhost:50051",
+    grpc.WithTransportCredentials(creds),
+    grpc.WithPerRPCCredentials(auth.PerRPC(*token)),
+)
+```
+
+And the credentials themselves are an interface with exactly two methods:
+
+```go
+func (c tokenCreds) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
+    return map[string]string{authHeader: bearerPrefix + c.token}, nil
+}
+
+func (c tokenCreds) RequireTransportSecurity() bool { return true }
+```
+
+Worth knowing where those two method names come from, since you can't guess them: `go doc google.golang.org/grpc/credentials.PerRPCCredentials` prints the interface and its doc comments from the exact version in your `go.mod`, offline. grpc-go also ships prose documentation inside the module itself — `Documentation/grpc-auth-support.md` sits in your module cache, covering precisely what I'd spent the day searching the internet for.
+
+That second method is doing more work than it looks. Returning `true` means gRPC will **refuse** to attach the token to an insecure channel. I don't have to remember to keep TLS wired up — if it ever regresses, I get a dial error instead of a credential broadcast in plaintext. **Given the choice, make the library enforce your invariant rather than your discipline.**
+
+On the server, the matching half is an interceptor — middleware that runs before the handler:
+
+```go
+server := grpc.NewServer(
+    grpc.Creds(creds),
+    grpc.ChainUnaryInterceptor(auth.UnaryServerInterceptor(auth.TokenFromEnv())),
+)
+```
+
+## 🧨 The interceptor that would have crashed the server
+
+My first interceptor read the header like this:
+
+```go
+headers := md.Get(authHeader)
+tokenFromHeader, found := strings.CutPrefix(headers[0], bearerPrefix)
+```
+
+Reasonable-looking. It's also a denial-of-service endpoint.
+
+`md.Get` returns a `[]string`, because HTTP/2 permits repeated headers. When the header is absent, that slice is empty — and `headers[0]` on an empty slice panics. So a request with no `authorization` header at all doesn't get rejected. It panics inside the interceptor.
+
+And grpc-go does not recover from panics in interceptors or handlers. It propagates and takes the process down.
+
+**An auth check that panics on a missing credential isn't an auth check — it's a way for an anonymous caller to kill your server.** The exact request the code exists to reject is the one that kills it.
+
+The fix is three lines, and the ordering is the entire point:
+
+```go
+headers := md.Get(authHeader)
+if len(headers) == 0 {
+    return nil, status.Error(codes.Unauthenticated, "Missing authorization header")
+}
+```
+
+I caught this in review before it ever ran, which I'm counting as luck rather than skill. Because here's the part that stuck with me: `go build` was clean. `go vet` was clean. Neither tool has any way to know that `md.Get` can return an empty slice.
+
+## 🕳️ Two more that compiled fine
+
+The same afternoon produced two more bugs that the toolchain was perfectly happy with.
+
+**The parameter I accepted and then ignored.** My interceptor took `expected string` and then called `TokenFromEnv()` inside the request path anyway. That function calls `log.Fatal` when the environment variable is missing — so I'd put an `os.Exit(1)` inside request handling. One RPC arriving at a misconfigured server would kill it, with no deferred cleanup and no graceful shutdown. Credential config should fail once, loudly, at boot.
+
+Go is strict about unused imports and unused local variables. It says nothing at all about an unused function parameter.
+
+**The flag default that fired too early.** This one is subtler:
+
+```go
+token := flag.String("token", auth.TokenFromEnv(), "bearer token to send")
+flag.Parse()
+```
+
+The default value is evaluated *immediately*, when `flag.String` is called — before `Parse` has any idea whether `-token` was passed. Since `TokenFromEnv` fatals on a missing variable, the flag could never rescue me: `-token=wrong` with no environment variable set would die before parsing the flag I'd just typed.
+
+The fix is to keep the fail-closed check but move it after `Parse`, and let the default be inert:
+
+```go
+tokenFromEnv := os.Getenv("GRPC_TOKEN")
+token := flag.String("token", tokenFromEnv, "bearer token to send")
+flag.Parse()
+
+if *token == "" {
+    log.Fatal("Missing token")
+}
+```
+
+## 🧪 Proving it
+
+Server in one terminal, client in another:
+
+```text
+$ go run ./client
+2026/08/21 17:46:31 Got user: id=42, name=John Doe
+
+$ go run ./client -token=definitely-wrong
+2026/08/21 17:46:31 rpc error: code = Unauthenticated desc = Bad credentials
+
+$ env -u GRPC_TOKEN go run ./client
+2026/08/21 17:46:31 Missing token
+```
+
+And the server's entire log across all three calls:
+
+```text
+2026/08/21 17:46:30 gRPC server listening on :50051
+2026/08/21 17:46:31 Request received: id:42
+```
+
+**One line.** Three calls went out, one `Request received:`. The rejected call never reached the handler — the interceptor returned before `handler(ctx, req)` was ever invoked. That absence is the actual proof; the error message on the client only tells you something went wrong somewhere.
+
+TLS confirmed separately, from outside the client:
+
+```text
+$ openssl s_client -connect localhost:50051 -servername localhost </dev/null \
+    | openssl x509 -noout -subject -ext subjectAltName
+
+subject=CN=localhost
+X509v3 Subject Alternative Name:
+    DNS:localhost, IP Address:127.0.0.1
+```
+
+One thing I'd flag for anyone generating their own certificate: the `subjectAltName` is not optional. Go's TLS verifier ignores the Common Name field entirely, so a cert without a SAN fails with an error about "legacy Common Name" that reads like a format problem rather than a missing field.
+
+## 🧠 Lessons
+
+- **gRPC's mystery is mostly codegen.** A `.proto` file and a compiler that writes you a typed client and server. The reason a remote call looks like a local function is that something generated a local function.
+- **The credential is a header.** gRPC metadata is HTTP/2 headers, and per-RPC auth is a string in one of them. Once you know that, the API stops feeling arbitrary and starts looking like plumbing you can reason about.
+- **`md.Get` returns a slice, and empty is the case you care about.** The absent-header path is exactly the path an attacker takes. Never index a metadata lookup without checking length.
+- **A clean `go vet` is not a clean bill of health.** Unused imports: compile error. Unused locals: compile error. Unused *parameters*, and out-of-range indexes on a slice the compiler can't reason about: silence.
+- **Evaluate defaults late.** `flag.String`'s default is computed before `Parse` runs, so a fail-closed helper in that position defeats the flag it's meant to back up.
+- **Make the library enforce the invariant.** `RequireTransportSecurity() == true` means I cannot accidentally ship the token over plaintext. That's better than remembering not to.
+- **Read the source you already downloaded.** `go doc` is authoritative for the version you actually have — no drift, no wrong major version. I went looking on the internet for things sitting in `~/go/pkg/mod`.
+
+## 🎉 Outcome
+
+I have a gRPC service that refuses unauthenticated calls, over TLS, in about seventy lines of auth code and no dependencies beyond grpc-go itself. And I can finally read the word "gRPC" in a Kubernetes doc and picture what's on the wire: an HTTP/2 stream, a protobuf-encoded message, a method name, and a few headers.
+
+The thing that surprised me most wasn't any of the protocol machinery. It was that the most dangerous bug I wrote compiled cleanly, vetted cleanly, and would have handed anonymous callers a way to take the server down — in the function whose entire job was keeping them out.
+
+There's also a ceiling here I can describe precisely, and it bothered me enough to keep going: **this token authenticates the connection, not the caller.** Every client holds the same secret, nothing can be revoked, and the handler has no idea who is calling. Fixing that, and adding the streaming gRPC is actually sold on, is [part two](/blog/grpc-jwt-roles-and-streaming).
+
+💻 The demo is on [GitHub](https://github.com/denesbeck/grpc-demo).

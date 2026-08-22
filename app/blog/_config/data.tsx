@@ -10,10 +10,12 @@ import developingMyOwnVcs from '@/../public/blog/covers/developing_my_own_vcs.pn
 import developingMyOwnVcsX from '@/../public/blog/covers/developing_my_own_vcs_x.png'
 import fromJsonToSqlite from '@/../public/blog/covers/from_json_to_sqlite.png'
 import fromJsonToSqliteX from '@/../public/blog/covers/from_json_to_sqlite_x.png'
-import lambdaDeploy from '@/../public/blog/covers/lambda_deploy.png'
-import lambdaDeployX from '@/../public/blog/covers/lambda_deploy_x.png'
-import lambdaPlatform from '@/../public/blog/covers/lambda_platform.png'
-import lambdaPlatformX from '@/../public/blog/covers/lambda_platform_x.png'
+import grpc from '@/../public/blog/covers/grpc.png'
+import grpcX from '@/../public/blog/covers/grpc_x.png'
+import lambdaDeployPipeline from '@/../public/blog/covers/lambda_deploy_pipeline.png'
+import lambdaDeployPipelineX from '@/../public/blog/covers/lambda_deploy_pipeline_x.png'
+import lambdaDeployPlatform from '@/../public/blog/covers/lambda_deploy_platform.png'
+import lambdaDeployPlatformX from '@/../public/blog/covers/lambda_deploy_platform_x.png'
 import remoteStateManagement from '@/../public/blog/covers/remote_state_management.png'
 import remoteStateManagementX from '@/../public/blog/covers/remote_state_management_x.png'
 import selfHostedDevPlatform from '@/../public/blog/covers/self_hosted_dev_platform.png'
@@ -28,6 +30,30 @@ import { BlogCover, BlogEntry } from '../_interfaces/blog'
 import BLOG_METADATA from './metadata'
 
 const COVERS: Record<number, BlogCover> = {
+  41: {
+    image: selfHostedDevPlatform,
+    original: selfHostedDevPlatform,
+    xImage: selfHostedDevPlatformX,
+    alt: 'self_hosted_dev_platform',
+    ogImage: '/blog/covers/self_hosted_dev_platform.png',
+    ogImageX: '/blog/covers/self_hosted_dev_platform_x.png',
+  },
+  40: {
+    image: grpc,
+    original: grpc,
+    xImage: grpcX,
+    alt: 'grpc',
+    ogImage: '/blog/covers/grpc.png',
+    ogImageX: '/blog/covers/grpc_x.png',
+  },
+  39: {
+    image: grpc,
+    original: grpc,
+    xImage: grpcX,
+    alt: 'grpc',
+    ogImage: '/blog/covers/grpc.png',
+    ogImageX: '/blog/covers/grpc_x.png',
+  },
   38: {
     image: cloudgoat,
     original: cloudgoat,
@@ -69,9 +95,9 @@ const COVERS: Record<number, BlogCover> = {
     ogImageX: '/blog/covers/cloudgoat_aws_x.png',
   },
   33: {
-    image: lambdaPlatform,
-    original: lambdaPlatform,
-    xImage: lambdaPlatformX,
+    image: lambdaDeployPlatform,
+    original: lambdaDeployPlatform,
+    xImage: lambdaDeployPlatformX,
     alt: 'lambda_platform',
     ogImage: '/blog/covers/lambda_platform.png',
     ogImageX: '/blog/covers/lambda_platform_x.png',
@@ -181,9 +207,9 @@ const COVERS: Record<number, BlogCover> = {
     ogImageX: '/blog/covers/arcade_lab_x.png',
   },
   19: {
-    image: lambdaDeploy,
-    original: lambdaDeploy,
-    xImage: lambdaDeployX,
+    image: lambdaDeployPipeline,
+    original: lambdaDeployPipeline,
+    xImage: lambdaDeployPipelineX,
     alt: 'lambda_deploy',
     ogImage: '/blog/covers/lambda_deploy.png',
     ogImageX: '/blog/covers/lambda_deploy_x.png',
@@ -301,9 +327,9 @@ const COVERS: Record<number, BlogCover> = {
     ogImageX: '/blog/covers/building_home_server_x.png',
   },
   3: {
-    image: lambdaDeploy,
-    original: lambdaDeploy,
-    xImage: lambdaDeployX,
+    image: lambdaDeployPipeline,
+    original: lambdaDeployPipeline,
+    xImage: lambdaDeployPipelineX,
     alt: 'lambda_deploy',
     ogImage: '/blog/covers/lambda_deploy.png',
     ogImageX: '/blog/covers/lambda_deploy_x.png',
