@@ -10,7 +10,7 @@ export function getPersonalInfo(): PersonalInfo {
     location: 'Budapest, Hungary',
     company: 'SEON',
     role: 'Senior Software Engineer',
-    bio: `Senior Software Engineer with ${new Date().getFullYear() - 2019}+ years of experience building full-stack applications, cloud-native systems, and developer platforms. My work spans modern web development, distributed systems, infrastructure automation, and operational tooling, allowing me to contribute across both application and platform layers.
+    bio: `Senior Software Engineer with ${new Date().getFullYear() - 2019}+ years of experience building cloud-native systems, developer platforms, and production software. My work spans modern web development, distributed systems, infrastructure automation, and operational tooling, allowing me to contribute across both application and platform layers.
 
     Professionally, I've delivered full-stack products, owned production services, and built CI/CD and deployment workflows used by engineering teams at scale. I enjoy creating systems that improve developer experience, reduce operational friction, and make software easier to ship and operate.
 
@@ -20,25 +20,34 @@ export function getPersonalInfo(): PersonalInfo {
 
     Check out my work (https://github.com/denesbeck) on GitHub.`,
     skills: [
-      'TypeScript',
-      'Node.js',
-      'React',
-      'Next.js',
-      'Tailwind CSS',
-      'Golang',
-      'Bash',
-      'Lua',
       'AWS',
-      'Docker',
       'Kubernetes',
       'Terraform',
+      'Docker',
       'Ansible',
+      'Linux',
+      'Helm',
+
+      // CI/CD & GitOps
       'GitHub Actions',
       'Argo CD',
-      'Linux',
+      'Tekton',
+      'Kustomize',
+
+      // Observability
       'Prometheus',
       'Grafana',
       'Loki',
+      'CloudWatch',
+
+      // Programming
+      'Go',
+      'TypeScript',
+      'Node.js',
+      'Bash',
+      'Next.js',
+      'Tailwind CSS',
+      'React',
     ],
     certificates: [
       {

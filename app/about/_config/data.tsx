@@ -10,8 +10,10 @@ import {
   FaReact,
 } from 'react-icons/fa'
 import { FaGolang } from 'react-icons/fa6'
+import { HiTemplate } from 'react-icons/hi'
 import { HiIdentification } from 'react-icons/hi2'
 import { LuLogs } from 'react-icons/lu'
+import { PiListMagnifyingGlassBold } from 'react-icons/pi'
 import { RiNextjsFill, RiTailwindCssFill } from 'react-icons/ri'
 import {
   SiAnsible,
@@ -20,9 +22,11 @@ import {
   SiGithubactions,
   SiGnubash,
   SiGrafana,
+  SiHelm,
   SiKubernetes,
   SiLua,
   SiPrometheus,
+  SiTekton,
   SiTerraform,
   SiTypescript,
 } from 'react-icons/si'
@@ -82,29 +86,35 @@ export const CERTIFICATES: Certificate[] = [
 ]
 
 export const SKILLS = [
-  // Full-stack
-  { name: 'TypeScript', icon: SiTypescript },
-  { name: 'Node.js', icon: FaNodeJs },
-  { name: 'React', icon: FaReact },
-  { name: 'Next.js', icon: RiNextjsFill },
-  { name: 'Tailwind CSS', icon: RiTailwindCssFill },
-  // Languages
-  { name: 'Golang', icon: FaGolang },
-  { name: 'Bash', icon: SiGnubash },
-  { name: 'Lua', icon: SiLua },
-  // DevOps & cloud
+  // Cloud & Infrastructure
   { name: 'AWS', icon: FaAws },
-  { name: 'Docker', icon: SiDocker },
   { name: 'Kubernetes', icon: SiKubernetes },
   { name: 'Terraform', icon: SiTerraform },
+  { name: 'Docker', icon: SiDocker },
   { name: 'Ansible', icon: SiAnsible },
+  { name: 'Linux', icon: FaLinux },
+  { name: 'Helm', icon: SiHelm },
+
+  // CI/CD & GitOps
   { name: 'GitHub Actions', icon: SiGithubactions },
   { name: 'Argo CD', icon: SiArgo },
-  { name: 'Linux', icon: FaLinux },
+  { name: 'Tekton', icon: SiTekton },
+  { name: 'Kustomize', icon: HiTemplate },
+
   // Observability
   { name: 'Prometheus', icon: SiPrometheus },
   { name: 'Grafana', icon: SiGrafana },
   { name: 'Loki', icon: LuLogs },
+  { name: 'CloudWatch', icon: PiListMagnifyingGlassBold },
+
+  // Programming
+  { name: 'Go', icon: FaGolang },
+  { name: 'TypeScript', icon: SiTypescript },
+  { name: 'Node.js', icon: FaNodeJs },
+  { name: 'Bash', icon: SiGnubash },
+  { name: 'Next.js', icon: RiNextjsFill },
+  { name: 'Tailwind CSS', icon: RiTailwindCssFill },
+  { name: 'React', icon: FaReact },
 ]
 
 export const BIO = (
@@ -112,11 +122,10 @@ export const BIO = (
     <p className="mb-8">
       🚀 Senior Software Engineer with{' '}
       <Emphasize>{new Date().getFullYear() - 2019}+ years</Emphasize> of
-      experience building <Emphasize>full-stack applications</Emphasize>,
-      cloud-native systems, and developer platforms. My work spans modern web
-      development, distributed systems, infrastructure automation, and
-      operational tooling, allowing me to contribute across both application and
-      platform layers.
+      experience building cloud-native systems, developer platforms, and
+      production software. My work spans application development, distributed
+      systems, infrastructure automation, CI/CD, and operational tooling,
+      allowing me to contribute across both application and platform layers.
     </p>
     <p className="mb-8">
       🏗️ Professionally, I&apos;ve delivered full-stack products, owned
@@ -130,7 +139,7 @@ export const BIO = (
       projects. I&apos;m building{' '}
       <a
         target="_blank"
-        className="underline text-active underline-offset-4"
+        className="text-active underline underline-offset-4"
         href="https://github.com/denesbeck/dev-platform"
       >
         Dev Platform
@@ -139,7 +148,7 @@ export const BIO = (
       bare-metal{' '}
       <a
         target="_blank"
-        className="underline text-active underline-offset-4"
+        className="text-active underline underline-offset-4"
         href="https://github.com/denesbeck/home-lab-infra"
       >
         homelab
@@ -152,7 +161,7 @@ export const BIO = (
       <Emphasize>Tmux</Emphasize> user who maintains a personal{' '}
       <a
         target="_blank"
-        className="underline text-active underline-offset-4"
+        className="text-active underline underline-offset-4"
         href="https://github.com/denesbeck/dotfiles"
       >
         development environment
@@ -160,7 +169,7 @@ export const BIO = (
       and builds{' '}
       <a
         target="_blank"
-        className="underline text-active underline-offset-4"
+        className="text-active underline underline-offset-4"
         href="https://github.com/denesbeck/tmux-worktree"
       >
         tools
@@ -171,7 +180,7 @@ export const BIO = (
       📁 Check out{' '}
       <a
         target="_blank"
-        className="underline text-active underline-offset-4"
+        className="text-active underline underline-offset-4"
         href="https://github.com/denesbeck"
       >
         my work
