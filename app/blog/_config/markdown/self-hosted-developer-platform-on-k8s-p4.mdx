@@ -290,6 +290,36 @@ terraform destroy 2>&1 | tee destroy.log | tail -20
 
 `$?` on that pipeline is `tail`'s exit code, not Terraform's. The destroy had failed; the shell said `0`. Now I grep the log for `Destroy complete` instead of trusting the exit status.
 
+### Round two: the race I hadn't met yet
+
+I said these failure modes would recur, and the very next teardown proved it — with a twist. This time `helm_release.argocd_root_app` was mid-uninstall when the API server simply stopped answering:
+
+```
+Error: Kubernetes cluster unreachable: Get "https://<eip>:6443/version": dial tcp <eip>:6443: i/o timeout
+```
+
+The cluster was fine. The problem was that Terraform had *also*, in the same wave, destroyed the security-group rule that opens port 6443 to my IP. Nothing in the graph said the Helm releases need that rule. During `apply` they had always won that race by accident — the rule lands in seconds, the releases start minutes later. Destroy runs the graph in reverse *and in parallel*, and with no edge between the two, the port slammed shut while the uninstall was in flight.
+
+Both failure modes turned out to share a two-part structural fix.
+
+Part one, the ordering. Every cluster-side resource already funnels through `null_resource.wait_for_apiserver` — the chokepoint between "AWS exists" and "the cluster is reachable" — so a single new edge fixes the destroy order for all of them at once:
+
+```hcl
+resource "null_resource" "wait_for_apiserver" {
+  depends_on = [
+    talos_cluster_kubeconfig.this,
+    data.talos_cluster_health.this,
+    aws_vpc_security_group_ingress_rule.kube_api,
+    aws_vpc_security_group_ingress_rule.talos_api,
+  ]
+```
+
+And it's not a teardown hack: that resource literally curls `https://<eip>:6443` in a retry loop, which never worked without the rule. The dependency was always real — I just hadn't declared it, and `apply` had been quietly winning the race for me.
+
+Part two, the finalizer had to go — from the root Application, *and* from the app through which Argo CD manages itself, which carried the same one. Fixing the destroy order alone would only have promoted the deadlock from attempt one back to the front of the queue. And on the self-referential apps the finalizer is a deadlock by construction: the cascade it triggers deletes the controller that has to clear it. The cost is that deleting the root app now orphans its children instead of removing them — which during teardown is exactly right, because the nodes are about to stop existing anyway.
+
+The next cycle proved it: **one `terraform destroy`, zero interventions, empty state** — the first clean single-shot teardown this cluster has ever had. The only thing Helm had to say was that it kept the three Argo CD CRDs, which the chart marks `helm.sh/resource-policy: keep` so that an uninstall can't cascade-delete every `Application` in the cluster. A sensible default that, here, protected three objects in a cluster that stopped existing minutes later.
+
 ---
 
 ## 🔍 Three small bugs worth naming
@@ -313,6 +343,8 @@ Under `set -o pipefail` this fails *when it matches*. `grep -q` exits immediatel
 **A bootstrap step can't depend on the thing it bootstraps.** `kubernetes_manifest` needs a CRD to exist at plan time; the CRD arrives during apply. No amount of `depends_on` fixes an ordering problem that spans two different phases — you have to move the work into a phase where the information exists.
 
 **Finalizers turn "stop managing this" into "delete this".** Argo CD has no way to distinguish "I'm retiring this component" from "I want a different owner for it," and its default answer to both is cascade-delete. Any change to *who* owns a resource has to be sequenced deliberately, against a controller that is actively reconciling while you work.
+
+**Destroy is where undeclared dependencies bite.** During `apply`, a missing edge can hide for months behind lucky timing. `destroy` runs the same graph in reverse and in parallel, and luck reverses with it. If resource A silently needs resource B, apply usually forgives you; destroy collects.
 
 **`Ready` is not a health signal.** Three nodes reported `Ready` with no CNI installed. Every status field answers one specific question, and it's usually not the one you're asking. Check the thing you actually care about.
 
