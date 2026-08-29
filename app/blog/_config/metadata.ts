@@ -17,8 +17,8 @@ const BLOG_METADATA: BlogMeta[] = [
     title: 'Dev Platform: Handing the Cluster to Argo CD',
     description:
       'Milestone 3: seeding Argo CD with Terraform, the App-of-Apps root, and the CNI handover that cost me an outage',
-    date: '2026-08-19',
-    hidden: true,
+    date: '2026-08-29',
+    hidden: false,
     tags: [
       'dev-platform',
       'kubernetes',
