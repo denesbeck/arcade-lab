@@ -76,7 +76,7 @@ const PROJECTS: Project[] = [
     ],
     url: 'https://github.com/denesbeck/dev-platform',
     status: 'active',
-    relatedBlogPostIds: [26, 29, 31],
+    relatedBlogPostIds: [26, 29, 31, 41],
   },
   {
     title: 'Dotfiles',
@@ -159,7 +159,7 @@ const PROJECTS: Project[] = [
     tech: ['GitHub Actions', 'Bash', 'Terraform', 'AWS'],
     url: 'https://github.com/denesbeck/lambda-functions',
     status: 'active',
-    relatedBlogPostIds: [3, 19],
+    relatedBlogPostIds: [3, 19, 33],
   },
 ]
 
