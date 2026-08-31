@@ -66,7 +66,7 @@ const PROJECTS: Project[] = [
     ],
     url: 'https://github.com/denesbeck/arcade-lab',
     status: 'active',
-    priority: 'critical',
+    priority: 'high',
     blogPosts: [20, 28],
   },
   {
@@ -106,7 +106,7 @@ const PROJECTS: Project[] = [
     ],
     url: 'https://github.com/denesbeck/dev-platform',
     status: 'active',
-    priority: 'high',
+    priority: 'critical',
     blogPosts: [26, 29, 31, 41],
   },
   {
@@ -219,7 +219,7 @@ const PROJECTS: Project[] = [
     ],
     url: 'https://github.com/denesbeck/tmux-pane-controller',
     status: 'active',
-    priority: 'medium',
+    priority: 'low',
     blogPosts: [25],
   },
   {
@@ -235,7 +235,7 @@ const PROJECTS: Project[] = [
     ],
     url: 'https://github.com/denesbeck/tmux-worktree',
     status: 'active',
-    priority: 'medium',
+    priority: 'low',
     blogPosts: [21],
   },
 ]
