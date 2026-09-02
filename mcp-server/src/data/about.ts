@@ -10,7 +10,7 @@ export function getPersonalInfo(): PersonalInfo {
     location: 'Budapest, Hungary',
     company: 'SEON',
     role: 'Senior Software Engineer',
-    bio: `Senior Software Engineer with ${new Date().getFullYear() - 2019}+ years of experience building cloud-native systems, developer platforms, and production software. My work spans modern web development, distributed systems, infrastructure automation, and operational tooling, allowing me to contribute across both application and platform layers.
+    bio: `Senior Software Engineer with ${new Date().getFullYear() - 2019}+ years of experience building cloud-native systems, developer platforms, and production software. My work spans application development, distributed systems, infrastructure automation, CI/CD, and operational tooling, allowing me to contribute across both application and platform layers.
 
     Professionally, I've delivered full-stack products, owned production services, and built CI/CD and deployment workflows used by engineering teams at scale. I enjoy creating systems that improve developer experience, reduce operational friction, and make software easier to ship and operate.
 
@@ -20,6 +20,7 @@ export function getPersonalInfo(): PersonalInfo {
 
     Check out my work (https://github.com/denesbeck) on GitHub.`,
     skills: [
+      // Cloud & Infrastructure
       'Kubernetes',
       'Docker',
       'AWS',
@@ -41,6 +42,7 @@ export function getPersonalInfo(): PersonalInfo {
       'CloudWatch',
 
       // Programming
+      'JavaScript',
       'Bash',
       'Go',
       'Lua',

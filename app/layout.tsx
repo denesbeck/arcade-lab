@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     template: '%s | Arcade Lab',
   },
   description:
-    'Personal portfolio and technical blog of Denes Beck, a Senior Software Engineer specializing in full-stack development, DevOps, and cloud infrastructure.',
+    'Personal portfolio and technical blog of Denes Beck, a Senior Software Engineer building full-stack products, developer tooling, and cloud-native systems.',
   alternates: {
     canonical: '/',
   },
@@ -23,6 +23,7 @@ export const metadata: Metadata = {
     'Denes Beck',
     'Software Engineer',
     'Full Stack Developer',
+    'Developer Tooling',
     'DevOps',
     'AWS',
     'Next.js',
@@ -48,7 +49,7 @@ export const metadata: Metadata = {
     siteName: 'Arcade Lab',
     title: 'Arcade Lab | Denes Beck - Senior Software Engineer',
     description:
-      'Personal portfolio and technical blog of Denes Beck, a Senior Software Engineer specializing in full-stack development, DevOps, and cloud infrastructure.',
+      'Personal portfolio and technical blog of Denes Beck, a Senior Software Engineer building full-stack products, developer tooling, and cloud-native systems.',
     images: [
       {
         url: `/logo/arcade_lab_logo.png`,
@@ -62,7 +63,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Arcade Lab | Denes Beck - Senior Software Engineer',
     description:
-      'Personal portfolio and technical blog of Denes Beck, a Senior Software Engineer specializing in full-stack development, DevOps, and cloud infrastructure.',
+      'Personal portfolio and technical blog of Denes Beck, a Senior Software Engineer building full-stack products, developer tooling, and cloud-native systems.',
     creator: '@DenesBeck',
     images: [`/logo/arcade_lab_logo.png`],
   },

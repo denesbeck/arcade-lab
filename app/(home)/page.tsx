@@ -9,13 +9,13 @@ const domain = process.env.NEXT_PUBLIC_DOMAIN || 'arcade-lab.vercel.app'
 
 export const metadata: Metadata = {
   title: 'Home',
-  description: `Hi, I'm ${INFO.Name}. I'm a ${INFO.Role} at ${INFO.Company} based in ${INFO.Location}. Specializing in full-stack development, DevOps, and cloud infrastructure.`,
+  description: `Hi, I'm ${INFO.Name}. I'm a ${INFO.Role} at ${INFO.Company} based in ${INFO.Location}, building full-stack products, developer tooling, and cloud-native systems.`,
   alternates: {
     canonical: '/',
   },
   openGraph: {
     title: `${INFO.Name} - ${INFO.Role}`,
-    description: `${INFO.Role} at ${INFO.Company} specializing in full-stack development, DevOps, and cloud infrastructure.`,
+    description: `${INFO.Role} at ${INFO.Company} building full-stack products and developer tooling, with hands-on cloud, Kubernetes, and homelab projects on the side.`,
     url: `https://${domain}`,
     type: 'profile',
     images: [
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: `${INFO.Name} - ${INFO.Role}`,
-    description: `${INFO.Role} at ${INFO.Company} specializing in full-stack development, DevOps, and cloud infrastructure.`,
+    description: `${INFO.Role} at ${INFO.Company} building full-stack products and developer tooling, with hands-on cloud, Kubernetes, and homelab projects on the side.`,
     creator: '@DenesBeck',
   },
 }

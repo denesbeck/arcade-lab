@@ -11,19 +11,21 @@ const domain = process.env.NEXT_PUBLIC_DOMAIN || 'arcade-lab.vercel.app'
 
 export const metadata: Metadata = {
   title: 'About',
-  description: `Learn about ${INFO.Name}, a self-taught full-stack ${INFO.Role} with ${new Date().getFullYear() - 2019} years of experience. Specializing in Next.js, React, TypeScript, AWS, Kubernetes, and DevOps. Based in ${INFO.Location}, working at ${INFO.Company}.`,
+  description: `Learn about ${INFO.Name}, a ${INFO.Role} with ${new Date().getFullYear() - 2019}+ years of experience building full-stack products, developer tooling, and cloud-native systems. Working with Next.js, React, TypeScript, Go, AWS, and Kubernetes. Based in ${INFO.Location}, working at ${INFO.Company}.`,
   keywords: [
     'Denes Beck',
     'Software Engineer',
     'Full Stack Developer',
-    'Self-taught Developer',
+    'Developer Tooling',
     'AWS Certified',
     'Terraform Certified',
     'Next.js Developer',
     'React Developer',
     'TypeScript',
     'Golang',
-    'DevOps Engineer',
+    'Kubernetes',
+    'DevOps',
+    'Home Lab',
     'Budapest',
     'SEON',
   ],
@@ -32,7 +34,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: `About ${INFO.Name} - ${INFO.Role}`,
-    description: `Self-taught full-stack ${INFO.Role} with ${new Date().getFullYear() - 2019} years of experience. AWS & Terraform certified. Specializing in scalable applications and infrastructure automation.`,
+    description: `${INFO.Role} with ${new Date().getFullYear() - 2019}+ years of experience delivering full-stack products, production services, and CI/CD workflows. AWS & Terraform certified, exploring platform engineering through hands-on projects.`,
     url: `https://${domain}/about`,
     type: 'profile',
     images: [
@@ -47,7 +49,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: `About ${INFO.Name}`,
-    description: `Self-taught full-stack ${INFO.Role} with ${new Date().getFullYear() - 2019} years of experience. AWS & Terraform certified.`,
+    description: `${INFO.Role} with ${new Date().getFullYear() - 2019}+ years of experience building full-stack products and developer tooling. AWS & Terraform certified.`,
     creator: '@DenesBeck',
   },
 }

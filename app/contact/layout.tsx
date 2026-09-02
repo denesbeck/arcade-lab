@@ -5,14 +5,14 @@ const domain = process.env.NEXT_PUBLIC_DOMAIN || 'arcade-lab.vercel.app'
 export const metadata: Metadata = {
   title: 'Contact',
   description:
-    'Get in touch with Denes Beck — for collaboration, freelance work, or a conversation about software engineering, DevOps, and cloud infrastructure.',
+    'Get in touch with Denes Beck — for collaboration, freelance work, or a conversation about software engineering, developer tooling, and cloud infrastructure.',
   alternates: {
     canonical: '/contact',
   },
   openGraph: {
     title: 'Contact - Denes Beck',
     description:
-      'Get in touch with Denes Beck — for collaboration, freelance work, or a conversation about software engineering, DevOps, and cloud infrastructure.',
+      'Get in touch with Denes Beck — for collaboration, freelance work, or a conversation about software engineering, developer tooling, and cloud infrastructure.',
     url: `https://${domain}/contact`,
     type: 'website',
     images: [
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Contact - Denes Beck',
     description:
-      'Get in touch with Denes Beck — for collaboration, freelance work, or a conversation about software engineering, DevOps, and cloud infrastructure.',
+      'Get in touch with Denes Beck — for collaboration, freelance work, or a conversation about software engineering, developer tooling, and cloud infrastructure.',
     creator: '@DenesBeck',
   },
 }
