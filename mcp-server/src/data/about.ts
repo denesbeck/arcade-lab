@@ -20,10 +20,10 @@ export function getPersonalInfo(): PersonalInfo {
 
     Check out my work (https://github.com/denesbeck) on GitHub.`,
     skills: [
-      'AWS',
       'Kubernetes',
-      'Terraform',
       'Docker',
+      'AWS',
+      'Terraform',
       'Ansible',
       'Linux',
       'Helm',
@@ -41,13 +41,14 @@ export function getPersonalInfo(): PersonalInfo {
       'CloudWatch',
 
       // Programming
-      'Go',
-      'TypeScript',
-      'Node.js',
       'Bash',
+      'Go',
+      'Lua',
       'Next.js',
-      'Tailwind CSS',
       'React',
+      'TypeScript',
+      'Tailwind CSS',
+      'Node.js',
     ],
     certificates: [
       {

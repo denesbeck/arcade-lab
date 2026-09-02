@@ -23,6 +23,7 @@ import {
   SiGnubash,
   SiGrafana,
   SiHelm,
+  SiJavascript,
   SiKubernetes,
   SiLua,
   SiPrometheus,
@@ -87,10 +88,10 @@ export const CERTIFICATES: Certificate[] = [
 
 export const SKILLS = [
   // Cloud & Infrastructure
-  { name: 'AWS', icon: FaAws },
   { name: 'Kubernetes', icon: SiKubernetes },
-  { name: 'Terraform', icon: SiTerraform },
   { name: 'Docker', icon: SiDocker },
+  { name: 'AWS', icon: FaAws },
+  { name: 'Terraform', icon: SiTerraform },
   { name: 'Ansible', icon: SiAnsible },
   { name: 'Linux', icon: FaLinux },
   { name: 'Helm', icon: SiHelm },
@@ -108,13 +109,15 @@ export const SKILLS = [
   { name: 'CloudWatch', icon: PiListMagnifyingGlassBold },
 
   // Programming
-  { name: 'Go', icon: FaGolang },
-  { name: 'TypeScript', icon: SiTypescript },
-  { name: 'Node.js', icon: FaNodeJs },
+  { name: 'JavaScript', icon: SiJavascript },
   { name: 'Bash', icon: SiGnubash },
+  { name: 'Go', icon: FaGolang },
+  { name: 'Lua', icon: SiLua },
   { name: 'Next.js', icon: RiNextjsFill },
-  { name: 'Tailwind CSS', icon: RiTailwindCssFill },
   { name: 'React', icon: FaReact },
+  { name: 'TypeScript', icon: SiTypescript },
+  { name: 'Tailwind CSS', icon: RiTailwindCssFill },
+  { name: 'Node.js', icon: FaNodeJs },
 ]
 
 export const BIO = (
