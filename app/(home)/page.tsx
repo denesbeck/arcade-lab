@@ -1,9 +1,16 @@
 import { Metadata } from 'next'
-import { Suspense } from 'react'
 import { INFO } from '@/about/_config/data'
-import { ContactButton } from './_components'
+import {
+  ClosingCta,
+  FeaturedWork,
+  Hero,
+  LatestPosts,
+  StackMarquee,
+} from './_components'
 
-export const dynamic = 'force-static'
+// Matches /blog: the latest-writing section has to pick up posts whose
+// publish date passes after the last build.
+export const revalidate = 3600 // Revalidate every 1h
 
 const domain = process.env.NEXT_PUBLIC_DOMAIN || 'arcade-lab.vercel.app'
 
@@ -37,21 +44,12 @@ export const metadata: Metadata = {
 
 const Home = () => {
   return (
-    <div className="flex flex-col justify-center items-center px-4 min-h-[calc(100dvh-100px)] w-dvw">
-      <div className="flex flex-col justify-center items-center pb-[100px]">
-        <div className="text-2xl text-center animate-text-focus">
-          👋🏻 Hello, my name is {INFO.Name.split(' ')[0]}.
-        </div>
-        <div className="mt-2 text-center animate-text-focus">
-          I&apos;m a {INFO.Role}.
-        </div>
-        <div className="mt-2 text-center animate-text-focus text-dark-200">
-          Full-Stack Applications · Developer Tooling · DevOps &amp; Automation
-        </div>
-        <Suspense>
-          <ContactButton label={'Contact me'} />
-        </Suspense>
-      </div>
+    <div className="flex w-full min-w-0 flex-col gap-20 overflow-x-clip px-4 pt-6 pb-24 sm:px-6 lg:gap-28 lg:pt-12">
+      <Hero />
+      <StackMarquee />
+      <FeaturedWork />
+      <LatestPosts />
+      <ClosingCta />
     </div>
   )
 }

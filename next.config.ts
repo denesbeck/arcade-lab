@@ -21,9 +21,10 @@ const nextConfig: NextConfig = {
     qualities: [75, 100],
   },
   pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
-  // Read time is estimated from the MDX sources on disk, which the blog routes
-  // still need when they revalidate on the server.
+  // Read time is estimated from the MDX sources on disk, which the home and
+  // blog routes still need when they revalidate on the server.
   outputFileTracingIncludes: {
+    '/': ['./app/blog/_config/markdown/**/*.mdx'],
     '/blog': ['./app/blog/_config/markdown/**/*.mdx'],
     '/blog/[slug]': ['./app/blog/_config/markdown/**/*.mdx'],
   },
