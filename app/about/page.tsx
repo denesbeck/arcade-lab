@@ -56,7 +56,7 @@ export const metadata: Metadata = {
 const About = () => {
   return (
     <div className="w-full min-w-0 overflow-x-clip px-4 pt-6 pb-24 sm:px-6">
-      <div className="grid grid-cols-1 gap-12 lg:grid-cols-[19rem_1fr] lg:gap-14">
+      <div className="grid grid-cols-1 gap-12 lg:grid-cols-[23rem_1fr] lg:gap-14">
         <CharacterCard />
         <div className="flex min-w-0 flex-col gap-14">
           <Biography />
