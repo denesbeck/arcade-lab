@@ -6,25 +6,25 @@ import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { Console } from '@/terminal/_components'
 import CopyButton from './_components/CopyButton'
-import { SHELL_MIN_WIDTH } from './_config/chat-widget'
+import { TERMINAL_MIN_WIDTH } from './_config/chat-widget'
 import chatMarkdownComponents from './_config/MarkdownComponents'
 import useChatWidgetMessages from './_hooks/useChatWidgetMessages'
 import useChatWidgetScroll from './_hooks/useChatWidgetScroll'
 import useChatWidgetSize from './_hooks/useChatWidgetSize'
 
-type Tab = 'assistant' | 'shell'
+type Tab = 'assistant' | 'terminal'
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'assistant', label: 'assistant' },
-  { id: 'shell', label: 'shell' },
+  { id: 'terminal', label: 'terminal' },
 ]
 
 const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false)
   const [tab, setTab] = useState<Tab>('assistant')
-  // The shell mounts on first visit and stays mounted, so its boot animation
+  // The terminal mounts on first visit and stays mounted, so its boot animation
   // plays when you actually open it and the scrollback survives tab switches.
-  const [shellStarted, setShellStarted] = useState(false)
+  const [terminalStarted, setTerminalStarted] = useState(false)
 
   const {
     messages,
@@ -38,7 +38,7 @@ const ChatWidget = () => {
   } = useChatWidgetMessages()
 
   const { size, handleResizeStart } = useChatWidgetSize()
-  // Gated on the tab too, or opening on the shell would pull the caret into
+  // Gated on the tab too, or opening on the terminal would pull the caret into
   // the chat field instead of the prompt.
   const { messagesContainerRef, inputRef } = useChatWidgetScroll(
     messages,
@@ -47,7 +47,7 @@ const ChatWidget = () => {
   )
 
   const openTab = (next: Tab) => {
-    if (next === 'shell') setShellStarted(true)
+    if (next === 'terminal') setTerminalStarted(true)
     setTab(next)
   }
 
@@ -56,7 +56,7 @@ const ChatWidget = () => {
       {/* Launcher — one control for both modes */}
       <button
         onClick={() => {
-          if (!isOpen && tab === 'shell') setShellStarted(true)
+          if (!isOpen && tab === 'terminal') setTerminalStarted(true)
           setIsOpen(!isOpen)
         }}
         className="bg-primary text-root fixed right-6 bottom-6 z-50 flex h-14 w-14 cursor-pointer items-center justify-center rounded-full shadow-lg transition-all duration-200 hover:scale-105 hover:brightness-110 active:scale-95"
@@ -74,8 +74,8 @@ const ChatWidget = () => {
           className="ring-secondary bg-dark-900 fixed right-6 bottom-24 z-50 flex max-w-[90dvw] flex-col shadow-[8px_8px_0px_0px_black] ring-2"
           style={{
             width:
-              tab === 'shell'
-                ? Math.max(size.width, SHELL_MIN_WIDTH)
+              tab === 'terminal'
+                ? Math.max(size.width, TERMINAL_MIN_WIDTH)
                 : size.width,
             height: size.height,
           }}
@@ -217,14 +217,17 @@ const ChatWidget = () => {
             </div>
           </div>
 
-          {/* Shell — the same Console the /terminal route and the 404 render */}
+          {/* Terminal — the same Console the /terminal route and the 404 render */}
           <div
             className={
-              tab === 'shell' ? 'flex min-h-0 flex-1 flex-col' : 'hidden'
+              tab === 'terminal' ? 'flex min-h-0 flex-1 flex-col' : 'hidden'
             }
           >
-            {shellStarted && (
-              <Console variant="embedded" active={isOpen && tab === 'shell'} />
+            {terminalStarted && (
+              <Console
+                variant="embedded"
+                active={isOpen && tab === 'terminal'}
+              />
             )}
           </div>
         </div>
