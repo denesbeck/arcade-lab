@@ -6,9 +6,9 @@ import ContactButton from './ContactButton'
 import SystemPanel from './SystemPanel'
 
 const DISCIPLINES = [
-  'Full-Stack Applications',
-  'Developer Tooling',
-  'DevOps & Automation',
+  'Cloud Platforms',
+  'Developer Experience',
+  'Infrastructure Automation',
 ]
 
 const Hero = () => {
@@ -28,13 +28,14 @@ const Hero = () => {
           </h1>
 
           <p className="animate-text-focus text-primary mt-4 text-lg [animation-fill-mode:backwards] [animation-delay:100ms] sm:text-xl">
-            {INFO.Role} @ {INFO.Company}
+            {INFO.FullRole} @ {INFO.Company}
           </p>
 
           <p className="animate-text-focus text-dark-200 mt-6 max-w-xl leading-relaxed [animation-fill-mode:backwards] [animation-delay:200ms]">
-            👋🏻 Hi, I&apos;m {INFO.Name.split(' ')[0]}. I build full-stack
-            products, developer tooling, and the cloud-native systems they run
-            on — and I write about what breaks along the way.
+            👋🏻 Hi, I&apos;m {INFO.Name.split(' ')[0]}. I build internal
+            platforms, cloud infrastructure, and the developer tooling
+            engineering teams ship on — and I write about what breaks along the
+            way.
           </p>
 
           <div className="animate-text-focus mt-7 flex flex-wrap gap-2 [animation-fill-mode:backwards] [animation-delay:300ms]">

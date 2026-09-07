@@ -1,12 +1,6 @@
 import { Metadata } from 'next'
 import { INFO } from '@/about/_config/data'
-import {
-  ClosingCta,
-  FeaturedWork,
-  Hero,
-  LatestPosts,
-  StackMarquee,
-} from './_components'
+import { FeaturedWork, Hero, LatestPosts, StackMarquee } from './_components'
 
 // Matches /blog: the latest-writing section has to pick up posts whose
 // publish date passes after the last build.
@@ -16,13 +10,13 @@ const domain = process.env.NEXT_PUBLIC_DOMAIN || 'arcade-lab.vercel.app'
 
 export const metadata: Metadata = {
   title: 'Home',
-  description: `Hi, I'm ${INFO.Name}. I'm a ${INFO.Role} at ${INFO.Company} based in ${INFO.Location}, building full-stack products, developer tooling, and cloud-native systems.`,
+  description: `Hi, I'm ${INFO.Name}. I'm a ${INFO.FullRole} at ${INFO.Company} based in ${INFO.Location}, building internal platforms, cloud infrastructure, and the developer tooling engineering teams ship on.`,
   alternates: {
     canonical: '/',
   },
   openGraph: {
-    title: `${INFO.Name} - ${INFO.Role}`,
-    description: `${INFO.Role} at ${INFO.Company} building full-stack products and developer tooling, with hands-on cloud, Kubernetes, and homelab projects on the side.`,
+    title: `${INFO.Name} - ${INFO.FullRole}`,
+    description: `${INFO.FullRole} at ${INFO.Company} building internal platforms, CI/CD pipelines, and developer tooling, with hands-on AWS, Kubernetes, and homelab projects on the side.`,
     url: `https://${domain}`,
     type: 'profile',
     images: [
@@ -36,8 +30,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: `${INFO.Name} - ${INFO.Role}`,
-    description: `${INFO.Role} at ${INFO.Company} building full-stack products and developer tooling, with hands-on cloud, Kubernetes, and homelab projects on the side.`,
+    title: `${INFO.Name} - ${INFO.FullRole}`,
+    description: `${INFO.FullRole} at ${INFO.Company} building internal platforms, CI/CD pipelines, and developer tooling, with hands-on AWS, Kubernetes, and homelab projects on the side.`,
     creator: '@DenesBeck',
   },
 }

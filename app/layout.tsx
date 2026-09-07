@@ -5,33 +5,39 @@ import { Metadata } from 'next'
 import AlertBox from './_components/AlertBox'
 import ChatWidget from './_components/ChatWidget'
 import Navbar from './_components/Navbar'
+import { INFO } from './about/_config/data'
 
 const domain = process.env.NEXT_PUBLIC_DOMAIN || 'arcade-lab.vercel.app'
+
+// The site title and blurb appear in three metadata blocks; deriving them from
+// INFO keeps the role string in exactly one place.
+const SITE_TITLE = `Arcade Lab | ${INFO.Name} - ${INFO.FullRole}`
+const SITE_DESCRIPTION = `Personal portfolio and technical blog of ${INFO.Name}, a ${INFO.FullRole} building internal platforms, cloud infrastructure, and developer tooling.`
 
 export const metadata: Metadata = {
   metadataBase: new URL(`https://${domain}`),
   title: {
-    default: 'Arcade Lab | Denes Beck - Senior Software Engineer',
+    default: SITE_TITLE,
     template: '%s | Arcade Lab',
   },
-  description:
-    'Personal portfolio and technical blog of Denes Beck, a Senior Software Engineer building full-stack products, developer tooling, and cloud-native systems.',
+  description: SITE_DESCRIPTION,
   alternates: {
     canonical: '/',
   },
   keywords: [
     'Denes Beck',
-    'Software Engineer',
-    'Full Stack Developer',
+    'Platform Engineer',
+    'Developer Experience',
+    'Internal Developer Platform',
     'Developer Tooling',
     'DevOps',
     'AWS',
-    'Next.js',
-    'React',
-    'TypeScript',
-    'Golang',
     'Kubernetes',
     'Terraform',
+    'GitOps',
+    'CI/CD',
+    'Golang',
+    'TypeScript',
     'Portfolio',
     'Technical Blog',
   ],
@@ -47,9 +53,8 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: `https://${domain}`,
     siteName: 'Arcade Lab',
-    title: 'Arcade Lab | Denes Beck - Senior Software Engineer',
-    description:
-      'Personal portfolio and technical blog of Denes Beck, a Senior Software Engineer building full-stack products, developer tooling, and cloud-native systems.',
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
     images: [
       {
         url: `/logo/arcade_lab_logo.png`,
@@ -61,9 +66,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Arcade Lab | Denes Beck - Senior Software Engineer',
-    description:
-      'Personal portfolio and technical blog of Denes Beck, a Senior Software Engineer building full-stack products, developer tooling, and cloud-native systems.',
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
     creator: '@DenesBeck',
     images: [`/logo/arcade_lab_logo.png`],
   },
@@ -91,7 +95,7 @@ export default function RootLayout({
     name: 'Denes Beck',
     url: `https://${domain}`,
     image: `https://${domain}/logo/arcade_lab_logo.png`,
-    jobTitle: 'Senior Software Engineer',
+    jobTitle: INFO.FullRole,
     worksFor: {
       '@type': 'Organization',
       name: 'SEON',
@@ -107,19 +111,20 @@ export default function RootLayout({
       'https://x.com/DenesBeck',
     ],
     knowsAbout: [
-      'Software Engineering',
-      'Full Stack Development',
-      'DevOps',
+      'Platform Engineering',
+      'Developer Experience',
+      'Internal Developer Platforms',
       'Cloud Computing',
       'AWS',
-      'Next.js',
-      'React',
-      'TypeScript',
-      'Golang',
       'Kubernetes',
-      'Docker',
       'Terraform',
+      'GitOps',
       'CI/CD',
+      'Observability',
+      'Docker',
+      'Golang',
+      'TypeScript',
+      'Full Stack Development',
     ],
   }
 
