@@ -60,13 +60,13 @@ const Hero = () => {
               <FiArrowUpRight className="ml-2 h-5 w-5 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </Link>
             <div className="ml-1 flex items-center gap-4">
-              {CONNECTIONS.map(({ url, icon: Icon }) => (
+              {CONNECTIONS.map(({ name, url, icon: Icon }) => (
                 <a
                   key={url}
                   href={url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label={new URL(url).hostname.replace('www.', '')}
+                  aria-label={name}
                   className="text-dark-300 hover:text-primary transition-colors duration-200 ease-in-out"
                 >
                   <Icon className="h-6 w-6" />

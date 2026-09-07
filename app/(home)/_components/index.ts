@@ -1,4 +1,3 @@
-import ClosingCta from './ClosingCta'
 import ContactButton from './ContactButton'
 import CountUp from './CountUp'
 import FeaturedWork from './FeaturedWork'
@@ -9,7 +8,6 @@ import StackMarquee from './StackMarquee'
 import SystemPanel from './SystemPanel'
 
 export {
-  ClosingCta,
   ContactButton,
   CountUp,
   FeaturedWork,

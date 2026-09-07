@@ -49,7 +49,6 @@ const Home = () => {
       <StackMarquee />
       <FeaturedWork />
       <LatestPosts />
-      <ClosingCta />
     </div>
   )
 }
