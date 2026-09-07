@@ -6,7 +6,7 @@ import ContactButton from './ContactButton'
 import SystemPanel from './SystemPanel'
 
 const DISCIPLINES = [
-  'Platforms Engineering',
+  'Platform Engineering',
   'Developer Experience',
   'Infrastructure Automation',
 ]
