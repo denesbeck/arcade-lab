@@ -15,8 +15,4 @@ export const navItems = [
     label: 'About',
     path: '/about',
   },
-  {
-    label: 'Terminal',
-    path: '/terminal',
-  },
 ]
