@@ -6,10 +6,12 @@ import profile from '@/../public/avatars/ghibli_avatar.png'
 import { darkTheme } from '@/theme'
 
 interface IAvatar {
+  /** Rendered edge length in px — the frame is always a circle. */
+  size?: number
   autoHide?: boolean
 }
 
-const Avatar = ({ autoHide = true }: IAvatar) => {
+const Avatar = ({ size = 160, autoHide = true }: IAvatar) => {
   const [loading, setLoading] = useState(true)
 
   const handleLoad = useCallback(() => {
@@ -17,17 +19,20 @@ const Avatar = ({ autoHide = true }: IAvatar) => {
   }, [])
 
   return (
+    // Sized inline rather than by utility class: the value is a prop, so
+    // Tailwind has nothing to scan at build time.
     <div
-      className={`${autoHide ? 'hidden' : ''} overflow-hidden mx-3 w-40 h-40 rounded-full ring-2 sm:block min-w-40 min-h-40 ring-primary`}
+      style={{ width: size, height: size }}
+      className={`${autoHide ? 'hidden sm:block' : ''} ring-primary shrink-0 overflow-hidden rounded-full ring-2`}
     >
       {loading && (
         <ThemeProvider theme={darkTheme}>
           <Skeleton
-            variant="rounded"
+            variant="circular"
             animation="wave"
-            width={160}
-            height={160}
-            className="min-w-40 min-h-40 !bg-dark-800"
+            width={size}
+            height={size}
+            className="!bg-dark-800"
           />
         </ThemeProvider>
       )}
@@ -35,11 +40,12 @@ const Avatar = ({ autoHide = true }: IAvatar) => {
       <Image
         src={profile}
         alt="profile"
-        width={160}
-        height={160}
+        width={size}
+        height={size}
         quality={100}
-        className="w-40 h-40 rounded-full transition-all duration-200 ease-in-out hover:scale-110 animate-text-focus min-w-40 min-h-40"
-        onLoad={() => handleLoad()}
+        style={{ width: size, height: size }}
+        className="animate-text-focus rounded-full object-cover transition-transform duration-200 ease-in-out hover:scale-110"
+        onLoad={handleLoad}
       />
     </div>
   )

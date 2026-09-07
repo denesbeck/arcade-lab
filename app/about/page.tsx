@@ -1,8 +1,5 @@
 import { Metadata } from 'next'
-import { Suspense } from 'react'
-import { Certificates, Info, Skills } from './_components'
-import Bio from './_components/Bio/Bio'
-import { Avatar } from './_components/Info'
+import { Biography, CharacterCard, Inventory, Trophies } from './_components'
 import { INFO } from './_config/data'
 
 export const dynamic = 'force-static'
@@ -11,20 +8,22 @@ const domain = process.env.NEXT_PUBLIC_DOMAIN || 'arcade-lab.vercel.app'
 
 export const metadata: Metadata = {
   title: 'About',
-  description: `Learn about ${INFO.Name}, a ${INFO.Role} with ${new Date().getFullYear() - 2019}+ years of experience building full-stack products, developer tooling, and cloud-native systems. Working with Next.js, React, TypeScript, Go, AWS, and Kubernetes. Based in ${INFO.Location}, working at ${INFO.Company}.`,
+  description: `Learn about ${INFO.Name}, a ${INFO.FullRole} with ${new Date().getFullYear() - 2019}+ years of experience building internal platforms, cloud infrastructure, CI/CD pipelines, and developer tooling. Working with AWS, Kubernetes, Terraform, GitOps, Go, and TypeScript. Based in ${INFO.Location}, working at ${INFO.Company}.`,
   keywords: [
     'Denes Beck',
-    'Software Engineer',
-    'Full Stack Developer',
+    'Platform Engineer',
+    'Developer Experience',
+    'DevEx Engineer',
+    'Internal Developer Platform',
     'Developer Tooling',
     'AWS Certified',
     'Terraform Certified',
-    'Next.js Developer',
-    'React Developer',
-    'TypeScript',
-    'Golang',
     'Kubernetes',
-    'DevOps',
+    'Terraform',
+    'GitOps',
+    'CI/CD',
+    'Golang',
+    'TypeScript',
     'Home Lab',
     'Budapest',
     'SEON',
@@ -33,8 +32,8 @@ export const metadata: Metadata = {
     canonical: '/about',
   },
   openGraph: {
-    title: `About ${INFO.Name} - ${INFO.Role}`,
-    description: `${INFO.Role} with ${new Date().getFullYear() - 2019}+ years of experience delivering full-stack products, production services, and CI/CD workflows. AWS & Terraform certified, exploring platform engineering through hands-on projects.`,
+    title: `About ${INFO.Name} - ${INFO.FullRole}`,
+    description: `${INFO.FullRole} with ${new Date().getFullYear() - 2019}+ years of experience building internal platforms, cloud infrastructure, and CI/CD pipelines that let engineering teams ship reliably at scale. AWS & Terraform certified.`,
     url: `https://${domain}/about`,
     type: 'profile',
     images: [
@@ -49,32 +48,20 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: `About ${INFO.Name}`,
-    description: `${INFO.Role} with ${new Date().getFullYear() - 2019}+ years of experience building full-stack products and developer tooling. AWS & Terraform certified.`,
+    description: `${INFO.FullRole} with ${new Date().getFullYear() - 2019}+ years of experience building internal platforms, cloud infrastructure, and developer tooling. AWS & Terraform certified.`,
     creator: '@DenesBeck',
   },
 }
 
 const About = () => {
   return (
-    <div className="flex flex-col items-center pt-8 md:pb-8 min-h-[calc(100dvh-100px)] w-dvw lg:pb-25">
-      {/* wrapper for adding animate-slide-in-from-bottom */}
-      <div className="flex flex-col py-4 px-2 my-auto transition-all duration-200 ease-in-out sm:w-max sm:ring-2 lg:py-8 lg:px-8 ring-secondary animate-slide-in-from-bottom backdrop-blur-md sm:max-w-[90dvw] sm:hover:shadow-[10px_10px_#46ecd5,20px_20px_black]">
-        {/* main container */}
-        <div className="grid grid-cols-1 gap-4 px-4 lg:grid-cols-2 lg:gap-8">
-          <div className="flex flex-col gap-4 justify-start">
-            <div className="flex justify-center items-center w-full sm:hidden">
-              <Avatar autoHide={false} />
-            </div>
-            <Info />
-            <div className="block my-2 border-b-2 border-secondary" />
-            <Skills />
-            <div className="block my-2 border-b-2 border-secondary" />
-            <Certificates />
-          </div>
-          <Suspense>
-            <div className="block my-2 border-b-2 lg:hidden border-secondary" />
-            <Bio />
-          </Suspense>
+    <div className="w-full min-w-0 overflow-x-clip px-4 pt-6 pb-24 sm:px-6">
+      <div className="grid grid-cols-1 gap-12 lg:grid-cols-[19rem_1fr] lg:gap-14">
+        <CharacterCard />
+        <div className="flex min-w-0 flex-col gap-14">
+          <Biography />
+          <Inventory />
+          <Trophies />
         </div>
       </div>
     </div>

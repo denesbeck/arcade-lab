@@ -1,5 +1,10 @@
 import type { PersonalInfo } from '../types'
 
+// Mirrors the split in app/about/_config/data.tsx, which cannot be imported
+// here because it carries JSX. Both files have to move together.
+const RANK = 'Senior'
+const ROLE = 'DevEx/Platform Engineer'
+
 /**
  * Personal information extracted from app/about/_config/data.tsx.
  * Plain data without React/Next.js dependencies.
@@ -9,25 +14,22 @@ export function getPersonalInfo(): PersonalInfo {
     name: 'Denes Beck',
     location: 'Budapest, Hungary',
     company: 'SEON',
-    role: 'Senior Software Engineer',
-    bio: `Senior Software Engineer with ${new Date().getFullYear() - 2019}+ years of experience building cloud-native systems, developer platforms, and production software. My work spans application development, distributed systems, infrastructure automation, CI/CD, and operational tooling, allowing me to contribute across both application and platform layers.
+    role: `${RANK} ${ROLE}`,
+    bio: `Senior Software Engineer with ${new Date().getFullYear() - 2019}+ years of experience building internal platforms, cloud infrastructure, web applications, CI/CD pipelines, and developer tooling. Experienced in AWS, Kubernetes, Terraform, GitOps, and production operations, with a track record of reducing infrastructure costs, improving deployment efficiency, and helping engineering teams ship reliable software at scale.
 
-    Professionally, I've delivered full-stack products, owned production services, and built CI/CD and deployment workflows used by engineering teams at scale. I enjoy creating systems that improve developer experience, reduce operational friction, and make software easier to ship and operate.
+    My background spans both platform engineering and full-stack product development, which shapes how I build platforms: with a focus on reliability, developer experience, and tools engineers actually want to use.
 
-    Outside of work, I explore platform engineering through hands-on projects. I'm building Dev Platform (https://github.com/denesbeck/dev-platform), a self-hosted Internal Developer Platform on Kubernetes, and maintain a bare-metal homelab (https://github.com/denesbeck/home-lab-infra) powered by Terraform, Ansible, GitOps workflows, and observability tooling.
-
-    I'm a long-time Neovim and Tmux user who maintains a personal development environment (https://github.com/denesbeck/dotfiles) and builds tools (https://github.com/denesbeck/tmux-worktree) to improve my daily workflow.
-
-    Check out my work (https://github.com/denesbeck) on GitHub.`,
+    Outside of work, I run a self-hosted Internal Developer Platform (https://github.com/denesbeck/dev-platform) on Kubernetes and a bare-metal homelab (https://github.com/denesbeck/home-lab-infra) managed with Terraform, Ansible, and GitOps.`,
     skills: [
-      // Cloud & Infrastructure
-      'Kubernetes',
-      'Docker',
+      // Platform & Cloud
       'AWS',
+      'Kubernetes',
       'Terraform',
       'Ansible',
-      'Linux',
+      'Docker',
+      'Podman',
       'Helm',
+      'Linux',
 
       // CI/CD & GitOps
       'GitHub Actions',
@@ -42,13 +44,16 @@ export function getPersonalInfo(): PersonalInfo {
       'CloudWatch',
 
       // Programming
-      'JavaScript',
-      'Bash',
-      'Go',
-      'Lua',
-      'Next.js',
-      'React',
       'TypeScript',
+      'JavaScript',
+      'Go',
+      'Bash',
+      'Python',
+      'Lua',
+
+      // Application Development
+      'React',
+      'Next.js',
       'Tailwind CSS',
       'Node.js',
     ],
