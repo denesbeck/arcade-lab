@@ -30,7 +30,7 @@ import {
   SiTerraform,
   SiTypescript,
 } from 'react-icons/si'
-import { Emphasize } from '@/_components'
+import Emphasize from '@/_components/Emphasize'
 
 const RANK = 'Senior'
 const ROLE = 'DevEx/Platform Engineer'

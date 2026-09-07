@@ -14,3 +14,5 @@ export const MIN_WIDTH = 320
 export const MIN_HEIGHT = 400
 export const DEFAULT_WIDTH = 400
 export const DEFAULT_HEIGHT = 500
+/** The shell prints wider output than chat does — toolkit wraps badly under this. */
+export const SHELL_MIN_WIDTH = 520

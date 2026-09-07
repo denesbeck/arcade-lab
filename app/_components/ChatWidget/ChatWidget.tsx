@@ -4,14 +4,27 @@ import { ImSpinner8 } from 'react-icons/im'
 import { IoChatbubbleEllipses, IoClose, IoSend } from 'react-icons/io5'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { Console } from '@/terminal/_components'
 import CopyButton from './_components/CopyButton'
+import { SHELL_MIN_WIDTH } from './_config/chat-widget'
 import chatMarkdownComponents from './_config/MarkdownComponents'
 import useChatWidgetMessages from './_hooks/useChatWidgetMessages'
 import useChatWidgetScroll from './_hooks/useChatWidgetScroll'
 import useChatWidgetSize from './_hooks/useChatWidgetSize'
 
+type Tab = 'assistant' | 'shell'
+
+const TABS: { id: Tab; label: string }[] = [
+  { id: 'assistant', label: 'assistant' },
+  { id: 'shell', label: 'shell' },
+]
+
 const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false)
+  const [tab, setTab] = useState<Tab>('assistant')
+  // The shell mounts on first visit and stays mounted, so its boot animation
+  // plays when you actually open it and the scrollback survives tab switches.
+  const [shellStarted, setShellStarted] = useState(false)
 
   const {
     messages,
@@ -25,41 +38,56 @@ const ChatWidget = () => {
   } = useChatWidgetMessages()
 
   const { size, handleResizeStart } = useChatWidgetSize()
+  // Gated on the tab too, or opening on the shell would pull the caret into
+  // the chat field instead of the prompt.
   const { messagesContainerRef, inputRef } = useChatWidgetScroll(
     messages,
     streamingContent,
-    isOpen
+    isOpen && tab === 'assistant'
   )
+
+  const openTab = (next: Tab) => {
+    if (next === 'shell') setShellStarted(true)
+    setTab(next)
+  }
 
   return (
     <>
-      {/* Chat toggle button */}
+      {/* Launcher — one control for both modes */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex fixed right-6 bottom-6 z-50 justify-center items-center w-14 h-14 rounded-full shadow-lg transition-all duration-200 cursor-pointer hover:scale-105 active:scale-95 bg-primary text-root hover:brightness-110"
-        aria-label={isOpen ? 'Close chat' : 'Open chat'}
+        onClick={() => {
+          if (!isOpen && tab === 'shell') setShellStarted(true)
+          setIsOpen(!isOpen)
+        }}
+        className="bg-primary text-root fixed right-6 bottom-6 z-50 flex h-14 w-14 cursor-pointer items-center justify-center rounded-full shadow-lg transition-all duration-200 hover:scale-105 hover:brightness-110 active:scale-95"
+        aria-label={isOpen ? 'Close panel' : 'Open panel'}
       >
         {isOpen ? (
-          <IoClose className="w-6 h-6" />
+          <IoClose className="h-6 w-6" />
         ) : (
-          <IoChatbubbleEllipses className="w-6 h-6" />
+          <IoChatbubbleEllipses className="h-6 w-6" />
         )}
       </button>
 
-      {/* Chat window */}
       {isOpen && (
         <div
-          className="flex fixed right-6 bottom-24 z-50 flex-col rounded-lg border-2 shadow-2xl max-w-[90dvw] border-dark-600 bg-dark-900"
-          style={{ width: size.width, height: size.height }}
+          className="ring-secondary bg-dark-900 fixed right-6 bottom-24 z-50 flex max-w-[90dvw] flex-col shadow-[8px_8px_0px_0px_black] ring-2"
+          style={{
+            width:
+              tab === 'shell'
+                ? Math.max(size.width, SHELL_MIN_WIDTH)
+                : size.width,
+            height: size.height,
+          }}
         >
           {/* Resize handle — top-left corner */}
           <div
             onMouseDown={handleResizeStart}
-            className="absolute top-0 left-0 z-10 w-4 h-4 cursor-nw-resize"
+            className="absolute top-0 left-0 z-10 h-4 w-4 cursor-nw-resize"
             title="Drag to resize"
           >
             <svg
-              className="m-0.5 w-3 h-3 text-dark-400"
+              className="text-dark-400 m-0.5 h-3 w-3"
               viewBox="0 0 12 12"
               fill="currentColor"
             >
@@ -69,104 +97,134 @@ const ChatWidget = () => {
             </svg>
           </div>
 
-          {/* Header */}
-          <div className="flex items-center py-3 px-4 rounded-t-lg border-b border-dark-600 bg-dark-800">
-            <div className="flex gap-2 items-center">
-              <div className="w-2 h-2 rounded-full bg-primary" />
-              <span className="text-sm font-semibold text-text-dark">
-                Arcade Lab Assistant
-              </span>
+          {/* Header — title plus the mode switch */}
+          <div className="border-secondary bg-dark-800 flex items-center justify-between gap-3 border-b-2 py-2 pr-3 pl-6">
+            <span className="text-dark-300 truncate text-xs tracking-widest uppercase">
+              Arcade Lab
+            </span>
+            <div className="flex shrink-0 gap-1.5">
+              {TABS.map(({ id, label }) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => openTab(id)}
+                  className={`cursor-pointer px-2.5 py-1 text-[0.625rem] tracking-widest uppercase transition-colors duration-200 ${
+                    tab === id
+                      ? 'bg-primary text-dark-900'
+                      : 'ring-dark-500 text-dark-300 hover:text-primary hover:ring-primary ring-1'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* Messages */}
+          {/* Assistant — kept mounted so the conversation survives a tab switch */}
           <div
-            ref={messagesContainerRef}
-            className="overflow-y-auto flex-1 p-4 space-y-3"
+            className={
+              tab === 'assistant' ? 'flex min-h-0 flex-1 flex-col' : 'hidden'
+            }
           >
-            {messages.map((message, index) => (
-              <div
-                key={`${message.role}-${index}`}
-                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
+            <div
+              ref={messagesContainerRef}
+              className="flex-1 space-y-3 overflow-y-auto p-4"
+            >
+              {messages.map((message, index) => (
                 <div
-                  className={`max-w-[85%] rounded-lg px-3 py-2 text-sm leading-relaxed ${
-                    message.role === 'user'
-                      ? 'bg-primary text-root'
-                      : 'bg-dark-700 text-text-dark group relative'
-                  }`}
+                  key={`${message.role}-${index}`}
+                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  {message.role === 'assistant' ? (
-                    <>
-                      <Markdown
-                        components={chatMarkdownComponents}
-                        remarkPlugins={[remarkGfm]}
-                      >
-                        {message.content}
-                      </Markdown>
-                      <CopyButton content={message.content} />
-                    </>
-                  ) : (
-                    <span className="whitespace-pre-wrap">
-                      {message.content}
-                    </span>
-                  )}
-                </div>
-              </div>
-            ))}
-
-            {/* Streaming message — appears while AI is typing */}
-            {streamingContent && (
-              <div className="flex justify-start">
-                <div className="max-w-[85%] rounded-lg px-3 py-2 text-sm leading-relaxed bg-dark-700 text-text-dark">
-                  <Markdown
-                    components={chatMarkdownComponents}
-                    remarkPlugins={[remarkGfm]}
+                  <div
+                    className={`max-w-[85%] px-3 py-2 text-sm leading-relaxed ${
+                      message.role === 'user'
+                        ? 'bg-primary text-root'
+                        : 'bg-dark-700 text-text-dark group relative'
+                    }`}
                   >
-                    {streamingContent}
-                  </Markdown>
+                    {message.role === 'assistant' ? (
+                      <>
+                        <Markdown
+                          components={chatMarkdownComponents}
+                          remarkPlugins={[remarkGfm]}
+                        >
+                          {message.content}
+                        </Markdown>
+                        <CopyButton content={message.content} />
+                      </>
+                    ) : (
+                      <span className="whitespace-pre-wrap">
+                        {message.content}
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
+              ))}
 
-            {/* Loading indicator (before streaming starts) */}
-            {isLoading && !streamingContent && (
-              <div className="flex justify-start">
-                <div className="flex gap-2 items-center py-2 px-3 rounded-lg bg-dark-700 text-text-dark">
-                  <ImSpinner8 className="w-4 h-4 animate-spin text-primary" />
-                  <span className="text-sm">Thinking...</span>
+              {/* Streaming message — appears while AI is typing */}
+              {streamingContent && (
+                <div className="flex justify-start">
+                  <div className="bg-dark-700 text-text-dark max-w-[85%] px-3 py-2 text-sm leading-relaxed">
+                    <Markdown
+                      components={chatMarkdownComponents}
+                      remarkPlugins={[remarkGfm]}
+                    >
+                      {streamingContent}
+                    </Markdown>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+
+              {/* Loading indicator (before streaming starts) */}
+              {isLoading && !streamingContent && (
+                <div className="flex justify-start">
+                  <div className="bg-dark-700 text-text-dark flex items-center gap-2 px-3 py-2">
+                    <ImSpinner8 className="text-primary h-4 w-4 animate-spin" />
+                    <span className="text-sm">Thinking...</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="border-secondary flex items-center gap-2 border-t-2 p-3">
+              {isAtLimit ? (
+                <div className="text-dark-300 flex-1 px-3 py-2 text-xs">
+                  Message limit reached. Refresh the page to start a new
+                  session.
+                </div>
+              ) : (
+                <>
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Ask me anything..."
+                    disabled={isLoading}
+                    className="ring-dark-500 text-text-dark placeholder:text-dark-400 focus:ring-primary flex-1 bg-transparent px-3 py-2 text-sm ring-1 outline-none disabled:opacity-50"
+                  />
+                  <button
+                    onClick={sendMessage}
+                    disabled={isLoading || !input.trim()}
+                    className="bg-primary text-root flex h-9 w-9 cursor-pointer items-center justify-center transition-colors hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+                    aria-label="Send message"
+                  >
+                    <IoSend className="h-4 w-4" />
+                  </button>
+                </>
+              )}
+            </div>
           </div>
 
-          {/* Input */}
-          <div className="flex gap-2 items-center p-3 border-t border-dark-600">
-            {isAtLimit ? (
-              <div className="flex-1 py-2 px-3 text-xs text-dark-300">
-                Message limit reached. Refresh the page to start a new session.
-              </div>
-            ) : (
-              <>
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Ask me anything..."
-                  disabled={isLoading}
-                  className="flex-1 py-2 px-3 text-sm bg-transparent rounded-md border outline-none disabled:opacity-50 border-dark-500 text-text-dark placeholder:text-dark-400 focus:border-primary"
-                />
-                <button
-                  onClick={sendMessage}
-                  disabled={isLoading || !input.trim()}
-                  className="flex justify-center items-center w-9 h-9 rounded-md transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed bg-primary text-root hover:brightness-110"
-                  aria-label="Send message"
-                >
-                  <IoSend className="w-4 h-4" />
-                </button>
-              </>
+          {/* Shell — the same Console the /terminal route and the 404 render */}
+          <div
+            className={
+              tab === 'shell' ? 'flex min-h-0 flex-1 flex-col' : 'hidden'
+            }
+          >
+            {shellStarted && (
+              <Console variant="embedded" active={isOpen && tab === 'shell'} />
             )}
           </div>
         </div>

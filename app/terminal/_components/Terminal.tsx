@@ -42,6 +42,16 @@ interface TerminalProps {
   /** Run automatically on first paint. */
   autoRun: string
   prompt?: string
+  /**
+   * 'page' draws its own window chrome and sizes to its content; 'embedded'
+   * drops the frame and fills whatever container it is given, for the widget.
+   */
+  variant?: 'page' | 'embedded'
+  /**
+   * Takes the caret when it turns true. A page mounts focused; the widget only
+   * wants focus once its panel is open on this tab, never on page load.
+   */
+  active?: boolean
 }
 
 const Terminal = ({
@@ -49,7 +59,10 @@ const Terminal = ({
   suggestions,
   autoRun,
   prompt = 'denes@arcade-lab',
+  variant = 'page',
+  active = true,
 }: TerminalProps) => {
+  const isEmbedded = variant === 'embedded'
   const router = useRouter()
   const [lines, setLines] = useState<Line[]>([])
   const [typing, setTyping] = useState('')
@@ -156,11 +169,11 @@ const Terminal = ({
     return clearTimers
   }, [run, autoRun, clearTimers])
 
-  // The terminal is the whole point of both routes that mount it, so the caret
-  // starts in the field. preventScroll stops the page jumping to it on load.
+  // preventScroll stops the page jumping to the terminal when it takes focus.
   useEffect(() => {
+    if (!active) return
     inputRef.current?.focus({ preventScroll: true })
-  }, [])
+  }, [active])
 
   // Stick to the bottom as output arrives.
   useEffect(() => {
@@ -217,25 +230,33 @@ const Terminal = ({
 
   return (
     <div
-      className="ring-secondary flex flex-col ring-2 backdrop-blur-md"
+      className={`flex flex-col ${
+        isEmbedded ? 'min-h-0 flex-1' : 'ring-secondary ring-2 backdrop-blur-md'
+      }`}
       onClick={() => inputRef.current?.focus()}
     >
-      {/* window chrome */}
-      <div className="border-secondary flex items-center gap-4 border-b-2 px-5 py-3">
-        <div className="flex shrink-0 space-x-2">
-          <span className="bg-macos-red h-3 w-3 rounded-full" />
-          <span className="bg-macos-yellow h-3 w-3 rounded-full" />
-          <span className="bg-macos-green h-3 w-3 rounded-full" />
+      {/* window chrome — the widget supplies its own header */}
+      {!isEmbedded && (
+        <div className="border-secondary flex items-center gap-4 border-b-2 px-5 py-3">
+          <div className="flex shrink-0 space-x-2">
+            <span className="bg-macos-red h-3 w-3 rounded-full" />
+            <span className="bg-macos-yellow h-3 w-3 rounded-full" />
+            <span className="bg-macos-green h-3 w-3 rounded-full" />
+          </div>
+          <span className="text-dark-400 truncate text-xs tracking-widest">
+            {prompt}: ~
+          </span>
         </div>
-        <span className="text-dark-400 truncate text-xs tracking-widest">
-          {prompt}: ~
-        </span>
-      </div>
+      )}
 
       {/* scrollback */}
       <div
         ref={scrollRef}
-        className="flex max-h-[65dvh] min-h-[26rem] flex-col gap-6 overflow-y-auto p-5 sm:p-7"
+        className={`flex flex-col gap-6 overflow-y-auto ${
+          isEmbedded
+            ? 'min-h-0 flex-1 p-4'
+            : 'max-h-[65dvh] min-h-[26rem] p-5 sm:p-7'
+        }`}
       >
         {lines.map(({ id, command, output }) => (
           <div key={id} className="flex flex-col gap-3">
@@ -273,7 +294,11 @@ const Terminal = ({
       </div>
 
       {/* clickable commands */}
-      <div className="border-secondary flex flex-wrap items-center gap-2 border-t-2 px-5 py-4">
+      <div
+        className={`border-secondary flex flex-wrap items-center gap-2 border-t-2 ${
+          isEmbedded ? 'px-4 py-3' : 'px-5 py-4'
+        }`}
+      >
         <span className="text-dark-500 mr-1 text-xs tracking-widest uppercase">
           run
         </span>

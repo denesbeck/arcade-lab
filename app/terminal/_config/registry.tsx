@@ -19,6 +19,7 @@ import type { Registry } from '../_components/Terminal'
 
 /** Only these resolve for `cd` — an unknown path is what makes the 404 work. */
 const ROUTES = [
+  { name: 'home', path: '/', note: `landing page` },
   { name: 'work', path: '/work', note: `${ACTIVE_PROJECTS} active projects` },
   { name: 'blog', path: '/blog', note: `${POSTS} posts` },
   { name: 'about', path: '/about', note: 'the long version' },
