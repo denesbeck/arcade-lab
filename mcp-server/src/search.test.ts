@@ -12,6 +12,7 @@ const ENTRIES: BlogPostMeta[] = [
     hidden: false,
     tags: ['linux', 'ubuntu', 'ssh', 'home-lab'],
     slug: 'home-lab-initial-setup-and-ssh',
+    file: 'home-lab-initial-setup-and-ssh',
   },
   {
     id: 2,
@@ -21,6 +22,7 @@ const ENTRIES: BlogPostMeta[] = [
     hidden: false,
     tags: ['git', 'golang', 'vcs', 'nexio'],
     slug: 'developing-my-own-vcs',
+    file: 'developing-my-own-vcs',
   },
   {
     id: 3,
@@ -30,6 +32,7 @@ const ENTRIES: BlogPostMeta[] = [
     hidden: false,
     tags: ['hacking', 'aws', 'beanstalk', 'iam', 'exploit'],
     slug: 'cloudgoat__beanstalk-secrets',
+    file: 'cloudgoat__beanstalk-secrets',
   },
   {
     id: 4,
@@ -40,6 +43,7 @@ const ENTRIES: BlogPostMeta[] = [
     hidden: false,
     tags: ['aws', 'lambda', 'cicd', 'github-actions', 'terraform'],
     slug: 'lambda-deployments',
+    file: 'lambda-deployments',
   },
 ]
 
@@ -137,6 +141,7 @@ describe('searchBlogPosts', () => {
       hidden: false,
       tags: ['linux'],
       slug: `post-${i}`,
+      file: `post-${i}`,
     }))
     const results = searchBlogPosts(manyEntries, 'linux')
     expect(results.length).toBe(5)

@@ -11,6 +11,7 @@ function meta(overrides: Partial<BlogPostMeta> = {}): BlogPostMeta {
     hidden: false,
     tags: ['test'],
     slug: 'test-post',
+    file: 'test-post',
     ...overrides,
   }
 }

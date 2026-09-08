@@ -5,9 +5,12 @@
     "moduleResolution": "bundler",
     "esModuleInterop": true,
     "strict": true,
-    "outDir": "dist",
-    "rootDir": "src",
-    "declaration": true,
+    // Type-check only. The server runs straight from source via tsx (see the
+    // start/dev scripts and the README's Claude Code config), and blog.ts
+    // imports the app's metadata, which sits outside any rootDir this package
+    // could declare — so emitting would only produce output nothing consumes.
+    "noEmit": true,
+    "types": ["node"],
     "resolveJsonModule": true,
     "skipLibCheck": true
   },
