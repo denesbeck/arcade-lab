@@ -158,7 +158,7 @@ export const SKILLS: Skill[] = SKILL_GROUPS.flatMap((group) => group.skills)
 export const BIO = (
   <div className="text-text-dark">
     <p className="mb-8">
-      Senior Software Engineer with{' '}
+      {INFO.FullRole} with{' '}
       <Emphasize>{new Date().getFullYear() - 2019}+ years</Emphasize> of
       experience building internal platforms, cloud infrastructure, web
       applications, CI/CD pipelines, and developer tooling. Experienced in{' '}
