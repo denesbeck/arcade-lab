@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     type: 'profile',
     images: [
       {
-        url: `/logo/arcade_lab_logo.png`,
+        url: `/logo/arcade_lab_og.png`,
         width: 1200,
         height: 630,
         alt: `${INFO.Name} - About`,

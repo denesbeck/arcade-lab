@@ -27,12 +27,18 @@ export const metadata: Metadata = {
     type: 'website',
     images: [
       {
-        url: '/logo/arcade_lab_logo.png',
+        url: '/logo/arcade_lab_og.png',
         width: 1200,
         height: 630,
         alt: `${INFO.Name} - Terminal`,
       },
     ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: `Terminal | ${INFO.Name}`,
+    description: `Browse ${INFO.Name}'s site from a shell — whoami, ls, cd, and the rest.`,
+    creator: '@DenesBeck',
   },
 }
 

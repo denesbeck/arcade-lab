@@ -12,20 +12,22 @@ const domain = process.env.NEXT_PUBLIC_DOMAIN || 'arcade-lab.vercel.app'
 export const metadata: Metadata = {
   title: 'Blog',
   description:
-    'In-depth technical articles about software engineering, DevOps, cloud infrastructure, ethical hacking and system administration.',
+    'In-depth technical articles about platform engineering, Kubernetes and cloud infrastructure, CI/CD and GitOps, AWS security and ethical hacking, and homelab system administration.',
   keywords: [
-    'Software Engineering Blog',
+    'Platform Engineering Blog',
+    'Developer Experience',
     'DevOps Blog',
     'AWS Tutorials',
     'Kubernetes Guide',
-    'Docker',
+    'GitOps',
     'CI/CD',
     'GitHub Actions',
     'Terraform',
     'Ansible',
+    'Docker',
+    'Cloud Security',
     'Home Lab',
     'Linux',
-    'Next.js',
     'Technical Writing',
   ],
   alternates: {
@@ -34,12 +36,12 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Technical Blog - Arcade Lab',
     description:
-      'In-depth technical articles about software engineering, DevOps, cloud infrastructure, ethical hacking and system administration.',
+      'In-depth technical articles about platform engineering, Kubernetes and cloud infrastructure, CI/CD and GitOps, AWS security and ethical hacking, and homelab system administration.',
     url: `https://${domain}/blog`,
     type: 'website',
     images: [
       {
-        url: `/logo/arcade_lab_logo.png`,
+        url: `/logo/arcade_lab_og.png`,
         width: 1200,
         height: 630,
         alt: 'Arcade Lab Blog',
@@ -50,7 +52,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Technical Blog - Arcade Lab',
     description:
-      'In-depth technical articles about software engineering, DevOps, cloud infrastructure, ethical hacking and system administration.',
+      'In-depth technical articles about platform engineering, Kubernetes and cloud infrastructure, CI/CD and GitOps, AWS security and ethical hacking, and homelab system administration.',
     creator: '@DenesBeck',
   },
 }

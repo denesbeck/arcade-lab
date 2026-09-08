@@ -17,6 +17,8 @@ export interface PersonalInfo {
   connections: { platform: string; url: string }[]
 }
 
+export type Priority = 'low' | 'medium' | 'high' | 'critical'
+
 export interface Project {
   title: string
   subtitle: string
@@ -24,6 +26,7 @@ export interface Project {
   tech: string[]
   url: string
   status: 'active' | 'archived'
+  priority: Priority
   relatedBlogPostIds: number[]
 }
 

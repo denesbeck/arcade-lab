@@ -57,7 +57,7 @@ export const metadata: Metadata = {
     description: SITE_DESCRIPTION,
     images: [
       {
-        url: `/logo/arcade_lab_logo.png`,
+        url: `/logo/arcade_lab_og.png`,
         width: 1200,
         height: 630,
         alt: 'Arcade Lab Logo',
@@ -69,7 +69,7 @@ export const metadata: Metadata = {
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
     creator: '@DenesBeck',
-    images: [`/logo/arcade_lab_logo.png`],
+    images: [`/logo/arcade_lab_og.png`],
   },
   robots: {
     index: true,

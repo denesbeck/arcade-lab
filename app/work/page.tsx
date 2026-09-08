@@ -10,19 +10,19 @@ const domain = process.env.NEXT_PUBLIC_DOMAIN || 'arcade-lab.vercel.app'
 export const metadata: Metadata = {
   title: 'Work',
   description:
-    'A showcase of my projects — from version control systems to home lab infrastructure.',
+    'Platform engineering and developer tooling projects — a self-hosted internal developer platform, a bare-metal homelab, CI/CD automation, and a version control system written in Go.',
   alternates: {
     canonical: '/work',
   },
   openGraph: {
     title: 'Work - Denes Beck',
     description:
-      'A showcase of my projects — from version control systems to home lab infrastructure.',
+      'Platform engineering and developer tooling projects — a self-hosted internal developer platform, a bare-metal homelab, CI/CD automation, and a version control system written in Go.',
     url: `https://${domain}/work`,
     type: 'website',
     images: [
       {
-        url: `/logo/arcade_lab_logo.png`,
+        url: `/logo/arcade_lab_og.png`,
         width: 1200,
         height: 630,
         alt: 'Denes Beck - Work',
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Work - Denes Beck',
     description:
-      'A showcase of my projects — from version control systems to home lab infrastructure.',
+      'Platform engineering and developer tooling projects — a self-hosted internal developer platform, a bare-metal homelab, CI/CD automation, and a version control system written in Go.',
     creator: '@DenesBeck',
   },
 }

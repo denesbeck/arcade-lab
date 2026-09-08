@@ -1,4 +1,4 @@
-import type { Project } from '../types'
+import type { Priority, Project } from '../types'
 
 /**
  * Project data extracted from app/work/_config/data.ts.
@@ -18,6 +18,7 @@ const PROJECTS: Project[] = [
     tech: ['Next.js', 'React', 'Tailwind CSS', 'TypeScript'],
     url: 'https://github.com/denesbeck/arcade-lab',
     status: 'active',
+    priority: 'high',
     relatedBlogPostIds: [20, 28],
   },
   {
@@ -42,6 +43,7 @@ const PROJECTS: Project[] = [
     ],
     url: 'https://github.com/denesbeck?tab=repositories&q=home-lab',
     status: 'active',
+    priority: 'critical',
     relatedBlogPostIds: [4, 5, 6, 7, 15, 16, 18, 22, 23, 24, 27, 30, 32],
   },
   {
@@ -54,6 +56,7 @@ const PROJECTS: Project[] = [
     tech: ['Golang'],
     url: 'https://github.com/denesbeck/nexio',
     status: 'active',
+    priority: 'critical',
     relatedBlogPostIds: [8, 9, 14, 17],
   },
   {
@@ -76,6 +79,7 @@ const PROJECTS: Project[] = [
     ],
     url: 'https://github.com/denesbeck/dev-platform',
     status: 'active',
+    priority: 'critical',
     relatedBlogPostIds: [26, 29, 31, 41],
   },
   {
@@ -88,6 +92,7 @@ const PROJECTS: Project[] = [
     tech: ['Lua', 'NeoVim', 'Tmux'],
     url: 'https://github.com/denesbeck/dotfiles',
     status: 'active',
+    priority: 'medium',
     relatedBlogPostIds: [],
   },
   {
@@ -100,6 +105,7 @@ const PROJECTS: Project[] = [
     tech: ['Bash', 'Tmux'],
     url: 'https://github.com/denesbeck/tmux-pane-controller',
     status: 'active',
+    priority: 'low',
     relatedBlogPostIds: [25],
   },
   {
@@ -112,6 +118,7 @@ const PROJECTS: Project[] = [
     tech: ['Bash', 'Tmux'],
     url: 'https://github.com/denesbeck/tmux-worktree',
     status: 'active',
+    priority: 'low',
     relatedBlogPostIds: [21],
   },
   {
@@ -124,6 +131,7 @@ const PROJECTS: Project[] = [
     tech: ['TypeScript', 'PostgreSQL', 'Redis'],
     url: 'https://github.com/denesbeck/auth-service',
     status: 'archived',
+    priority: 'low',
     relatedBlogPostIds: [],
   },
   {
@@ -145,6 +153,7 @@ const PROJECTS: Project[] = [
     ],
     url: 'https://github.com/denesbeck/lost-in-dusk',
     status: 'archived',
+    priority: 'low',
     relatedBlogPostIds: [],
   },
   {
@@ -159,14 +168,41 @@ const PROJECTS: Project[] = [
     tech: ['GitHub Actions', 'Bash', 'Terraform', 'AWS'],
     url: 'https://github.com/denesbeck/lambda-functions',
     status: 'active',
+    priority: 'high',
     relatedBlogPostIds: [3, 19, 33],
   },
 ]
+
+// Mirrors sortProjects in app/work/_config/data.ts so this tool lists projects
+// in the same order the work page renders them.
+const STATUS_ORDER: Record<Project['status'], number> = {
+  active: 0,
+  archived: 1,
+}
+
+const PRIORITY_ORDER: Record<Priority, number> = {
+  critical: 0,
+  high: 1,
+  medium: 2,
+  low: 3,
+}
+
+const SORTED_PROJECTS: Project[] = [...PROJECTS]
+  .sort(
+    (a, b) =>
+      STATUS_ORDER[a.status] - STATUS_ORDER[b.status] ||
+      PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority] ||
+      a.title.localeCompare(b.title)
+  )
+  .map((project) => ({
+    ...project,
+    tech: [...project.tech].sort((a, b) => a.localeCompare(b)),
+  }))
 
 /**
  * Get all projects, optionally filtered by status.
  */
 export function getProjects(status?: 'active' | 'archived'): Project[] {
-  if (status) return PROJECTS.filter((p) => p.status === status)
-  return PROJECTS
+  if (status) return SORTED_PROJECTS.filter((p) => p.status === status)
+  return SORTED_PROJECTS
 }

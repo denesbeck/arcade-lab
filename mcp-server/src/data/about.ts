@@ -15,7 +15,7 @@ export function getPersonalInfo(): PersonalInfo {
     location: 'Budapest, Hungary',
     company: 'SEON',
     role: `${RANK} ${ROLE}`,
-    bio: `Senior Software Engineer with ${new Date().getFullYear() - 2019}+ years of experience building internal platforms, cloud infrastructure, web applications, CI/CD pipelines, and developer tooling. Experienced in AWS, Kubernetes, Terraform, GitOps, and production operations, with a track record of reducing infrastructure costs, improving deployment efficiency, and helping engineering teams ship reliable software at scale.
+    bio: `${RANK} ${ROLE} with ${new Date().getFullYear() - 2019}+ years of experience building internal platforms, cloud infrastructure, web applications, CI/CD pipelines, and developer tooling. Experienced in AWS, Kubernetes, Terraform, GitOps, and production operations, with a track record of reducing infrastructure costs, improving deployment efficiency, and helping engineering teams ship reliable software at scale.
 
     My background spans both platform engineering and full-stack product development, which shapes how I build platforms: with a focus on reliability, developer experience, and tools engineers actually want to use.
 
@@ -59,11 +59,11 @@ export function getPersonalInfo(): PersonalInfo {
     ],
     certificates: [
       {
-        name: 'AWS Certified Developer - Associate',
+        name: 'AWS Certified Developer — Associate',
         url: 'https://www.credly.com/badges/b4bf4117-6a90-49eb-baee-e382447b72c2/public_url',
       },
       {
-        name: 'AWS Certified CloudOps Engineer - Associate',
+        name: 'AWS Certified CloudOps Engineer — Associate',
         url: 'https://www.credly.com/badges/955a71c6-a223-4c7b-9b27-cc95268465ce/public_url',
       },
       {
