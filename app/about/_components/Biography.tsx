@@ -5,7 +5,7 @@ import Panel from './Panel'
 const Biography = () => {
   return (
     <Panel title="Lore" meta={`${YEARS} year run`}>
-      <div className="max-w-2xl leading-relaxed">{BIO}</div>
+      <div className="w-full leading-relaxed">{BIO}</div>
     </Panel>
   )
 }

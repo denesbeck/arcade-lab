@@ -31,7 +31,7 @@ const STATS = [
 // the same config the /work, /blog and /about pages render, so it cannot drift.
 const SystemPanel = () => {
   return (
-    <div className="ring-secondary animate-text-focus w-full ring-2 backdrop-blur-md [animation-fill-mode:backwards] [animation-delay:400ms]">
+    <div className="ring-secondary w-full animate-text-focus ring-2 backdrop-blur-md [animation-delay:400ms] [animation-fill-mode:backwards]">
       <div className="border-secondary flex items-center gap-4 border-b-2 px-5 py-3">
         <div className="flex shrink-0 space-x-2">
           <span className="bg-macos-red h-3 w-3 rounded-full" />

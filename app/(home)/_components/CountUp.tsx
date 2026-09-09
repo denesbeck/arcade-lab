@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 
-const DURATION_MS = 1400
+const DURATION_MS = 1200
 
 // Same guard as work/_components/Highlights.tsx uses.
 const useIsomorphicLayoutEffect =
