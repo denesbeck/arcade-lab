@@ -10,6 +10,7 @@ import {
 } from '@/_components'
 import { useAlert } from '@/_components/AlertBox/_hooks'
 import { Turnstile } from './_components'
+import type { TurnstileHandle } from './_components/Turnstile'
 import validate from './_utils/validate'
 import { contact } from './actions'
 
@@ -17,13 +18,11 @@ const Contact = () => {
   const nameRef = useRef<HTMLInputElement>(null)
   const emailRef = useRef<HTMLInputElement>(null)
   const messageRef = useRef<HTMLTextAreaElement>(null)
-  const tsToken = useRef<string | null>(null)
+  const turnstile = useRef<TurnstileHandle>(null)
+  // State, not a ref: the submit button's disabled state has to react to it.
+  const [token, setToken] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const { alert } = useAlert('global')
-
-  const handleTokenReceived = useCallback((token: string) => {
-    tsToken.current = token
-  }, [])
 
   const handleSubmit = useCallback(async () => {
     const { valid, messages } = validate(
@@ -41,39 +40,48 @@ const Contact = () => {
       return
     }
 
-    setLoading(true)
-    if (tsToken.current) {
-      const res = await contact({
-        token: tsToken.current,
-        name: nameRef.current?.value || '',
-        email: emailRef.current?.value || '',
-        message: messageRef.current?.value || '',
+    if (!token) {
+      alert({
+        id: 'contact-unverified',
+        title: 'Verification pending',
+        message: 'Wait for the human check to finish, then submit again.',
+        severity: 'warning',
       })
-
-      if (!res.success) {
-        alert({
-          id: 'contact-error',
-          title: 'Error',
-          message: res.message,
-          severity: 'error',
-        })
-      } else {
-        alert({
-          id: 'contact-success',
-          title: 'Success',
-          message: res.message,
-          severity: 'success',
-        })
-      }
-      setLoading(false)
-      nameRef.current!.value = ''
-      emailRef.current!.value = ''
-      messageRef.current!.value = ''
-      // @ts-expect-error: Turnstile object should be present
-      window.turnstile.reset()
       return
     }
-  }, [alert])
+
+    setLoading(true)
+    const res = await contact({
+      token,
+      name: nameRef.current?.value || '',
+      email: emailRef.current?.value || '',
+      message: messageRef.current?.value || '',
+    })
+    setLoading(false)
+
+    // The token is spent either way; the widget needs a fresh challenge.
+    turnstile.current?.reset()
+
+    if (!res.success) {
+      alert({
+        id: 'contact-error',
+        title: 'Error',
+        message: res.message,
+        severity: 'error',
+      })
+      return
+    }
+
+    alert({
+      id: 'contact-success',
+      title: 'Success',
+      message: res.message,
+      severity: 'success',
+    })
+    nameRef.current!.value = ''
+    emailRef.current!.value = ''
+    messageRef.current!.value = ''
+  }, [alert, token])
 
   return (
     <div className="flex flex-col w-full min-h-[calc(100dvh-100px)]">
@@ -85,9 +93,9 @@ const Contact = () => {
             <Input placeholder="Name" inputRef={nameRef} />
             <Input placeholder="Email" inputRef={emailRef} />
             <TextArea placeholder="Message" messageRef={messageRef} />
-            <Turnstile getToken={handleTokenReceived} />
+            <Turnstile ref={turnstile} onToken={setToken} />
             <Button
-              disabled={!tsToken}
+              disabled={!token}
               label={'Submit'}
               action={handleSubmit}
               loading={loading}

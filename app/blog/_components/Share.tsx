@@ -5,7 +5,7 @@ interface IShare {
   slug: string
 }
 
-const domain = process.env.NEXT_PUBLIC_DOMAIN
+const domain = process.env.NEXT_PUBLIC_DOMAIN || 'arcade-lab.vercel.app'
 
 const SHARE_OPTIONS = [
   {

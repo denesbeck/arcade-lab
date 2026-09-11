@@ -13,14 +13,12 @@ resource "vercel_project" "arcade_lab" {
   }
 }
 
-# --- Lambda invoker env (all environments) ---
-
 resource "vercel_project_environment_variable" "aws_region" {
   project_id = vercel_project.arcade_lab.id
   sensitive  = false
   key        = "AWS_REGION"
   value      = "eu-central-1"
-  target     = ["production", "preview", "development"]
+  target     = ["production"]
 }
 
 resource "vercel_project_environment_variable" "aws_role_arn" {
@@ -28,7 +26,7 @@ resource "vercel_project_environment_variable" "aws_role_arn" {
   sensitive  = true
   key        = "AWS_ROLE_ARN"
   value      = module.iam.invoker_role_arn
-  target     = ["production", "preview", "development"]
+  target     = ["production"]
 }
 
 resource "vercel_project_environment_variable" "contact_lambda" {
@@ -36,10 +34,8 @@ resource "vercel_project_environment_variable" "contact_lambda" {
   sensitive  = false
   key        = "CONTACT_LAMBDA"
   value      = "ArcadeLabContact"
-  target     = ["production", "preview", "development"]
+  target     = ["production"]
 }
-
-# --- App config (production only) ---
 
 resource "vercel_project_environment_variable" "anthropic_api_key" {
   project_id = vercel_project.arcade_lab.id

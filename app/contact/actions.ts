@@ -6,6 +6,10 @@ import {
 } from '@aws-sdk/client-lambda'
 import { awsCredentialsProvider } from '@vercel/functions/oidc'
 
+const REQUIRED = ['AWS_ROLE_ARN', 'AWS_REGION', 'CONTACT_LAMBDA'] as const
+
+const missing = () => REQUIRED.filter((name) => !process.env[name])
+
 const contactLambda = new LambdaClient({
   credentials: awsCredentialsProvider({
     roleArn: process.env.AWS_ROLE_ARN as string,
@@ -21,6 +25,12 @@ interface IContactPayload {
 }
 
 export async function contact(payload: IContactPayload) {
+  const absent = missing()
+  if (absent.length > 0) {
+    console.error(`Contact is misconfigured, unset: ${absent.join(', ')}`)
+    return { success: false, message: 'Unable to send message!' }
+  }
+
   const params = {
     FunctionName: process.env.CONTACT_LAMBDA,
     InvocationType: 'RequestResponse' as InvocationType,
@@ -32,9 +42,8 @@ export async function contact(payload: IContactPayload) {
   try {
     const { Payload, FunctionError } = await contactLambda.send(cmd)
 
-    // RequestResponse resolves successfully even when the handler returns a
-    // non-2xx statusCode (invalid input, failed Turnstile, SES failure), so we
-    // must inspect the payload rather than relying on send() to throw.
+    // RequestResponse resolves even for handled non-2xx returns, so the
+    // payload has to be inspected rather than trusting send() to throw.
     if (FunctionError) {
       console.error('Lambda function error:', FunctionError)
       return { success: false, message: 'Unable to send message!' }

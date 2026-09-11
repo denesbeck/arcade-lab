@@ -1,28 +1,26 @@
-import { useEffect } from 'react'
+'use client'
+import { type Ref, useEffect, useImperativeHandle } from 'react'
 import { useTurnstile } from '../_hooks'
 
-interface ITurnstile {
-  getToken: (token: string) => void
+export interface TurnstileHandle {
+  reset: () => void
 }
 
-const SITE_KEY = process.env.NEXT_PUBLIC_TS_SITE_KEY
-const Turnstile = ({ getToken }: ITurnstile) => {
-  const { token } = useTurnstile()
+interface ITurnstile {
+  ref?: Ref<TurnstileHandle>
+  onToken: (token: string | null) => void
+}
+
+const Turnstile = ({ ref, onToken }: ITurnstile) => {
+  const { token, container, reset } = useTurnstile()
+
+  useImperativeHandle(ref, () => ({ reset }), [reset])
 
   useEffect(() => {
-    if (token) getToken(token)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token])
+    onToken(token)
+  }, [token, onToken])
 
-  return (
-    <div
-      className="p-0 cf-turnstile"
-      data-sitekey={SITE_KEY}
-      data-size="flexible"
-      data-callback="onTurnstileSuccess"
-      data-theme="dark"
-    />
-  )
+  return <div ref={container} />
 }
 
 export default Turnstile

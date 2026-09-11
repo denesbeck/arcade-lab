@@ -1,8 +1,6 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-// The Lambda client is constructed at module load, so mock its dependencies
-// before importing the action under test. `send` is shared via vi.hoisted so
-// the mock factory (hoisted above imports) can reference it.
+// The client is built at module load, so mock before importing the action.
 const { sendMock } = vi.hoisted(() => ({ sendMock: vi.fn() }))
 
 vi.mock('@vercel/functions/oidc', () => ({
@@ -36,6 +34,20 @@ describe('contact action', () => {
   beforeEach(() => {
     sendMock.mockReset()
     vi.spyOn(console, 'error').mockImplementation(() => {})
+    vi.stubEnv('AWS_ROLE_ARN', 'arn:aws:iam::1:role/Test')
+    vi.stubEnv('AWS_REGION', 'eu-central-1')
+    vi.stubEnv('CONTACT_LAMBDA', 'ContactFn')
+  })
+
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
+  it('refuses to send when required config is missing', async () => {
+    vi.stubEnv('AWS_ROLE_ARN', '')
+    const result = await contact(payload)
+    expect(result.success).toBe(false)
+    expect(sendMock).not.toHaveBeenCalled()
   })
 
   it('reports success when the Lambda returns statusCode 200', async () => {
@@ -45,8 +57,6 @@ describe('contact action', () => {
   })
 
   it('reports failure on a non-200 statusCode (e.g. failed Turnstile)', async () => {
-    // RequestResponse resolves even for handled non-2xx returns — the action
-    // must inspect the payload rather than trusting send() to throw.
     sendMock.mockResolvedValue(lambdaResponse({ statusCode: 403 }))
     const result = await contact(payload)
     expect(result.success).toBe(false)
