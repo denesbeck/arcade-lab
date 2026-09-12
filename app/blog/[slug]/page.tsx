@@ -148,14 +148,16 @@ const Post = async ({ params }: IPost) => {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <GoBack fallbackUrl="/blog" />
       <ScrollToTop />
-      {readTime !== null && (
-        <div className="text-dark-300 flex w-4xl max-w-screen items-center space-x-2 px-6 pt-4 text-sm">
-          <FaRegClock />
-          <span>{readTime} min read</span>
-        </div>
-      )}
+      <div className="text-dark-300 flex w-4xl max-w-screen items-center gap-4 px-6 pt-4 text-sm">
+        <GoBack fallbackUrl="/blog" />
+        {readTime !== null && (
+          <span className="ml-8 flex shrink-0 items-center gap-2">
+            <FaRegClock />
+            {readTime} min read
+          </span>
+        )}
+      </div>
       {Post()}
       <div className="mt-8 flex w-4xl max-w-screen flex-wrap items-start space-x-4 px-6">
         {post.tags.map((tag) => (

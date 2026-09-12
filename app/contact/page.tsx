@@ -86,7 +86,9 @@ const Contact = () => {
 
   return (
     <div className="w-full min-w-0 overflow-x-clip px-4 pt-6 pb-24 sm:px-6">
-      <GoBack fallbackUrl="/" />
+      <div className="mb-8">
+        <GoBack fallbackUrl="/" />
+      </div>
       <div className="grid grid-cols-1 gap-12 lg:grid-cols-[23rem_1fr] lg:gap-14">
         <SignalCard>
           <Turnstile ref={turnstile} onToken={setToken} />
@@ -118,7 +120,10 @@ const Contact = () => {
             </div>
           </Panel>
 
-          <Panel title="Send" meta={token ? 'verified' : 'awaiting check'}>
+          <Panel
+            title="Transmission"
+            meta={token ? 'verified' : 'awaiting check'}
+          >
             <div className="flex max-w-[44rem] flex-col gap-5">
               <Button
                 disabled={!token}
