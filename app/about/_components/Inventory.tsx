@@ -1,6 +1,6 @@
+import { Panel } from '@/_components'
 import { TOOL_COUNT } from '@/_config/stats'
 import { SKILL_GROUPS } from '../_config/data'
-import Panel from './Panel'
 import Slot from './Slot'
 
 const MAX_GROUP = Math.max(...SKILL_GROUPS.map(({ skills }) => skills.length))

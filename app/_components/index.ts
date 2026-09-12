@@ -17,6 +17,7 @@ import MacOSBar from './MacOSBar'
 import Mermaid from './Mermaid'
 import Navbar from './Navbar'
 import PageHeader from './PageHeader'
+import Panel from './Panel'
 import ScrollToTop from './ScrollToTop'
 import Spinner from './Spinner'
 import TextArea from './TextArea'
@@ -42,6 +43,7 @@ export {
   Mermaid,
   Navbar,
   PageHeader,
+  Panel,
   ScrollToTop,
   Spinner,
   TextArea,

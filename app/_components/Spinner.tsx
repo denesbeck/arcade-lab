@@ -1,7 +1,11 @@
 import { ImSpinner8 } from 'react-icons/im'
 
-const Spinner = () => {
-  return <ImSpinner8 className="w-6 h-6 animate-spin" />
+interface SpinnerProps {
+  className?: string
+}
+
+const Spinner = ({ className = 'w-6 h-6' }: SpinnerProps) => {
+  return <ImSpinner8 className={`${className} animate-spin`} />
 }
 
 export default Spinner

@@ -1,3 +1,4 @@
+import SignalCard from './SignalCard'
 import Turnstile from './Turnstile'
 
-export { Turnstile }
+export { SignalCard, Turnstile }

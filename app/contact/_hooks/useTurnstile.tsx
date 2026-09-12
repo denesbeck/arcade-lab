@@ -63,7 +63,9 @@ const useTurnstile = () => {
       widget.current = api.render(container.current, {
         sitekey: SITE_KEY,
         theme: 'dark',
-        size: 'flexible',
+        // Fixed 300px, not 'flexible': flexible stretches the widget to the
+        // full column width, which reads as a long bar rather than a control.
+        size: 'normal',
         callback: setToken,
         // Tokens lapse after a few minutes; dropping them keeps a stale form
         // from failing silently.

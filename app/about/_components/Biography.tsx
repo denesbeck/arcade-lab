@@ -1,6 +1,6 @@
+import { Panel } from '@/_components'
 import { YEARS } from '@/_config/stats'
 import { BIO } from '../_config/data'
-import Panel from './Panel'
 
 const Biography = () => {
   return (

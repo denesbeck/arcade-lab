@@ -1,7 +1,7 @@
 import Image from 'next/image'
+import { Panel } from '@/_components'
 import { CERT_COUNT } from '@/_config/stats'
 import { CERTIFICATES } from '../_config/data'
-import Panel from './Panel'
 import Slot from './Slot'
 
 // Same cell shape as the inventory, so certifications read as another shelf of

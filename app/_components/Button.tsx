@@ -17,10 +17,17 @@ const Button = ({
     <button
       disabled={disabled}
       onClick={action}
-      className="flex justify-center items-center py-2 px-4 space-x-4 font-semibold ring-2 transition-colors duration-200 ease-in-out cursor-pointer text-root ring-primary bg-primary min-w-[300px] hover:not-disabled:text-primary hover:not-disabled:bg-root hover:not-disabled:shadow-[10px_10px_0px_0px_black] active:not-disabled:not-hover:text-root active:not-disabled:text-primary active:not-disabled:shadow-[10px_10px_0px_0px_black] active:not-disabled:brightness-125 disabled:grayscale-100"
+      className="bg-primary text-dark-900 hover:not-disabled:bg-primary/80 disabled:bg-dark-600 disabled:text-dark-400 flex w-full cursor-pointer items-center justify-center gap-3 py-3 text-xs tracking-[0.25em] uppercase transition-colors duration-200 disabled:cursor-not-allowed"
     >
-      {loading && <Spinner />}
+      {loading && <Spinner className="h-4 w-4" />}
       <span>{label}</span>
+      {/* Blinks only while the human check is still running, so the disabled
+          state reads as waiting rather than broken. */}
+      {disabled && !loading && (
+        <span aria-hidden className="animate-caret">
+          ▮
+        </span>
+      )}
     </button>
   )
 }

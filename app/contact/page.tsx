@@ -1,18 +1,15 @@
 'use client'
 import { useCallback, useRef, useState } from 'react'
-import {
-  AnimatedBorder,
-  Button,
-  GoBack,
-  Heading2,
-  Input,
-  TextArea,
-} from '@/_components'
+import { Button, GoBack, Input, Panel, TextArea } from '@/_components'
 import { useAlert } from '@/_components/AlertBox/_hooks'
-import { Turnstile } from './_components'
+import { SignalCard, Turnstile } from './_components'
 import type { TurnstileHandle } from './_components/Turnstile'
 import validate from './_utils/validate'
 import { contact } from './actions'
+
+// Deliberately under the lambda's own 2000-character cap, so the meter reads as
+// a budget to spend rather than a ceiling nobody reaches.
+const MESSAGE_MAX = 500
 
 const Contact = () => {
   const nameRef = useRef<HTMLInputElement>(null)
@@ -22,6 +19,9 @@ const Contact = () => {
   // State, not a ref: the submit button's disabled state has to react to it.
   const [token, setToken] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  // Bumped on a successful send so the message counter resyncs to the cleared
+  // field; incremented per send, never per keystroke.
+  const [sent, setSent] = useState(0)
   const { alert } = useAlert('global')
 
   const handleSubmit = useCallback(async () => {
@@ -81,27 +81,54 @@ const Contact = () => {
     nameRef.current!.value = ''
     emailRef.current!.value = ''
     messageRef.current!.value = ''
+    setSent((count) => count + 1)
   }, [alert, token])
 
   return (
-    <div className="flex flex-col w-full min-h-[calc(100dvh-100px)]">
+    <div className="w-full min-w-0 overflow-x-clip px-4 pt-6 pb-24 sm:px-6">
       <GoBack fallbackUrl="/" />
-      <div className="flex flex-col items-center pt-6 my-auto animate-slide-in-from-bottom pb-15 lg:pb-25">
-        <AnimatedBorder>
-          <div className="flex relative flex-col gap-4 p-6 min-w-max ring-2 transition-all duration-200 ease-in-out hover:ring-gray-500 hover:ring-offset-2 ring-secondary ring-offset-root h-max max-w-[90dvw] backdrop-blur-md">
-            <Heading2>Contact </Heading2>
-            <Input placeholder="Name" inputRef={nameRef} />
-            <Input placeholder="Email" inputRef={emailRef} />
-            <TextArea placeholder="Message" messageRef={messageRef} />
-            <Turnstile ref={turnstile} onToken={setToken} />
-            <Button
-              disabled={!token}
-              label={'Submit'}
-              action={handleSubmit}
-              loading={loading}
-            />
-          </div>
-        </AnimatedBorder>
+      <div className="grid grid-cols-1 gap-12 lg:grid-cols-[23rem_1fr] lg:gap-14">
+        <SignalCard>
+          <Turnstile ref={turnstile} onToken={setToken} />
+        </SignalCard>
+
+        <div className="flex min-w-0 flex-col gap-14">
+          <Panel title="Message" meta="3 fields">
+            <div className="flex max-w-[44rem] flex-col gap-6">
+              <Input
+                label="Name"
+                placeholder="Who's sending this"
+                inputRef={nameRef}
+                autoComplete="name"
+              />
+              <Input
+                label="Email"
+                placeholder="Where the reply goes"
+                inputRef={emailRef}
+                type="email"
+                autoComplete="email"
+              />
+              <TextArea
+                label="Message"
+                placeholder="What's on your mind"
+                messageRef={messageRef}
+                max={MESSAGE_MAX}
+                resetKey={sent}
+              />
+            </div>
+          </Panel>
+
+          <Panel title="Send" meta={token ? 'verified' : 'awaiting check'}>
+            <div className="flex max-w-[44rem] flex-col gap-5">
+              <Button
+                disabled={!token}
+                label="Send"
+                action={handleSubmit}
+                loading={loading}
+              />
+            </div>
+          </Panel>
+        </div>
       </div>
     </div>
   )
