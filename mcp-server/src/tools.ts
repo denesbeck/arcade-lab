@@ -230,7 +230,9 @@ export function executeTool(
         `Skills: ${info.skills.join(', ')}`,
         '',
         'Certifications:',
-        ...info.certificates.map((c) => `  - ${c.name}: ${c.url}`),
+        ...info.certificates.map(
+          (c) => `  - ${c.name}${c.expired ? ' (expired)' : ''}: ${c.url}`
+        ),
         '',
         'Social Links:',
         ...info.connections.map((c) => `  - ${c.platform}: ${c.url}`),

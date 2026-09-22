@@ -16,19 +16,19 @@ import {
   SiAnsible,
   SiArgo,
   SiDocker,
+  SiElasticstack,
   SiGithubactions,
   SiGnubash,
   SiGrafana,
   SiHelm,
   SiJavascript,
   SiKubernetes,
-  SiLua,
   SiPodman,
   SiPrometheus,
-  SiPython,
   SiTekton,
   SiTerraform,
   SiTypescript,
+  SiVault,
 } from 'react-icons/si'
 import Emphasize from '@/_components/Emphasize'
 
@@ -68,6 +68,8 @@ export type Certificate = {
   size: number
   img: string
   alt: string
+  /** Earned but lapsed — the trophy slot marks it instead of hiding it. */
+  expired?: boolean
 }
 
 export const CERTIFICATES: Certificate[] = [
@@ -91,6 +93,7 @@ export const CERTIFICATES: Certificate[] = [
     img: 'https://images.credly.com/size/680x680/images/0dc62494-dc94-469a-83af-e35309f27356/blob',
     alt: 'terraform',
     name: 'HashiCorp Certified: Terraform Associate',
+    expired: true,
   },
 ]
 
@@ -109,6 +112,7 @@ export const SKILL_GROUPS: SkillGroup[] = [
       { name: 'Docker', icon: SiDocker },
       { name: 'Podman', icon: SiPodman },
       { name: 'Helm', icon: SiHelm },
+      { name: 'Vault', icon: SiVault },
       { name: 'Linux', icon: FaLinux },
     ],
   },
@@ -127,6 +131,7 @@ export const SKILL_GROUPS: SkillGroup[] = [
       { name: 'Prometheus', icon: SiPrometheus },
       { name: 'Grafana', icon: SiGrafana },
       { name: 'Loki', icon: LuLogs },
+      { name: 'ELK Stack', icon: SiElasticstack },
       { name: 'CloudWatch', icon: PiListMagnifyingGlassBold },
     ],
   },
@@ -137,8 +142,6 @@ export const SKILL_GROUPS: SkillGroup[] = [
       { name: 'JavaScript', icon: SiJavascript },
       { name: 'Go', icon: FaGolang },
       { name: 'Bash', icon: SiGnubash },
-      { name: 'Python', icon: SiPython },
-      { name: 'Lua', icon: SiLua },
     ],
   },
   {
@@ -160,12 +163,10 @@ export const BIO = (
     <p className="mb-8">
       {INFO.FullRole} with{' '}
       <Emphasize>{new Date().getFullYear() - 2019}+ years</Emphasize> of
-      experience building internal platforms, cloud infrastructure, web
+      experience building developer platforms, cloud infrastructure, web
       applications, CI/CD pipelines, and developer tooling. Experienced in{' '}
       <Emphasize>AWS</Emphasize>, <Emphasize>Kubernetes</Emphasize>,{' '}
-      <Emphasize>Terraform</Emphasize>, GitOps, and production operations, with
-      a track record of reducing infrastructure costs, improving deployment
-      efficiency, and helping engineering teams ship reliable software at scale.
+      <Emphasize>Terraform</Emphasize>, GitOps, and production operations.
     </p>
     <p className="mb-8">
       My background spans both platform engineering and full-stack product

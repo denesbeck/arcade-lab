@@ -13,7 +13,7 @@ export interface PersonalInfo {
   role: string
   bio: string
   skills: string[]
-  certificates: { name: string; url: string }[]
+  certificates: { name: string; url: string; expired?: boolean }[]
   connections: { platform: string; url: string }[]
 }
 

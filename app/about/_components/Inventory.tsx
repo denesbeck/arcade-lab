@@ -21,9 +21,10 @@ const Meter = ({ filled }: { filled: number }) => (
 const Inventory = () => {
   return (
     <Panel title="Inventory" meta={`${TOOL_COUNT} slots filled`}>
-      {/* Eight columns is exactly the largest group, so no group orphans a
-          single item onto a row of its own; the cap keeps cells slot-sized. */}
-      <div className="flex max-w-[44rem] flex-col gap-8">
+      {/* Nine columns is exactly the largest group, so no group orphans a
+          single item onto a row of its own. The cap is derived, not round:
+          9 cells + 8 gaps at the original 81px slot size. */}
+      <div className="flex max-w-[49.5rem] flex-col gap-8">
         {SKILL_GROUPS.map(({ name, skills }) => (
           <div key={name} className="flex flex-col gap-3">
             <div className="flex items-center gap-4">
@@ -35,7 +36,7 @@ const Inventory = () => {
                 {skills.length}
               </span>
             </div>
-            <div className="grid grid-cols-3 gap-2 xs:grid-cols-5 sm:grid-cols-8">
+            <div className="grid grid-cols-3 gap-2 xs:grid-cols-5 sm:grid-cols-9">
               {skills.map(({ name: skill, icon: Icon }, slot) => (
                 <div
                   key={skill}

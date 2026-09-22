@@ -15,7 +15,7 @@ export function getPersonalInfo(): PersonalInfo {
     location: 'Budapest, Hungary',
     company: 'SEON',
     role: `${RANK} ${ROLE}`,
-    bio: `${RANK} ${ROLE} with ${new Date().getFullYear() - 2019}+ years of experience building internal platforms, cloud infrastructure, web applications, CI/CD pipelines, and developer tooling. Experienced in AWS, Kubernetes, Terraform, GitOps, and production operations, with a track record of reducing infrastructure costs, improving deployment efficiency, and helping engineering teams ship reliable software at scale.
+    bio: `${RANK} ${ROLE} with ${new Date().getFullYear() - 2019}+ years of experience building developer platforms, cloud infrastructure, web applications, CI/CD pipelines, and developer tooling. Experienced in AWS, Kubernetes, Terraform, GitOps, and production operations.
 
     My background spans both platform engineering and full-stack product development, which shapes how I build platforms: with a focus on reliability, developer experience, and tools engineers actually want to use.
 
@@ -29,6 +29,7 @@ export function getPersonalInfo(): PersonalInfo {
       'Docker',
       'Podman',
       'Helm',
+      'Vault',
       'Linux',
 
       // CI/CD & GitOps
@@ -41,6 +42,7 @@ export function getPersonalInfo(): PersonalInfo {
       'Prometheus',
       'Grafana',
       'Loki',
+      'ELK Stack',
       'CloudWatch',
 
       // Programming
@@ -48,8 +50,6 @@ export function getPersonalInfo(): PersonalInfo {
       'JavaScript',
       'Go',
       'Bash',
-      'Python',
-      'Lua',
 
       // Application Development
       'React',
@@ -69,6 +69,7 @@ export function getPersonalInfo(): PersonalInfo {
       {
         name: 'HashiCorp Certified: Terraform Associate',
         url: 'https://www.credly.com/badges/91d294a8-8f7d-4f5a-80c1-071fa0bf2be6/public_url',
+        expired: true,
       },
     ],
     connections: [
