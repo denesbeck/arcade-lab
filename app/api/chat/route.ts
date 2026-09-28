@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import Anthropic from '@anthropic-ai/sdk'
 import type {
   MessageParam,
@@ -56,6 +57,26 @@ export async function POST(request: Request) {
         { status: 400 }
       )
     }
+
+    const last = messages[messages.length - 1]
+    const question =
+      typeof last?.content === 'string'
+        ? last.content
+        : Array.isArray(last?.content)
+          ? last.content
+              .map((block) => (block?.type === 'text' ? block.text : ''))
+              .join(' ')
+          : ''
+    // Hashed so visitors can be grouped per session without storing raw IPs.
+    const visitor = createHash('sha256').update(ip).digest('hex').slice(0, 12)
+    console.log(
+      JSON.stringify({
+        event: 'chat_question',
+        visitor,
+        turn: messages.length,
+        question: question.slice(0, 1000),
+      })
+    )
 
     const client = new Anthropic({ apiKey })
 
