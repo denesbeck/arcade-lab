@@ -1,5 +1,6 @@
 import { FiExternalLink } from 'react-icons/fi'
 import { TbArticle } from 'react-icons/tb'
+import { Tooltip } from '@/_components'
 import BLOG_ENTRIES from '@/blog/_config/data'
 import { isPublished } from '@/blog/_utils/isPublished'
 import PROJECTS from '@/work/_config/data'
@@ -55,18 +56,23 @@ const FeaturedWork = () => {
 
             <div className="mt-auto flex flex-wrap items-center gap-2 pt-1">
               {project.tech.slice(0, 5).map(({ name, icon: Icon }) => (
-                <div
-                  key={name}
-                  title={name}
-                  className="ring-dark-500 group-hover:ring-primary/40 flex h-8 w-8 items-center justify-center ring-1 transition-all duration-200"
-                >
-                  <Icon className="text-dark-200 group-hover:text-primary h-4 w-4 transition-colors duration-200" />
-                </div>
+                <Tooltip key={name} title={name}>
+                  <div className="ring-dark-500 group-hover:ring-primary/40 flex h-8 w-8 items-center justify-center ring-1 transition-all duration-200">
+                    <Icon className="text-dark-200 group-hover:text-primary h-4 w-4 transition-colors duration-200" />
+                  </div>
+                </Tooltip>
               ))}
               {project.tech.length > 5 && (
-                <span className="text-dark-400 text-xs">
-                  +{project.tech.length - 5}
-                </span>
+                <Tooltip
+                  title={project.tech
+                    .slice(5)
+                    .map(({ name }) => name)
+                    .join(', ')}
+                >
+                  <span className="text-dark-400 text-xs">
+                    +{project.tech.length - 5}
+                  </span>
+                </Tooltip>
               )}
             </div>
 
