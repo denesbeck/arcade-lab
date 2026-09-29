@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { CountUp } from '@/_components'
 import { ACTIVE_PROJECTS, POSTS, TOOL_COUNT, YEARS } from '@/_config/stats'
 import { CONNECTIONS, INFO } from '../_config/data'
 import { Avatar } from './Info'
@@ -38,7 +39,8 @@ const CharacterCard = () => {
             level
           </span>
           <span className="text-primary text-6xl leading-none font-semibold">
-            {String(YEARS).padStart(2, '0')}
+            {/* All four start together, once the card's blur-in has finished. */}
+            <CountUp value={YEARS} pad={2} delay={400} />
           </span>
           <span className="text-dark-400 text-xs tracking-[0.2em] uppercase">
             years in
@@ -65,7 +67,7 @@ const CharacterCard = () => {
         {COUNTERS.map(([label, value]) => (
           <div key={label} className="flex items-baseline gap-3">
             <span className="text-primary w-9 shrink-0 text-xl font-semibold">
-              {String(value).padStart(2, '0')}
+              <CountUp value={value} pad={2} delay={400} />
             </span>
             <span className="text-dark-400 text-xs tracking-[0.2em] uppercase">
               {label}

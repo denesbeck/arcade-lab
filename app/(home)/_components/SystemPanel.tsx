@@ -1,8 +1,8 @@
+import { CountUp } from '@/_components'
 import { CERTIFICATES, INFO } from '@/about/_config/data'
 import BLOG_ENTRIES from '@/blog/_config/data'
 import { isPublished } from '@/blog/_utils/isPublished'
 import PROJECTS from '@/work/_config/data'
-import CountUp from './CountUp'
 
 const CAREER_START_YEAR = 2019
 

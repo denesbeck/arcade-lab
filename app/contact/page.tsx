@@ -95,7 +95,7 @@ const Contact = () => {
         </SignalCard>
 
         <div className="flex min-w-0 flex-col gap-14">
-          <Panel title="Message" meta="3 fields">
+          <Panel title="Message" meta="3 fields" delay={100}>
             <div className="flex max-w-[44rem] flex-col gap-6">
               <Input
                 label="Name"
@@ -123,6 +123,7 @@ const Contact = () => {
           <Panel
             title="Transmission"
             meta={token ? 'verified' : 'awaiting check'}
+            delay={200}
           >
             <div className="flex max-w-[44rem] flex-col gap-5">
               <Button

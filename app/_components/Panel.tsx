@@ -4,13 +4,18 @@ interface PanelProps {
   title: string
   /** Right-aligned count or aside, e.g. "26 slots filled". */
   meta: string
+  /** Entrance stagger in ms, so a sheet's sections cascade in order. */
+  delay?: number
   children: ReactNode
 }
 
 // A filled tab plus a rule, rather than a boxed section — the sheet's sections
 // are peers of each other, not cards.
-const Panel = ({ title, meta, children }: PanelProps) => (
-  <section className="flex min-w-0 flex-col gap-6">
+const Panel = ({ title, meta, delay = 0, children }: PanelProps) => (
+  <section
+    style={{ animationDelay: `${delay}ms` }}
+    className="animate-text-focus flex min-w-0 flex-col gap-6 [animation-fill-mode:backwards]"
+  >
     <div className="flex items-center gap-4">
       <h2 className="bg-primary text-dark-900 shrink-0 px-3 py-1 text-xs tracking-[0.25em] uppercase">
         {title}

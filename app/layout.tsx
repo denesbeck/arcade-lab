@@ -129,8 +129,17 @@ export default function RootLayout({
   }
 
   return (
-    <html lang="en">
+    // data-count is set by the script below, so it differs from the server HTML.
+    <html lang="en" suppressHydrationWarning>
       <head>
+        {/* Runs before first paint, so CountUp can hide its server-rendered
+            final value until hydration instead of flashing it. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "if(!matchMedia('(prefers-reduced-motion: reduce)').matches)document.documentElement.dataset.count=''",
+          }}
+        />
         {/* Not via metadata.alternates.types — pages that set their own
             canonical replace the whole alternates object and drop it. */}
         <link

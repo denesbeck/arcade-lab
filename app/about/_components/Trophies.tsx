@@ -9,7 +9,7 @@ import Slot from './Slot'
 // the same case rather than a separate card grid.
 const Trophies = () => {
   return (
-    <Panel title="Trophies" meta={`${CERT_COUNT} unlocked`}>
+    <Panel title="Trophies" meta={`${CERT_COUNT} unlocked`} delay={300}>
       <div className="grid grid-cols-1 gap-3 xs:grid-cols-3">
         {CERTIFICATES.map(({ name, url, img, alt, expired }, slot) => (
           <a
@@ -17,7 +17,8 @@ const Trophies = () => {
             href={url}
             target="_blank"
             rel="noopener noreferrer"
-            className="ring-dark-600 hover:ring-primary group relative flex flex-col items-center justify-center gap-3 p-5 text-center ring-1 transition-all duration-200 hover:shadow-[6px_6px_0px_0px_black]"
+            style={{ animationDelay: `${400 + slot * 100}ms` }}
+            className="ring-dark-600 hover:ring-primary group animate-text-focus relative flex flex-col items-center justify-center gap-3 p-5 text-center ring-1 transition-all duration-200 [animation-fill-mode:backwards] hover:shadow-[6px_6px_0px_0px_black]"
           >
             <Slot index={slot + 1}>
               {/* Positioned on the wrapper, not the glyph: Tooltip brings its

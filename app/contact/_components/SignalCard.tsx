@@ -1,4 +1,5 @@
 import { ReactNode } from 'react'
+import { CountUp } from '@/_components'
 import { CONNECTIONS, INFO } from '@/about/_config/data'
 
 const VITALS: [string, string][] = [
@@ -16,7 +17,7 @@ interface SignalCardProps {
 // card, carrying the ways in that are not the form.
 const SignalCard = ({ children }: SignalCardProps) => {
   return (
-    <aside className="ring-secondary animate-text-focus flex flex-col self-start shadow-[8px_8px_0px_0px_black] ring-2 lg:sticky lg:top-[120px]">
+    <aside className="ring-secondary flex animate-text-focus flex-col self-start shadow-[8px_8px_0px_0px_black] ring-2 lg:sticky lg:top-[120px]">
       <div className="border-secondary flex items-center justify-between border-b-2 px-6 py-3">
         <span className="text-primary text-[0.625rem] tracking-[0.3em] uppercase">
           signal
@@ -31,7 +32,12 @@ const SignalCard = ({ children }: SignalCardProps) => {
           channels
         </span>
         <span className="text-primary text-6xl leading-none font-semibold">
-          {String(CONNECTIONS.length + 1).padStart(2, '0')}
+          <CountUp
+            value={CONNECTIONS.length + 1}
+            pad={2}
+            delay={400}
+            stepMs={100}
+          />
         </span>
         <span className="text-dark-400 text-xs tracking-[0.2em] uppercase">
           ways in

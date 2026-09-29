@@ -89,7 +89,7 @@ const Blog = async ({
           <NoRecords message="No results based on your tag selection." />
         ) : (
           <div className="grid justify-center w-full sm:gap-6 sm:px-10 sm:grid-cols-[repeat(auto-fit,minmax(33rem,0))]">
-            {entries.filter(isPublished).map((entry) => (
+            {entries.filter(isPublished).map((entry, index) => (
               <BlogCard
                 key={entry.id}
                 slug={entry.slug}
@@ -98,6 +98,8 @@ const Blog = async ({
                 date={entry.date}
                 readTime={getReadTime(entry.file)}
                 cover={entry.cover}
+                // Capped: cards past the first screen shouldn't queue for seconds.
+                delay={100 + Math.min(index, 8) * 100}
               />
             ))}
           </div>

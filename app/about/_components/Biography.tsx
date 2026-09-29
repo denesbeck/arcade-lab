@@ -4,7 +4,7 @@ import { BIO } from '../_config/data'
 
 const Biography = () => {
   return (
-    <Panel title="Lore" meta={`${YEARS} year run`}>
+    <Panel title="Lore" meta={`${YEARS} year run`} delay={100}>
       <div className="w-full leading-relaxed">{BIO}</div>
     </Panel>
   )

@@ -3,6 +3,7 @@ import AnimatedUnderline from './AnimatedUnderline'
 import Button from './Button'
 import ChatWidget from './ChatWidget'
 import CopyButton from './CopyButton'
+import CountUp from './CountUp'
 import DarkLayout from './DarkLayout'
 import Emphasize from './Emphasize'
 import Footer from './Footer'
@@ -29,6 +30,7 @@ export {
   Button,
   ChatWidget,
   CopyButton,
+  CountUp,
   DarkLayout,
   Emphasize,
   Footer,

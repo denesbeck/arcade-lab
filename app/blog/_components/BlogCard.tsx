@@ -15,6 +15,7 @@ interface BlogCardProps {
   date: string
   readTime: number | null
   cover: { image: StaticImageData; alt: string }
+  delay?: number
 }
 
 const BlogCard = ({
@@ -24,6 +25,7 @@ const BlogCard = ({
   date,
   readTime,
   cover,
+  delay = 0,
 }: BlogCardProps) => {
   const searchParams = useSearchParams()
   const [loading, setLoading] = useState(false)
@@ -39,7 +41,8 @@ const BlogCard = ({
   return (
     <Link
       href={`/blog/${slug}?${searchParams.toString()}`}
-      className="ring-offset-root border-secondary ring-secondary group sm:hover:ring-primary sm:active:ring-active relative flex max-h-44 min-h-44 animate-text-focus cursor-pointer overflow-hidden border-b-2 backdrop-blur-md transition-all duration-200 ease-in-out last:border-b-0 sm:border-b-0 sm:ring-2 sm:hover:ring-offset-4"
+      style={{ animationDelay: `${delay}ms` }}
+      className="ring-offset-root border-secondary ring-secondary group sm:hover:ring-primary sm:active:ring-active relative flex max-h-44 min-h-44 animate-text-focus cursor-pointer overflow-hidden border-b-2 backdrop-blur-md [animation-fill-mode:backwards] transition-all duration-200 ease-in-out last:border-b-0 sm:border-b-0 sm:ring-2 sm:hover:ring-offset-4"
     >
       {loading && (
         <ThemeProvider theme={darkTheme}>

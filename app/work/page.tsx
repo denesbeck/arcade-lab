@@ -47,8 +47,12 @@ const Work = () => {
       />
       <div className="flex justify-center py-4">
         <div className="grid justify-center w-full sm:gap-6 sm:px-10 sm:grid-cols-[repeat(auto-fit,minmax(415px,0))]">
-          {PROJECTS.map((project) => (
-            <ProjectCard key={project.title} {...project} />
+          {PROJECTS.map((project, index) => (
+            <ProjectCard
+              key={project.title}
+              {...project}
+              delay={100 + index * 100}
+            />
           ))}
         </div>
       </div>

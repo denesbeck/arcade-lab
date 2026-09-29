@@ -5,6 +5,7 @@
   --animate-text-focus: textFocus 0.4s ease-in-out;
   --animate-marquee: marquee 45s linear infinite;
   --animate-caret: caret 1.1s step-end infinite;
+  --animate-meter-fill: meterFill 0.01s linear;
 
   --breakpoint-xs: 30rem;
   --breakpoint-2xl: 100rem;
@@ -42,6 +43,18 @@
 
     100% {
       transform: translateX(-50%);
+    }
+  }
+
+  /* Held off to the last frame: a cell switches on whole, like an LED segment. */
+  @keyframes meterFill {
+    0%,
+    99% {
+      opacity: 0;
+    }
+
+    100% {
+      opacity: 1;
     }
   }
 
@@ -97,6 +110,28 @@
 }
 body {
   background: var(--color-dark-900);
+}
+
+/* Shows a digit for the animation's run only; its base style keeps it hidden.
+   Outside @theme: Tailwind drops theme keyframes no animate-* utility uses, and
+   this one is only referenced from inline styles. */
+@keyframes meterCount {
+  0%,
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Counters wait for CountUp to hydrate; the delayed reveal is a safety net if it never does. */
+[data-count] [data-count-pending] {
+  animation: count-reveal 0s 3s forwards;
+  visibility: hidden;
+}
+
+@keyframes count-reveal {
+  to {
+    visibility: visible;
+  }
 }
 
 /* The looping animations are decoration — the page reads the same without them. */

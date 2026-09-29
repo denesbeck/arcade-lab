@@ -13,22 +13,28 @@ interface CountUpProps {
   value: number
   /** Milliseconds to wait after the number scrolls into view. */
   delay?: number
+  /** Zero-pad to this many digits, e.g. 2 renders 8 as "08". */
+  pad?: number
+  /** Tick by one every `stepMs` instead of easing over a fixed duration. */
+  stepMs?: number
 }
 
 /**
  * Counts up to `value` the first time it scrolls into view.
  *
- * The final number is what renders on the server and during hydration, so it is
- * correct without JavaScript and for crawlers; the reset to zero happens in a
- * layout effect, before the browser paints, so the real figure never flashes.
+ * The final number is what renders on the server, so it is correct without
+ * JavaScript and for crawlers. It stays hidden (see globals.css) until the
+ * layout effect resets it to zero, so the real figure never flashes first.
  */
-const CountUp = ({ value, delay = 0 }: CountUpProps) => {
+const CountUp = ({ value, delay = 0, pad = 0, stepMs }: CountUpProps) => {
   const [displayed, setDisplayed] = useState(value)
+  const [pending, setPending] = useState(true)
   const ref = useRef<HTMLSpanElement>(null)
 
   useIsomorphicLayoutEffect(() => {
     const node = ref.current
     if (!node) return
+    setPending(false)
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
     setDisplayed(0)
@@ -39,9 +45,12 @@ const CountUp = ({ value, delay = 0 }: CountUpProps) => {
 
     const step = (now: number) => {
       if (!startedAt) startedAt = now
-      const progress = Math.min((now - startedAt) / DURATION_MS, 1)
-      setDisplayed(Math.round(easeOutCubic(progress) * value))
-      if (progress < 1) frame = requestAnimationFrame(step)
+      const elapsed = now - startedAt
+      const next = stepMs
+        ? Math.min(Math.floor(elapsed / stepMs) + 1, value)
+        : Math.round(easeOutCubic(Math.min(elapsed / DURATION_MS, 1)) * value)
+      setDisplayed(next)
+      if (next < value) frame = requestAnimationFrame(step)
     }
 
     const observer = new IntersectionObserver(
@@ -61,9 +70,13 @@ const CountUp = ({ value, delay = 0 }: CountUpProps) => {
       window.clearTimeout(timer)
       cancelAnimationFrame(frame)
     }
-  }, [value, delay])
+  }, [value, delay, stepMs])
 
-  return <span ref={ref}>{displayed}</span>
+  return (
+    <span ref={ref} data-count-pending={pending ? '' : undefined}>
+      {String(displayed).padStart(pad, '0')}
+    </span>
+  )
 }
 
 export default CountUp
