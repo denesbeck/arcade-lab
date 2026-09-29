@@ -12,6 +12,31 @@ export interface BlogMeta {
 
 const BLOG_METADATA: BlogMeta[] = [
   {
+    id: 42,
+    slug: 'ebs-csi-driver-without-eks',
+    title: 'Dev Platform: Persistent Storage Without EKS',
+    description:
+      'Milestone 4: the EBS CSI driver on a self-hosted cluster - hand-wired IRSA, a wrong ARN in the docs, and an IMDS hop limit Cilium outgrew',
+    date: '2026-09-28',
+    hidden: false,
+    tags: [
+      'dev-platform',
+      'kubernetes',
+      'ebs-csi',
+      'aws',
+      'irsa',
+      'imds',
+      'storage',
+      'argocd',
+      'helm',
+      'cilium',
+      'talos',
+      'devops',
+      'self-hosted',
+    ],
+    file: 'self-hosted-developer-platform-on-k8s-p5',
+  },
+  {
     id: 41,
     slug: 'argocd-app-of-apps-bootstrap',
     title: 'Dev Platform: Handing the Cluster to Argo CD',
