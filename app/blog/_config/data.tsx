@@ -16,6 +16,8 @@ import lambdaDeployPipeline from '@/../public/blog/covers/lambda_deploy_pipeline
 import lambdaDeployPipelineX from '@/../public/blog/covers/lambda_deploy_pipeline_x.png'
 import lambdaDeployPlatform from '@/../public/blog/covers/lambda_deploy_platform.png'
 import lambdaDeployPlatformX from '@/../public/blog/covers/lambda_deploy_platform_x.png'
+import llmPlatform from '@/../public/blog/covers/llm_platform.png'
+import llmPlatformX from '@/../public/blog/covers/llm_platform_x.png'
 import remoteStateManagement from '@/../public/blog/covers/remote_state_management.png'
 import remoteStateManagementX from '@/../public/blog/covers/remote_state_management_x.png'
 import selfHostedDevPlatform from '@/../public/blog/covers/self_hosted_dev_platform.png'
@@ -30,6 +32,15 @@ import { BlogCover, BlogEntry } from '../_interfaces/blog'
 import BLOG_METADATA from './metadata'
 
 const COVERS: Record<number, BlogCover> = {
+  // TODO: placeholder cover until an llm-platform cover exists
+  43: {
+    image: llmPlatform,
+    original: llmPlatform,
+    xImage: llmPlatformX,
+    alt: 'llm_platform',
+    ogImage: '/blog/covers/llm_platform.png',
+    ogImageX: '/blog/covers/llm_platform_x.png',
+  },
   42: {
     image: selfHostedDevPlatform,
     original: selfHostedDevPlatform,

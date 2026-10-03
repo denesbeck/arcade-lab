@@ -12,6 +12,29 @@ export interface BlogMeta {
 
 const BLOG_METADATA: BlogMeta[] = [
   {
+    id: 43,
+    slug: 'litellm-ollama-local-llm-gateway',
+    title: 'LLM Platform: The Whole Stack on a MacBook',
+    description:
+      'Milestone 0: a LiteLLM gateway with keys, spend logs and metrics in front of a local Qwen model, and why the first reply took four minutes',
+    date: '2026-10-02',
+    hidden: false,
+    tags: [
+      'llm-platform',
+      'llm',
+      'litellm',
+      'ollama',
+      'qwen',
+      'opencode',
+      'docker-compose',
+      'prometheus',
+      'postgres',
+      'performance',
+      'self-hosted',
+    ],
+    file: 'self-hosted-llm-platform-p1',
+  },
+  {
     id: 42,
     slug: 'ebs-csi-driver-without-eks',
     title: 'Dev Platform: Persistent Storage Without EKS',
