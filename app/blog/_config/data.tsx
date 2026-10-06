@@ -1,5 +1,7 @@
 import arcadeLab from '@/../public/blog/covers/arcade_lab.png'
 import arcadeLabX from '@/../public/blog/covers/arcade_lab_x.png'
+import backstageMcpOauth from '@/../public/blog/covers/backstage_mcp_oauth.png'
+import backstageMcpOauthX from '@/../public/blog/covers/backstage_mcp_oauth_x.png'
 import blobStorageOptimization from '@/../public/blog/covers/blob_storage_optimization.png'
 import blobStorageOptimizationX from '@/../public/blog/covers/blob_storage_optimization_x.png'
 import buildHomeServer from '@/../public/blog/covers/building_home_server.png'
@@ -32,6 +34,14 @@ import { BlogCover, BlogEntry } from '../_interfaces/blog'
 import BLOG_METADATA from './metadata'
 
 const COVERS: Record<number, BlogCover> = {
+  44: {
+    image: backstageMcpOauth,
+    original: backstageMcpOauth,
+    xImage: backstageMcpOauthX,
+    alt: 'backstage_mcp_oauth',
+    ogImage: '/blog/covers/backstage_mcp_oauth.png',
+    ogImageX: '/blog/covers/backstage_mcp_oauth_x.png',
+  },
   // TODO: placeholder cover until an llm-platform cover exists
   43: {
     image: llmPlatform,

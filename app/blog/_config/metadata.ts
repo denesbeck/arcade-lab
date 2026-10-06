@@ -12,6 +12,29 @@ export interface BlogMeta {
 
 const BLOG_METADATA: BlogMeta[] = [
   {
+    id: 44,
+    slug: 'mcp-oauth-cimd-local-proxy',
+    title: 'One MCP Server, Four AI Tools, One OAuth Setup',
+    description:
+      "Per-user OAuth for a VPN-only MCP server when most AI clients lack CIMD: a hosted client document, mcp-remote, and Cursor's sandbox",
+    date: '2026-10-07',
+    hidden: false,
+    tags: [
+      'mcp',
+      'ai',
+      'oauth',
+      'backstage',
+      'authentication',
+      'authorization',
+      'claude',
+      'tls',
+      'debugging',
+      'developer-experience',
+      'platform-engineering',
+    ],
+    file: 'mcp-oauth-proxy-for-ai-clients',
+  },
+  {
     id: 43,
     slug: 'litellm-ollama-local-llm-gateway',
     title: 'LLM Platform: The Whole Stack on a MacBook',
