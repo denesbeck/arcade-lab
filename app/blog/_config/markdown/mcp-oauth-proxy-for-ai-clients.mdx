@@ -133,9 +133,9 @@ Claude Desktop worked through the helper right away. Cursor did not.
 
 ---
 
-## ⛰️ Cursor's three walls
+## ⛰️ Cursor's four walls
 
-The design above was right. What broke was the environment Cursor launches `mcp-remote` in, and it broke three times. The config shown earlier is the end result. Getting there, Cursor said `MCP 'backstage' is not connected`, and kept saying exactly that through three different problems, each one hiding behind the previous.
+The design above was right. What broke was the environment Cursor launches `mcp-remote` in, and it broke four times. The config shown earlier is the end result. Getting there, Cursor said `MCP 'backstage' is not connected`, and kept saying exactly that through three different problems, each one hiding behind the previous. The fourth showed up a day later, and it had been there all along.
 
 ### Wall 1: the certificate
 
@@ -183,13 +183,42 @@ The fix has two parts. Use Cursor's proxy, which `mcp-remote --enable-proxy` doe
 
 Cursor's proxy runs outside the sandbox, so it resolves names through the system DNS, internal VPN zone included. TLS is tunnelled through it unchanged, so `--use-system-ca` is still needed.
 
+Cursor connected, and I called it done.
+
+### Wall 4: the sign-in nobody could finish
+
+The next day I switched from one shared client document to one per tool, and Cursor broke again. This time with the Cursor CLI, version 2026.10.01: `agent mcp list-tools` hung with no browser tab, and Ctrl+C turned it into `Connection closed`. Three things were going on:
+
+- **Cursor had never signed in by itself.** `mcp-remote` stores tokens per server URL *and* client document. The day before, Cursor had quietly been reusing tokens from my terminal test runs. The new `cursor` document meant no saved tokens, so Cursor needed its first real sign-in.
+- **The browser never opened.** The bridge did start the sign-in: it saved its PKCE code verifier to `~/.mcp-auth` and listened for the callback on port 7964, which `mcp-remote` derives from the server URL. But no tab ever opened, apparently because the sandbox stops it from launching the browser. The same command in a terminal printed `Browser opened automatically.`
+- **Interrupted runs block the next ones.** Ctrl+C stopped `agent`, but not the sandboxed `mcp-remote` it had started. That process kept port 7964 and kept waiting. Every later run, even from a terminal, said `Another instance is running the sign-in for this server on port 7964` and waited for it.
+
+The fix is a one-time step outside Cursor. **Sign in once from a terminal**, with the same command minus `--enable-proxy`:
+
+```sh
+npx -y --node-options=--use-system-ca mcp-remote@0.14.3 \
+  https://<portal-host>/api/mcp-actions/v1 \
+  --client-metadata-url https://<portal-host>/api/mcp-client/cursor/client-metadata.json
+```
+
+Same server URL and same client document means the same token file, so Cursor picks up the tokens and refreshes them itself from then on. And if a run gets stuck, **clear the leftover bridges** before trying again:
+
+```sh
+pkill -f "mcp-remote.*cursor"
+```
+
+Both are now steps in our setup guide. One thing I haven't tested yet: whether the Cursor app, not just the `agent` CLI, can open the browser on its own.
+
+A false lead cost time along the way. Running `agent mcp list-tools` from inside the AI assistant I was debugging with gave `npm error code EPERM` on `~/.npm/_cacache`. It looked like Cursor's sandbox blocking writes, but it was the assistant's own sandbox, inherited by every process it started. Run from my own terminal, npm worked fine.
+
 | Layer | Symptom | Cause | Fix |
 |---|---|---|---|
 | TLS | `SELF_SIGNED_CERT_IN_CHAIN` | Node ignores the macOS keychain | `--use-system-ca` |
 | Process environment | `fetch failed` despite the `env` setting | Cursor drops `NODE_OPTIONS` | flag as an `npx` argument |
 | Network sandbox | `getaddrinfo ENOTFOUND` | seatbelt, proxy-only network | `--enable-proxy` + `sandbox.json` |
+| First sign-in | hangs with no browser tab, then `Another instance is running the sign-in` | the sandbox apparently can't open the browser; interrupted bridges keep the callback port | sign in once from a terminal; `pkill` stuck bridges |
 
-Three layers, one error message.
+Four walls. Three of them hid behind the same error message, and the fourth hid behind tokens borrowed from a terminal.
 
 ---
 
@@ -226,7 +255,7 @@ flowchart LR
 
 Dashed lines are the one-time sign-in that issues a token to whoever holds the OAuth client role: the AI tool itself, or `mcp-remote` on its behalf. Solid lines are the MCP traffic, which carries that user's token on every request.
 
-One consent page that names the tool, one sign-in per engineer per tool, permissions per person, and no shared secrets. All four tools are verified against staging.
+One consent page that names the tool, one sign-in per engineer per tool, permissions per person, and no shared secrets. All four tools are verified against staging. For Cursor, that includes the one-time sign-in from a terminal.
 
 ---
 
@@ -241,6 +270,10 @@ One consent page that names the tool, one sign-in per engineer per tool, permiss
 **A diagnostic stand-in beats guessing.** A fake server reporting its own environment answered in one run what theories couldn't.
 
 **"Works for me" needs the same launch conditions.** Same command, same machine, different parent process: environment, sandbox and network can all differ.
+
+**"It worked yesterday" may have been borrowed state.** Cursor ran on tokens from a terminal run, and the first change that needed a fresh sign-in showed it had never done one itself. Test the first sign-in from a clean state.
+
+**Your debugger has a sandbox too.** Commands an AI assistant runs inherit its restrictions, so an error it reproduces may be its own. Confirm it in your own terminal before believing it.
 
 **Corporate networks multiply all of this.** Internal CAs, internal DNS and VPN-only hosts break assumptions that AI tools make. Expect a trust fix and a network fix for every new client.
 
