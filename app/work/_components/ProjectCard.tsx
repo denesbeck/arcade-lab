@@ -40,15 +40,17 @@ const ProjectCard = ({
     >
       {/* status & priority indicators */}
       <div className="flex absolute top-4 right-4 gap-4 items-center">
-        <div className="flex gap-1 items-center">
-          {(() => {
-            const { icon: PriorityIcon, color } = PRIORITY_CONFIG[priority]
-            return <PriorityIcon className={`w-4 h-4 ${color}`} />
-          })()}
-          <span className="text-xs tracking-widest uppercase text-dark-300">
-            {priority}
-          </span>
-        </div>
+        {priority && (
+          <div className="flex gap-1 items-center">
+            {(() => {
+              const { icon: PriorityIcon, color } = PRIORITY_CONFIG[priority]
+              return <PriorityIcon className={`w-4 h-4 ${color}`} />
+            })()}
+            <span className="text-xs tracking-widest uppercase text-dark-300">
+              {priority}
+            </span>
+          </div>
+        )}
         <div className="flex gap-2 items-center">
           <div
             className={`w-2 h-2 rounded-full ${status === 'active' ? 'bg-macos-green animate-pulse' : 'bg-dark-400'}`}

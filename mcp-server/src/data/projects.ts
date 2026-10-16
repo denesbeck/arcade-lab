@@ -56,15 +56,17 @@ const PROJECTS: Project[] = [
     tech: ['Golang'],
     url: 'https://github.com/denesbeck/nexio',
     status: 'active',
-    priority: 'critical',
+    priority: 'medium',
     relatedBlogPostIds: [8, 9, 14, 17],
   },
   {
     title: 'Dev Platform',
     subtitle: 'Self-Hosted Internal Developer Platform',
     highlights: [
-      'Designing a portfolio-grade Internal Developer Platform on AWS with end-to-end IaC — from VPC to running apps in a single repository',
-      'Running vanilla Kubernetes on Talos Linux with Cilium networking, spot instance self-healing, and GitOps via Argo CD',
+      'Building an Internal Developer Platform on AWS with end-to-end IaC in a single repository — Terraform takes it from VPC and IAM to a running cluster, then hands off to Argo CD',
+      'Running vanilla Kubernetes on Talos Linux with an on-demand control plane, spot workers and scheduled stop/start, with Cilium eBPF networking replacing kube-proxy and Hubble for flow visibility',
+      'Implemented IRSA without EKS — self-hosted OIDC discovery on S3 and per-ServiceAccount IAM roles, so cluster add-ons reach AWS without static keys',
+      'Reconciling the cluster through an Argo CD App-of-Apps with SOPS + age encrypted secrets, CI checks for Terraform, Helm and manifests, and verified cold builds and single-shot teardowns',
     ],
     tech: [
       'AWS',
@@ -81,6 +83,30 @@ const PROJECTS: Project[] = [
     status: 'active',
     priority: 'critical',
     relatedBlogPostIds: [26, 29, 31, 41],
+  },
+  {
+    title: 'LLM Platform',
+    subtitle: 'Self-Hosted LLM Gateway',
+    highlights: [
+      'Designing a private, multi-user LLM platform on AWS — an OpenAI-compatible LiteLLM gateway with per-user virtual keys, rate limits, budgets and spend tracking, all in Terraform',
+      'Routing stable model aliases between self-hosted Qwen on vLLM (spot L4 GPUs behind a Terraform toggle), Ollama on a MacBook, and Bedrock as a fallback, reachable only over Tailscale',
+      'Shipped the local milestone: the full gateway stack on Docker Compose with Postgres spend logs and Prometheus metrics, verified end to end with opencode',
+    ],
+    tech: [
+      'AWS',
+      'Terraform',
+      'Docker',
+      'Ollama',
+      'vLLM',
+      'Qwen',
+      'Tailscale',
+      'Prometheus',
+      'Grafana',
+    ],
+    url: 'https://github.com/denesbeck/llm-platform',
+    status: 'active',
+    priority: 'critical',
+    relatedBlogPostIds: [43],
   },
   {
     title: 'Dotfiles',
@@ -104,8 +130,7 @@ const PROJECTS: Project[] = [
     ],
     tech: ['Bash', 'Tmux'],
     url: 'https://github.com/denesbeck/tmux-pane-controller',
-    status: 'active',
-    priority: 'low',
+    status: 'archived',
     relatedBlogPostIds: [25],
   },
   {
@@ -117,8 +142,7 @@ const PROJECTS: Project[] = [
     ],
     tech: ['Bash', 'Tmux'],
     url: 'https://github.com/denesbeck/tmux-worktree',
-    status: 'active',
-    priority: 'low',
+    status: 'archived',
     relatedBlogPostIds: [21],
   },
   {
@@ -131,7 +155,6 @@ const PROJECTS: Project[] = [
     tech: ['TypeScript', 'PostgreSQL', 'Redis'],
     url: 'https://github.com/denesbeck/auth-service',
     status: 'archived',
-    priority: 'low',
     relatedBlogPostIds: [],
   },
   {
@@ -153,7 +176,6 @@ const PROJECTS: Project[] = [
     ],
     url: 'https://github.com/denesbeck/lost-in-dusk',
     status: 'archived',
-    priority: 'low',
     relatedBlogPostIds: [],
   },
   {
@@ -168,7 +190,7 @@ const PROJECTS: Project[] = [
     tech: ['GitHub Actions', 'Bash', 'Terraform', 'AWS'],
     url: 'https://github.com/denesbeck/lambda-functions',
     status: 'active',
-    priority: 'high',
+    priority: 'medium',
     relatedBlogPostIds: [3, 19, 33],
   },
 ]
@@ -187,11 +209,15 @@ const PRIORITY_ORDER: Record<Priority, number> = {
   low: 3,
 }
 
+// archived projects carry no priority, so they fall through to the title order
+const rank = (project: Project) =>
+  project.status === 'active' ? PRIORITY_ORDER[project.priority] : 0
+
 const SORTED_PROJECTS: Project[] = [...PROJECTS]
   .sort(
     (a, b) =>
       STATUS_ORDER[a.status] - STATUS_ORDER[b.status] ||
-      PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority] ||
+      rank(a) - rank(b) ||
       a.title.localeCompare(b.title)
   )
   .map((project) => ({

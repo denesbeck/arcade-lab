@@ -19,16 +19,17 @@ export interface PersonalInfo {
 
 export type Priority = 'low' | 'medium' | 'high' | 'critical'
 
-export interface Project {
+export type Project = {
   title: string
   subtitle: string
   highlights: string[]
   tech: string[]
   url: string
-  status: 'active' | 'archived'
-  priority: Priority
   relatedBlogPostIds: number[]
-}
+} & (
+  | { status: 'active'; priority: Priority }
+  | { status: 'archived'; priority?: never }
+)
 
 export interface ToolResult {
   [key: string]: unknown

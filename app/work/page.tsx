@@ -1,9 +1,16 @@
 import { Metadata } from 'next'
+import { LuChevronRight } from 'react-icons/lu'
 import { PageHeader } from '@/_components'
 import { ProjectCard } from './_components'
 import PROJECTS from './_config/data'
 
 export const dynamic = 'force-static'
+
+const GRID =
+  'grid justify-center w-full sm:gap-6 sm:px-10 sm:grid-cols-[repeat(auto-fill,minmax(415px,0))]'
+
+const active = PROJECTS.filter(({ status }) => status === 'active')
+const archived = PROJECTS.filter(({ status }) => status === 'archived')
 
 const domain = process.env.NEXT_PUBLIC_DOMAIN || 'arcade-lab.vercel.app'
 
@@ -46,8 +53,8 @@ const Work = () => {
         description="A collection of tools and services I&apos;ve built and maintain."
       />
       <div className="flex justify-center py-4">
-        <div className="grid justify-center w-full sm:gap-6 sm:px-10 sm:grid-cols-[repeat(auto-fit,minmax(415px,0))]">
-          {PROJECTS.map((project, index) => (
+        <div className={GRID}>
+          {active.map((project, index) => (
             <ProjectCard
               key={project.title}
               {...project}
@@ -56,6 +63,30 @@ const Work = () => {
           ))}
         </div>
       </div>
+      {archived.length > 0 && (
+        <details className="group/archived py-4">
+          <summary className="list-none cursor-pointer [&::-webkit-details-marker]:hidden">
+            {/* same grid as the cards so the label lines up with the first column */}
+            <span className={GRID}>
+              <span className="flex col-span-full gap-2 items-center px-6 py-2 text-xs tracking-widest uppercase transition-colors duration-200 sm:px-0 text-dark-300 hover:text-primary">
+                <LuChevronRight className="w-4 h-4 transition-transform duration-200 group-open/archived:rotate-90" />
+                Archived ({archived.length})
+              </span>
+            </span>
+          </summary>
+          <div className="flex justify-center pt-4">
+            <div className={GRID}>
+              {archived.map((project, index) => (
+                <ProjectCard
+                  key={project.title}
+                  {...project}
+                  delay={index * 100}
+                />
+              ))}
+            </div>
+          </div>
+        </details>
+      )}
     </div>
   )
 }
