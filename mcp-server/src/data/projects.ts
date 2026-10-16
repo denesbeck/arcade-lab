@@ -40,6 +40,7 @@ const PROJECTS: Project[] = [
       'Grafana',
       'Loki',
       'Bash',
+      'Tailscale',
     ],
     url: 'https://github.com/denesbeck?tab=repositories&q=home-lab',
     status: 'active',

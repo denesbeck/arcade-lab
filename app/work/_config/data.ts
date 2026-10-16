@@ -151,6 +151,7 @@ const PROJECTS: Project[] = [
       { name: 'Grafana', icon: SiGrafana },
       { name: 'Loki', icon: LuLogs },
       { name: 'Bash', icon: SiGnubash },
+      { name: 'Tailscale', icon: SiTailscale },
     ],
     url: 'https://github.com/denesbeck?tab=repositories&q=home-lab',
     status: 'active',
