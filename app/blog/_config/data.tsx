@@ -34,6 +34,14 @@ import { BlogCover, BlogEntry } from '../_interfaces/blog'
 import BLOG_METADATA from './metadata'
 
 const COVERS: Record<number, BlogCover> = {
+  45: {
+    image: buildHomeServer,
+    original: buildHomeServer,
+    xImage: buildHomeServerX,
+    alt: 'build_home_server',
+    ogImage: '/blog/covers/building_home_server.png',
+    ogImageX: '/blog/covers/building_home_server_x.png',
+  },
   44: {
     image: backstageMcpOauth,
     original: backstageMcpOauth,

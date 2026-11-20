@@ -1,0 +1,159 @@
+# 💾 Home Lab: The Shutdown That Was Killing My Disk
+
+_Why my server's clean shutdowns were ending in emergency head retracts — and what hunting bad sectors on a failing SMR drive taught me_
+
+It started the way these things always start: a video froze at the same spot, every time. Jellyfin retried, ffmpeg got killed, the file never played. The kernel log had the real story:
+
+```text
+critical medium error, dev sdb, sector 5594053152 op 0x0:(READ)
+Sense Key : Medium Error [current]
+Add. Sense: Unrecovered read error
+```
+
+`sdb` is a 5 TB WD Elements portable drive. It holds my media library and — less comfortably — the local backup snapshots of my photos. A few minutes later `smartd` started reporting **3 currently unreadable (pending) sectors**, every 30 minutes, forever. In September the same drive's SMART counters were all zeros.
+
+A failed SMART long self-test a few days later confirmed it wasn't a one-off. Two weeks after that a *second* bad patch appeared — this time under another video, which pushed the pending count to 5. A drive that was clean two months ago now had two bad regions. Something was wearing it out, and I wanted to know what.
+
+## 📊 First, make the disk talk to Prometheus
+
+Until then, disk health lived in `smartd`'s syslog lines, which nobody reads. My whole monitoring stack is Prometheus, so the first step was getting SMART into it. A small Python script runs from cron every 10 minutes, calls `smartctl -j` for each expected disk, and writes metrics to node-exporter's textfile collector:
+
+```text
+disk_present{label="wd-elements-movies-backups"} 1
+disk_smart_passed{label="wd-elements-movies-backups"} 1
+disk_ata_attribute_raw{attribute="current_pending_sector", ...} 5
+disk_ata_attribute_raw{attribute="reallocated_sector_ct", ...} 0
+disk_selftest_errors{label="wd-elements-movies-backups"} 2
+```
+
+Two details matter. It calls `smartctl -n standby`, so reading counters never spins up a sleeping disk. And it identifies disks by **serial**, not `/dev/sdX` — USB device letters swap between boots on this box, so `sdb` today can be `sda` tomorrow.
+
+The alert rules fire on *growth*, not on non-zero, because the drive already had a baseline of bad sectors:
+
+```yaml
+- alert: DiskBadSectorsIncreasing
+  expr: delta(disk_ata_attribute_raw{attribute=~"reallocated_sector_ct|current_pending_sector|offline_uncorrectable|reported_uncorrect"}[6h]) > 0
+  labels:
+    severity: critical
+```
+
+Then I exported four more counters I didn't think I needed. They turned out to be the whole story.
+
+## 🕵️ "But I just bought it"
+
+My first reaction was disbelief — this drive is new. SMART disagreed:
+
+```text
+  9 Power_On_Hours          10606
+ 12 Power_Cycle_Count       94
+192 Power-Off_Retract_Count 81
+```
+
+10,606 hours is about the same as the mini PC's own NVMe, so the drive is as old as the server, not new. Fine — memory is unreliable. But the line that made me sit up was the last one.
+
+**`Power-Off_Retract_Count` tracks emergency head retracts.** The attribute is vendor-specific, but on WD drives it counts the times the drive had to park its heads because power went away without a proper stop, instead of during a normal controlled spin-down. A retract like that is a protective procedure, not damage in itself. It's just not how you want a spinning disk to stop night after night.
+
+**81 of its 94 power cycles were emergency retracts.**
+
+That made no sense. The server shuts down cleanly every night — `systemctl poweroff`, filesystems synced and unmounted, the boot log ending in a polite `systemd-shutdown: Syncing filesystems and block devices`. No power cuts. So why did the drive count nearly every shutdown as an emergency?
+
+## 🧨 Root cause: my server never told the disk to stop
+
+The answer was one attribute in sysfs:
+
+```bash
+$ for d in /sys/class/scsi_disk/*; do
+>   echo "$(cat "$d/device/model") manage_shutdown=$(cat "$d/manage_shutdown")"
+> done
+Elements 2621    manage_shutdown=0
+M3               manage_shutdown=0
+```
+
+On a clean shutdown Linux flushes caches and unmounts filesystems. What happens next depends on the SCSI disk driver. For a native SATA disk, libata handles spinning it down. For a disk behind a **USB bridge**, the `sd` driver only sends a `START STOP UNIT` (stop) command if `manage_shutdown` is set. On my server (Ubuntu 24.04, kernel 6.8), it was **0** for both USB disks. Your kernel, bridge and distro may behave differently, which is exactly why it's worth checking.
+
+So the shutdown sequence on my server was:
+
+1. Filesystems flushed and unmounted — data safe ✅
+2. Kernel powers off — **nobody told the disk**
+3. USB ports lose power while the platters are at full speed
+4. The drive does an emergency retract
+
+My data was never at risk, which is why nothing ever looked wrong. The *drive* took the hit instead: 81 times, and almost daily once I started powering the server off every night.
+
+## 🛠️ The fix: one udev rule
+
+`manage_shutdown` is writable, so the fix is a udev rule that sets it whenever a SCSI disk appears:
+
+```text
+# /etc/udev/rules.d/60-usb-disk-shutdown.rules
+ACTION=="add", SUBSYSTEM=="scsi_disk", ATTR{manage_shutdown}="1"
+```
+
+It only matches `scsi_disk` devices, so the NVMe system drive is untouched, and it only changes behaviour at power-off. It goes into the same Ansible playbook as the disk-health exporter, with a handler that runs `udevadm trigger --subsystem-match=scsi_disk --action=add` so it takes effect without a reboot.
+
+There's a catch worth knowing: **the stop is only sent on power-off, not on reboot.** On a reboot the USB ports usually stay powered and the disk keeps spinning, so testing with `reboot` proves nothing. A real test needs a full power-off.
+
+## 🧪 Proving it
+
+Some cheap USB-SATA bridges ignore the stop command, so a rule that sets a flag is a hypothesis until the drive's own counters agree. Record, power off, power on, compare:
+
+| Counter | Before | After |
+|---|---|---|
+| `Power_Cycle_Count` | 94 | 95 |
+| `Start_Stop_Count` | 1504 | **1505** |
+| `Power-Off_Retract_Count` | 81 | **81** |
+
+The power cycle happened, the start-stop count went up — the drive was told to stop and parked its heads — and the retract count **didn't move**. You could also *hear* it: the drive spun down with a quiet whir instead of the usual clunk. Several shutdowns later, the retract count is still 81.
+
+## 🔎 Cleaning up the damage — and an SMR surprise
+
+> None of this repairs a failing drive. I only zeroed files that were already unreadable and easy to replace. If a drive holds anything you care about, copy it off first and experiment after.
+
+The fix stops new damage, but it doesn't undo the old. A drive only resolves a pending sector when something **writes** to it: it either rewrites the sector successfully or swaps in a spare.
+
+Both bad spots were inside the two files that had refused to play, so the cleanup was simple. I overwrote each file with zeros using `dd` (with `conv=notrunc`, so ext4 rewrites the file's existing blocks instead of allocating new ones), then deleted them. I expected the pending count to drop to 0.
+
+**It went from 5 to 6.**
+
+No new read errors, either. This drive is **SMR** (shingled magnetic recording), like most 2.5" drives this size, and what I saw fits how those drives manage writes, though SMART alone can't tell me what happened inside. An SMR drive can buffer writes and reorganise whole shingled regions later, so overwriting a file doesn't guarantee its pending sectors get resolved right away. The extra one may simply be another weak sector the drive found while handling my writes.
+
+What mattered still worked: the short self-test that had failed on that area now passed, twice. The files read fine. The counter just lags behind.
+
+## 🎬 The bad sector that read fine
+
+A few days later I ran a long self-test as a full health check. It failed within five minutes, at a sector I hadn't seen before. I read that one sector directly, and it came back fine. I was ready to call it SMR noise.
+
+Then I looked up which file that sector belonged to (`debugfs` can map a disk block to a file). It was a 16.6 GB video that nothing had complained about. So I read the **whole file**:
+
+```text
+dd: error reading 'video.mkv': No data available
+critical medium error, dev sdb, sector 4234270864 op 0x0:(READ)
+```
+
+A third bad region, somewhere else in the same file, and the pending count went from 6 to 8. The sector the test pointed at was weak but still readable after retries. The real damage was in a part of the file nothing had read in a long time.
+
+That's the lesson I'd have got wrong if I'd stopped at the single sector: **one sector reading fine doesn't mean the file is fine. Only reading the whole file proves it.** On a drive full of media you rarely play, bad sectors can sit unnoticed for months.
+
+## ⚖️ Two problems, not one
+
+It's tempting to tie this up as "the shutdowns killed the disk", but I can't prove that, so I won't.
+
+- **The shutdown behaviour: fixed.** The disk wasn't getting a stop command at power-off. The udev rule changed that, and the drive's own counters confirm it.
+- **The disk's condition: not fixed.** It has three bad regions, and the full read showed damage I hadn't found yet. No number of clean shutdowns will remove them.
+
+Eighty-one emergency retracts are evidence of repeated abnormal shutdowns, and they're the only abnormal stress I found. They may have contributed to the bad sectors, but nothing in the data proves it. Either way, the drive is being retired.
+
+## 🧠 Lessons
+
+- **Don't assume your USB disks get a proper stop at power-off.** Mine didn't. If you run spinning disks over USB, check `/sys/class/scsi_disk/*/manage_shutdown`. It's a one-line fix, and the drive's own counters will tell you whether it worked.
+- **Export the counters you think you don't need.** `Power-Off_Retract_Count` was never going to be on an alert, but it's the one that explained everything.
+- **Test a power-off fix with a power-off.** The stop command isn't sent on reboot.
+- **Drive-managed SMR makes bad-sector cleanup less intuitive.** Overwriting a file doesn't guarantee its pending sectors resolve right away, and the cleanup can turn up more weak sectors.
+- **A clean read of one sector proves one sector.** To know a file is intact, read all of it.
+- **A fix doesn't undo damage.** The shutdowns are clean now, but the bad regions are permanent.
+
+## 🎉 Outcome
+
+The drive now gets a proper stop before every power-off, and the retract counter that climbed 81 times hasn't moved since. Every disk reports SMART into Prometheus, and bad-sector growth pages me before I find out from a frozen video.
+
+The WD still has three damaged regions, so it's being retired. Its replacement is a 3.5" CMR drive built to run 24/7. The photo snapshots are moving to free space on the internal NVMe, and the photos are finishing their first full off-site upload to S3. And when the new drive goes in, it gets the same udev rule from its first boot.

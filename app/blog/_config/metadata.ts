@@ -12,6 +12,29 @@ export interface BlogMeta {
 
 const BLOG_METADATA: BlogMeta[] = [
   {
+    id: 45,
+    slug: 'usb-disk-manage-shutdown-emergency-retract',
+    title: 'Home Lab: The Shutdown That Was Killing My Disk',
+    description:
+      'How a Linux default turned every clean shutdown into an emergency head retract, and what hunting bad sectors on an SMR drive taught me',
+    date: '2026-11-20',
+    hidden: false,
+    tags: [
+      'home-lab',
+      'self-hosted',
+      'linux',
+      'smart',
+      'hdd',
+      'udev',
+      'prometheus',
+      'observability',
+      'ansible',
+      'iac',
+      'sre',
+    ],
+    file: 'building-my-home-server-p14',
+  },
+  {
     id: 44,
     slug: 'mcp-oauth-cimd-local-proxy',
     title: 'One MCP Server, Four AI Tools, One OAuth Setup',
