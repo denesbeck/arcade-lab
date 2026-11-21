@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.12.0",
-    "@aws-sdk/client-lambda": "^3.1173.0",
+    "@aws-sdk/client-lambda": "^3.1175.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@mdx-js/loader": "^3.1.1",
